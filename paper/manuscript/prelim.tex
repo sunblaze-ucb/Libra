@@ -13,5 +13,5 @@ Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P},
 \end{itemize}
 
 \subsection{Sum Check Protocol}
-The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(x_0, x_1, ..., x_l)$ for a given function $g(x_0, x_1, ..., x_l)$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck}
+The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(x_0, x_1, ..., x_{l-1})$ for a given function $g(x_0, x_1, ..., x_{l-1})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{x_0\in\{0,1\}}\sum_{x_1\in\{0,1\}}...\sum_{x_{l-1}\in\{0,1\}}g(x_0,x_1,...,x_{l-1})$$
 \end{definition}
