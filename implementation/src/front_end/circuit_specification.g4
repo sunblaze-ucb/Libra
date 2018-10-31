@@ -1,4 +1,4 @@
-grammar test;		
+grammar circuit_specification;		
 prog:	(expr NEWLINE)* ;
 expr:	expr ('*'|'/') expr
     |	expr ('+'|'-') expr
