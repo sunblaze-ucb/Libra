@@ -11,7 +11,27 @@ Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P},
 	\item {\bf Completeness.} For every $x$ such that $f(x) = 1$ it holds that $\Pr[\langle\mathcal{P}, \mathcal{V}\rangle(x)=accept]=1$.
 	\item {\bf $\epsilon$-Soundness.} For any $x$ with $f(x) \neq 1$ and any $\mathcal{P}^*$ it holds that $\Pr[\langle\mathcal{P^*},\mathcal{V}\rangle=accept] \le \epsilon$
 \end{itemize}
+\end{definition}
 
 \subsection{Sum Check Protocol}
-The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(x_0, x_1, ..., x_{l-1})$ for a given function $g(x_0, x_1, ..., x_{l-1})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{x_0\in\{0,1\}}\sum_{x_1\in\{0,1\}}...\sum_{x_{l-1}\in\{0,1\}}g(x_0,x_1,...,x_{l-1})$$
+The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_0, b_1, ..., b_{l-1})$ for a given polynomial $g(x_0, x_1, ..., x_{l-1})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{b_0\in\{0,1\}}\sum_{b_1\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(b_0,b_1,...,b_{l-1})$$
+Using this protocol, even a polynomial bounded verifier can verify the statement above. Now we formally define the problem and provide a description of the protocol.
+
+\begin{definition}
+Let $g$ be a $l$-variate polynomial $g(b_0, b_1, ..., b_{l-1})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
+
+$$H=\sum_{b_0\in\{0,1\}}\sum_{b_1\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(b_0,b_1,...,b_{l-1})$$
+\end{definition}
+
+\begin{protocol}[\textbf{Sum Check}]
+The protocol proceeds in $l$ rounds. 
+\begin{itemize}
+\item In the first round, the prover sends a univariate polynomial $$g_0(x_0)\overset{def}{=}\sum_{b_1\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(x_0, b_1, b_2, ..., b_{l-1})$$, the verifier checks $H=g_0(0)+g_0(1)$. Then the verifier sends a random number $r_0$ to prover, and sets $G_0\overset{def}{=}g_{0}(r_0)$.
+\item In $i$-th round, where $2\le i \le l-1$, the prover sends $$g_{i-1}(x_{i-1})\overset{def}{=}\sum_{b_{i}\in\{0,1\}}\sum_{b_{i+1}\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(r_0, r_1, ..., r_{i-2}, x_{i-1}, b_{i}, b_{i+1}, ..., b_{l-1})$$. Then the verifier checks $G_{i-2}=g_{i-1}(0)+g_{i-1}(1)$, and then sends a random number $r_{i-1}$ to prover. The verifier sets $G_{i-1}\overset{def}{=}g_{i-1}(r_{i-1})$.
+\item In $l$-th round, the prover sends $$g_{l-1}(x_{l-1})\overset{def}{=}g(r_0, r_1, ..., r_{l-2}, x_{l-1})$$, the verifier checks $G_{l-2}=g_{l-1}(0)+g_{l-1}(1)$. Then verifier generate a random number $r_{l-1}$ and sets $G_{l-1}\overset{def}{=}g_{l-1}(r_{l-1})$. The verifier also compute $Answer\overset{def}{=}g(r_0, r_1, ..., r_{l-1})$ locally. Verifier will accept iff $G_{l-1}=Answer$.
+\end{itemize}
+\end{protocol}
+
+\begin{definition}[\textbf{Multi-linear Extension}]
+
 \end{definition}
