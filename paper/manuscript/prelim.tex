@@ -15,26 +15,31 @@ Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P},
 \end{definition}
 
 \subsection{Sum Check Protocol}
-The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_0, b_1, ..., b_{l-1})$ for a given polynomial $g(x_0, x_1, ..., x_{l-1})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{b_0\in\{0,1\}}\sum_{b_1\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(b_0,b_1,...,b_{l-1})$$
+The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_1, b_2, ..., b_{l})$ for a given polynomial $g(x_1, x_2, ..., x_{l})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
 Using this protocol, even a polynomial bounded verifier can verify the statement above. Now we formally define the problem and provide a description of the protocol.
 
 \begin{definition}
-Let $g$ be a $l$-variate polynomial $g(b_0, b_1, ..., b_{l-1})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
+Let $g$ be a $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
 
-$$H=\sum_{b_0\in\{0,1\}}\sum_{b_1\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(b_0,b_1,...,b_{l-1})$$
+$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
 \end{definition}
 
 \begin{protocol}[\textbf{Sum Check}]
 The protocol proceeds in $l$ rounds. 
 \begin{itemize}
-\item In the first round, the prover sends a univariate polynomial $$g_0(x_0)\overset{def}{=}\sum_{b_1\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(x_0, b_1, b_2, ..., b_{l-1})$$, the verifier checks $H=g_0(0)+g_0(1)$. Then the verifier sends a random number $r_0$ to prover, and sets $G_0\overset{def}{=}g_{0}(r_0)$.
-\item In $i$-th round, where $2\le i \le l-1$, the prover sends $$g_{i-1}(x_{i-1})\overset{def}{=}\sum_{b_{i}\in\{0,1\}}\sum_{b_{i+1}\in\{0,1\}}...\sum_{b_{l-1}\in\{0,1\}}g(r_0, r_1, ..., r_{i-2}, x_{i-1}, b_{i}, b_{i+1}, ..., b_{l-1})$$. Then the verifier checks $G_{i-2}=g_{i-1}(0)+g_{i-1}(1)$, and then sends a random number $r_{i-1}$ to prover. The verifier sets $G_{i-1}\overset{def}{=}g_{i-1}(r_{i-1})$.
-\item In $l$-th round, the prover sends $$g_{l-1}(x_{l-1})\overset{def}{=}g(r_0, r_1, ..., r_{l-2}, x_{l-1})$$, the verifier checks $G_{l-2}=g_{l-1}(0)+g_{l-1}(1)$. Then verifier generate a random number $r_{l-1}$ and sets $G_{l-1}\overset{def}{=}g_{l-1}(r_{l-1})$. The verifier also compute $Answer\overset{def}{=}g(r_0, r_1, ..., r_{l-1})$ locally. Verifier will accept iff $G_{l-1}=Answer$.
+\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(x_1, b_2, b_3, ..., b_{l})$$, the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover, and sets $G_1\overset{def}{=}g_{1}(r_1)$.
+\item In $i$-th round, where $2\le i \le l-1$, the prover sends $$g_{i}(x_{i})\overset{def}{=}\sum_{b_{i+1}\in\{0,1\}}\sum_{b_{i+2}\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(r_1, r_2, ..., r_{i-1}, x_{i}, b_{i+1}, b_{i+2}, ..., b_{l})$$. Then the verifier checks $G_{i-1}=g_{i}(0)+g_{i}(1)$, and then sends a random number $r_{i}$ to prover. The verifier sets $G_{i}\overset{def}{=}g_{i}(r_{i})$.
+\item In $l$-th round, the prover sends $$g_{l}(x_{l})\overset{def}{=}g(r_1, r_2, ..., r_{l-1}, x_{l})$$, the verifier checks $G_{l-1}=g_{l}(0)+g_{l}(1)$. Then verifier generate a random number $r_{l}$ and sets $G_{l}\overset{def}{=}g_{l}(r_{l})$. The verifier also compute $Answer\overset{def}{=}g(r_1, r_2, ..., r_{l})$ locally. Verifier will accept iff $G_{l}=Answer$.
 \end{itemize}
 \end{protocol}
 
 \begin{definition}[\textbf{Multi-linear Extension}]
-	Let $V:{0, 1}^l \rightarrow \mathbb{F}$ be a function. A multi-linear extension is a unique polynomial $V: \mathbb{F}^l \rightarrow \mathbb{F}$
+	Let $V:\{0, 1\}^l \rightarrow \mathbb{F}$ be a function. A \textit{multi-linear extension} is a unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ defined as:
+	$$\tilde{V}(x_1, x_2, ..., x_{l})\overset{def}{=}\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
+	where $b_i$ is $i$-th bit of b. 
 \end{definition}
 
+\subsection{CMT Protocol}
+CMT Protocol (Cormode et al.)\cite{CMT} is based on the work of Goldwasser et al. \cite{GKR}, gives us a efficient implementation of GKR protocol. We will futhur improve CMT protocol to optimal prover time and make it zero knowledge without any assumption on the circuit. In this section, we will introduce the original CMT protocol here.
 
+Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite field $\mathbb{F}$. The gates in $i$-th layer takes input from $i-1$-th layer and output to $i+1$-th layer; first layer is the input layer, last layer is the output layer. 
