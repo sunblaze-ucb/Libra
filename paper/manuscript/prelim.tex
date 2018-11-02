@@ -39,7 +39,4 @@ The protocol proceeds in $l$ rounds.
 	where $b_i$ is $i$-th bit of b. 
 \end{definition}
 
-\subsection{CMT Protocol}
-CMT Protocol (Cormode et al.)\cite{CMT} is based on the work of Goldwasser et al. \cite{GKR}, gives us a efficient implementation of GKR protocol. We will futhur improve CMT protocol to optimal prover time and make it zero knowledge without any assumption on the circuit. In this section, we will introduce the original CMT protocol here.
-
-Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite field $\mathbb{F}$. The gates in $i$-th layer takes input from $i-1$-th layer and output to $i+1$-th layer; first layer is the input layer, last layer is the output layer. 
+\input{CMT}
