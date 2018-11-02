@@ -5,7 +5,7 @@ In this section, we will introduce some useful results and definitions.
 Traditional proof involves two static objects: a prover $\mathcal{P}$ and a verifier $\mathcal{V}$. The prover $\mathcal{P}$ takes a statement $x$ as input and generate a string $\pi$ as a proof, then the verifier $\mathcal{V}$ checks if the statement $x$ and proof $\pi$ are correct. A interactive proof is a stronger notion of proof, it allows a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ of the validity of some statement. The interactive proof runs in several rounds, allows the verifier to ask questions in each round based on prover's answers of previous rounds. We phrase this in term of $\mathcal{P}$ trying to convince $\mathcal{V}$ that $f(x)=1$. The proof system is interesting iff the running time of $\mathcal{V}$ is less than the time of directly computing the function $f$.
 
 We formalize the "interactive proof" in the following:
-
+https://www.overleaf.com/project/5bda2d6969cdac040f3771af
 \begin{definition}
 Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for f with soundness $\epsilon$ if the following holds:
 \begin{itemize}
