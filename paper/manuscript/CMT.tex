@@ -5,5 +5,17 @@ CMT Protocol (Cormode et al.)\cite{CMT} is based on the work of Goldwasser et al
 
 Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite field $\mathbb{F}$. The gates in $i$-th layer takes input from $i+1$-th layer and outputs to $i-1$-th layer; layer $0$ is the output layer, and layer $d$ is the input layer. 
 
-The protocol proceeds layer by layer. The prover starts by sending the output value to the verifier. Then the protocol starts from the output layer. In $i$-th round the verifier.
+The protocol proceeds layer by layer. The prover starts by sending the output value to the verifier. Then the protocol starts from the output layer. In $i$-th round both party runs the sum check protocol on the previous prover's claim, for the first round, they run check sumcheck to check the output. The sumcheck will eventually reduce the claim into the evalution to one specific point. Each point of current layer corresponds to two point of next layer. The verifier then reduce these two points into one point. And recursively check on this point of next layer. For the final input layer, the verifier checks the claim by calculating the value by himself.
 
+\subsubsection{Protocol Details}
+We define the polynomial for each layer as follows:
+\begin{definition}
+$$V_i(g)=\sum_{u, v \in \{0,1\}^{s_{i+1}}}(add_{i+1}(g,u,v)(V_{i+1}(u)+V_{i+1}(v))+mult_{i+1}(g,u,v)(V_{i+1}(u)V_{i+1}(v)))$$
+where the gates are numbered by the binary label, $2^{s_i}$ is the number of gates in $i$-th layer, and $V_i(g)$ means the output of gate $g$ of $i$-th layer.
+\end{definition}
+
+We futher define the multi-linear extension of this polynomial.
+
+\begin{definition}
+$$\tilde{V}_{i}(z)\overset{def}{=}\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}$$
+\end{definition}
