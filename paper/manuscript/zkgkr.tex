@@ -1,0 +1,60 @@
+\section{Zero Knowledge Sumcheck}
+
+In $GKR$ protocol，for every layer of the circuit, the prover needs to prove one equation to verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck.\\
+
+\noindent
+For sumcheck protocol, the prover needs to prove $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}f(x_1, x_2, \cdots, x_n)$ to the verifier. And the verifier accepts it if and only if the verifier verifies $a = f(r_1, r_2, \cdots, r_n)$, where $r_1, r_2, \cdots, r_n$ are randomly chosen by verifier and $a$ is given by the prover, at the end of the protocol. We could use verifiable polynomial delegation to help verifier verify the value of $f(r_1, r_2, \cdots, r_n)$. So Zero knowledge sumcheck means that the verifier could learn nothing about the polynomial $f$ except for the value of $a$.\\
+
+\noindent
+So the idea to make sumcheck protocol zero knowledge is very easy. We hope to use another sumcheck polynomial with the same degree and variables to mask $\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}f(x_1, x_2, \cdots, x_n)$. In addition, we hope that the mask polynomial is as simple as possible since the time complexity of verifiable polynomial delegation is related to the number of items in the polynomial.\\
+
+\noindent
+Consider the simplest example, where $f(x_1, x_2, \cdots, x_n)$ is a multilinear polynomial or the degree of $f$ is only one. Then we hope to use $g(x_1, x_2, \cdots, x_n) = a_0 + a_1x_1 + a_2x_2 + \cdots + a_nx_n$ to mask $f$, where $a_0, a_1, \cdots, a_n$ is randomly chosen from $\mathbb{F}$. Suppose that $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}g(x_1, x_2, \cdots, x_n)$ and we would use the sumcheck protocol to verify
+
+$$a + b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}[f(x_1, x_2, \cdots, x_n) + g(x_1, x_2, \cdots, x_n)]$$. 
+
+In sumcheck protocol, we know that in the beginning, the prover sends $a + b$ to the verifier. Later on, the prover sends $g_i(x_i)$to the verifier in round $i$, where $1 \leq i \leq n$. And the verifier verifies $g_i(0) + g_i(1) = g_{i-1}(r_{i-1})$. Finally, the verifier queries $f(r_1, r_2, \cdots, r_n)$ and verifies whether it equals to $g_n(r_n)$.\\
+
+\noindent
+In our simple example, where $f$ and $g$ is multilinear, the prover could use $g_i(0)$ and $g_i(1)$ to replace $g_i(x_i)$. So we could construct our simulator $\mathcal{S}$. The simulator $\mathcal{S}$ given straightline access to $\mathcal{V^*}$ and the oracle access to $f$, works as follows
+
+\begin{enumerate}
+
+\item Draw a multilinear polynomial $Z_{sim} = a_0 + a_1x_1 + \cdots + a_nx_n$, where $a_0, a_1, \cdots, a_n$ are uniformly randomly chosen from $\mathbb{F}$. 
+
+\item Draw a multilinear polynomial $Q_{sim} = \in \mathbb{F}[x_{1, 2, \cdots, n}^{\leq 1}]$ uniform at random conditioned on $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$.
+
+\item Begin simulating $\mathcal{V}^*$. The simulator sends $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$ to $\mathcal{V}^*$. Then engage in the sumcheck protocol on the claim ``$\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n) + Z_{sim}(x_1, x_2, \cdots, x_n) = a + b$''. 
+
+\item Let $\vec{c} \in \mathbb{F}^n$ be the point chosen by $\mathcal{V}^*$ in the sumcheck protocol above. $\mathcal{V}^*$ utilizes the verifiable polynomial delegation(VPD) to verify the value of $Q_{sim}(\vec{r}) + Z_{sim}(\vec{r})$. 
+
+\item Finally, output the view of the simulated $\mathcal{V}^*$. 
+
+\end{enumerate} 
+
+Next, we need to prove this protocol is zero knowledge. Firstly, 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
