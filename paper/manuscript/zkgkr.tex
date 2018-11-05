@@ -1,6 +1,6 @@
 \section{Zero Knowledge Sumcheck}
 
-In $GKR$ protocol，for every layer of the circuit, the prover needs to prove one equation to verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck.\\
+In $GKR$ protocol, for every layer of the circuit, the prover needs to prove one equation to verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck.\\
 
 \noindent
 For sumcheck protocol, the prover needs to prove $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}f(x_1, x_2, \cdots, x_n)$ to the verifier. And the verifier accepts it if and only if the verifier verifies $a = f(r_1, r_2, \cdots, r_n)$, where $r_1, r_2, \cdots, r_n$ are randomly chosen by verifier and $a$ is given by the prover, at the end of the protocol. We could use verifiable polynomial delegation to help verifier verify the value of $f(r_1, r_2, \cdots, r_n)$. So Zero knowledge sumcheck means that the verifier could learn nothing about the polynomial $f$ except for the value of $a$.\\
