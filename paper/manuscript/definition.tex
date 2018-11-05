@@ -1,0 +1,31 @@
+\section{Zero knowledge proof}
+
+We have learned the interactive proof in the prelim part. We would introduce the zero knowledge proof system based on the interactive proof system in this section.\\
+
+\noindent
+\textbf{Argument Systems.} Let $R$ be an $NP$ relation. An argument system for $R$ is a protocol between
+computationally bounded prover $\mathcal{P}$ and a verifier $\mathcal{V}$ at the end of which $\mathcal{V}$ is convinced in the validity of a statement made by $\mathcal{P}$ of the from “there exists $w$ such that $(x; w) in R$” for some input $x$. In the sequel we focus on arguments of knowledge which have the stronger property that if the prover manages to convince
+the verifier of the statement’s validity, then the prover must know $w$. We use $\mathcal{G}$ to represent private key $pk$ and verificaiton key $vk$ generation phase. Formally, consider the definition below.
+
+\begin{definition}
+
+Let $R$ be an NP relation and let $\lambda$ be a security parameter. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero knowledge argument fro $R$ if the following holds.
+
+\begin{itemize}
+
+\item Correctness. For every $(vk, pk)$ output by $\mathcal{G}(1^\lambda)$ and $(x, w) \in R$ we have
+$$\langle \mathcal{P}(pk, w), \mathcal{V}(vk) \rangle(x) = accept$$
+
+\item Soundness. For any probabilistic polynomial time prover $\mathcal{P^*}$ there exists a probabilisitic polynomial extractore $\mathcal{\epsilon}$ which runs on the same randomness as $\mathcal{P^*}$ such that for any $x$ it holds that
+
+$$Pr[\langle\mathcal{P^*}(pk), \mathcal{V}(vk) \rangle(x) = accept \wedge (x, w) \in R] \leq neg(\lambda)$$
+
+\item Zero knowledge. There exists a probabilistic polynomial simulator $\mathcal{S}$ such that for any probabilistic polynomail time adversary $\mathcal{V^*}$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$ the following holds
+
+$$\{View_{V^*}(\mathcal{P}(x, w) \leftrightarrow \mathcal{V^*}(x, z))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(x, z)\}$$
+
+where $\simeq_{c}$ means computational inditinguishability. 
+
+\end{itemize}
+
+\end{definition}
