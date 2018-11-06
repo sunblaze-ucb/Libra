@@ -33,13 +33,14 @@ Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite
 
 The protocol proceeds layer by layer. The prover starts by sending the output value to the verifier. Then the protocol starts from the output layer. In $i$-th round both party runs the sum check protocol on the previous prover's claim, for the first round, they run check sumcheck to check the output. The sumcheck will eventually reduce the claim into the evalution to one specific random point. Each point of current layer $f_{i,z}(R_g,R_u,R_v)$, corresponds to two points of next layer $V_{i+1}(R_u), V_{i+1}(R_v)$. A simple idea is to recursively check these two points. However the number of threads will grow exponentially, which would result in a very inefficient protocol.
 
-Instead directly check two points, we can combine these two points into one by linear combination. And recursively check on the combined point of next layer. For the final input layer, the verifier checks the claim by calculating the value by himself.
+Instead of directly check two points, we can combine these two points into one by linear combination. And recursively check on the combined point of next layer. For the final input layer, the verifier checks the claim by calculating the value by himself.
 
 \subsubsection{Protocol Details}
 
 The CMT protocol do sumchecks on polynomial $V_{i}$ for each layer and reduces the claim to next layer polynomial $V_{i+1}$. We will explain the protocol in detail.
 
 \begin{protocol}
+\label{protocol::CMT}
 Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ is the prover and $\mathcal{V}$ is the prover. $\mathcal{P}$ wants to convince that $y=C(x)$ where $x$ is the input from the verifier $\mathcal{V}$, and $y$ is the output array, the detailed protocol:
 
 \begin{itemize}
@@ -58,3 +59,6 @@ Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^
 	\item The verifier accepts iff $a_d = \tilde{V_d}(r_d)$, where $\tilde{V_d}$ is the multi-linear extension representation of input layer.
 \end{itemize}
 \end{protocol}
+
+\begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::CMT} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {S}}{|\mathbb{F}|})$, where $S$ is the maximal number of gates per circuit layer. It uses $O(d \log S)$ rounds of interaction and running time of prover $\mathcal{P}$ is $O(|C|\log S)$. Let the optimal computation time for $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of the verifier is $O(n+k+dT)$, in some applications, $T=\poly{\log S}$.
+\end{theorem}
