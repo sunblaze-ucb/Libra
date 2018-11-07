@@ -1,3 +1,6 @@
+%!TEX root = fastZKP.tex
+
+
 \section{Zero Knowledge Sumcheck}
 
 In $GKR$ protocol, for every layer of the circuit, the prover needs to prove one equation to verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck.\\
@@ -22,7 +25,7 @@ In our simple example, where $f$ and $g$ is multilinear, the prover could use $g
 
 \item Draw a multilinear polynomial $Z_{sim} = a_0 + a_1x_1 + \cdots + a_nx_n$, where $a_0, a_1, \cdots, a_n$ are uniformly randomly chosen from $\mathbb{F}$. 
 
-\item Draw a multilinear polynomial $Q_{sim} = \in \mathbb{F}[x_{1, 2, \cdots, n}^{\leq 1}]$ uniform at random conditioned on $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$.
+\item Draw a multilinear polynomial $Q_{sim} \in \mathbb{F}[x_{1, 2, \cdots, n}^{\leqslant 1}]$ uniform at random conditioned on $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$.
 
 \item Begin simulating $\mathcal{V}^*$. The simulator sends $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$ to $\mathcal{V}^*$. Then engage in the sumcheck protocol on the claim ``$\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n) + Z_{sim}(x_1, x_2, \cdots, x_n) = a + b$''. 
 
@@ -32,7 +35,48 @@ In our simple example, where $f$ and $g$ is multilinear, the prover could use $g
 
 \end{enumerate} 
 
-Next, we need to prove this protocol is zero knowledge. Firstly, 
+Next, we need to prove this protocol is zero knowledge. Firstly, we argue that in the real world, the distribution of $F(x_1, x_2, \cdots, x_n)$ should be uniformly at random conditioned on
+$$\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n) = a$$.\\ 
+
+\noindent
+In every round $i$ of the sumcheck, the verifier only receives $h_i(0) = f_i(0) + g_i(0)$ and $h_i(1) = f_i(1) + g_i(1)$. Since the verifier knows $h_{i-1}(0) = f_i(0) + g_i(0)$ and $h_{i-1}(1) = f_{i-1}(0) + g_{i-1}(0)$ and the random number $r_{i-1}$ in last round, the verifier could get $h_{i}(1)$ itself if he knows $h_{i}(0)$ since $h_{i}(0) + h_{i}(1) = h_{i-1}(r_{i-1}) = (1 - r_{i-1})h_{i-1}(0) + r_{i-1}h_{i-1}(1)$ for honest prover. So the actual valid information for the verifier is $h_{1}(0), h_{2}(0), \cdots, h_{n}(0)$. We hope that the verifier could learn nothing of $F(x_1, x_2, \cdots, x_n)$ except for $a$ using these information. However, the mask polynomial $G(x_1, x_2, \cdots, x_n)$ would hide the information of $F$. Therefore, the verifier wants to remove the information of $G$ but remains some information about $F$. That is equavilent to $g(0), g_{1}(0), g_{2}(1), \cdots, g_{n}(0)$ are linear independent about random variables $a_0, a_1, \cdots, a_n$.
+
+\begin{proof}
+Consider that if we run the sumcheck only for $G(x_1, x_2, \cdots, x_n)$. The verifier could know exactly what $G(x_1, x_2, \cdots, x_n)$ is. The reason is that the verifier could know $g_{i}(0)$ and $g_{i}(1)$, and $G$ is a linear function of $x_i$, so it is easy to compute the coefficient of $x_i$, which is $a_i$ foo $i$ from 1 to $n$. Finally, since the verifier knows $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$, he could compute $a_0$. So the verifier could get the exact function $G$ after sumcheck.\\  
+
+Notice that in this sumcheck, the valid information for the verifier is still $g(0), g_{1}(0), \cdots, g_{n}(0)$. So the verifier has only $n + 1$ equations about $a_0, a_1, \cdots, a_n$ and could get the value of $a_0, a_1, \cdots, a_n$. Therefore, $g(0), g_{1}(0), \cdots, g_{n}(0)$ must be linear independent about random variables $a_0, a_1, \cdots, a_n$.
+\end{proof}
+
+That means $F$ and $Q_{sim}$ is inditinguishable for any verifier. Besides, both of $G$ and $Z_{sim}$ are uniformly at random, so they are also indistinguishable for the verifier. By hybrid argument, we could know that $\{View_{V^*}(\mathcal{P}(a, F) \leftrightarrow \mathcal{V^*}(a))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(a)\}$, which means it is zero knowledge.\\
+
+\noindent
+Now we could move to the general case, where the degree of $F$ is $d$. Using the same idea of mask polynomial, we could use the polynomial $G = a_{0} + G_1(x_1) + G_2(x_2) + \cdots + G_n(x_n)$, where $G_{i}(x_i) = a_{i1}x_i + a_{i2}x_i^2 + \cdots + a_{id}x_i^d$. And all coefficients of $G$ are uniformly randomly chosen from $\mathbb{F}$. And in the sumcheck protocol, the prover needs to send $d+1$ values $g_{i}(0), g_{i}(1), \cdots, g_i(d)$ to the verifier. And the zero knowledge proof is very similar to the above proof. 
+
+\section{zero knowledge GKR}
+
+For GKR protocol, if we want to make it zero knowledge. We hope that the verifier has no idea about the circuits. However, although we have above zero knowledge sum check protocol, the GKR protocol would still leak some information when it generates from current layer to the next layer. We hope to prevent this leakage.\\
+
+We introduce some notation before the proof. We denote by $Z(x_1, x_2, \cdots, x_n) = x_1(1-x_1)x_2(1-x_2) \cdots x_n(1-x_n)$, it is to easy to find that $Z(\vec{x})$ is zero on $\{0, 1\}^n$ and nonzero on $(\mathbb{F} - \{0, 1\})^n$. The intuition is as follows. We would like to use $Z(\vec{x}) \sum\limits_{c \in \{0, 1\}}R(\vec{x}, c)$ to mask $\tilde{V}(x)$ and get a low degree extension of $V(x)$.
+
+$$\dot{V}(\vec{x}) = \tilde{V}(\vec{x}) + Z(\vec{x})\sum\limits_{c \in \{0, 1\}} R(\vec{x}, c)$$
+
+Then we could do sumcheck protocol for $\dot{V}(\vec{x})$ together with the variable $c$. And in the final round of the sumcheck protocol for $\dot{V}(\vec{x})$, the prover would give $R(\vec{r}, r')$ to the verifier, where $\vec{r}, r'$ are randomly chosen by the verifier. We hope that even if the verifier know the value of $R(\vec{r}, r')$. It has no idea of $\sum\limits_{c \in \{0, 1\}}R(\vec{r}, c)$. That means the value of $\sum\limits_{c \in \{0, 1\}}R(\vec{r}, c)$ is still random from the verifier's perspective. For example, let $R(c) = a_0 + a_1c + a_2c^2$, even if the verifier know the value of $R(r) = a_0 + a_1r + a_2r^2$, it could not know $\sum\limits_{c \in \{0, 1\}}R(c)$. Consequently, it achieves the hideness of $\tilde{V}(\vec{x})$. There is a formal proof as follows.
+
+\begin{proof}
+\begin{align*}
+ \dot{V}_{i}(z) &\overset{def}{=}\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}\tilde{\beta}(z, g)\tilde{mult}(g, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))+\tilde{add}(g,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
+ &+ Z_i(\vec{z})\sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c)\\
+ &= \sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}c \in \{0, 1\}}[c\tilde{\beta}(z, g)\tilde{mult}(g, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))+\tilde{add}(g,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
+ &+ I((\vec{g}, \vec{u}, \vec{v}), \vec{0})Z_i(\vec{z})\sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c)]
+\end{align*}
+$I((\vec{g}, \vec{u}, \vec{v}), \vec{0}) = 1$ if $(\vec{g}, \vec{u}, \vec{v}) = \vec{0}$, otherwise $I((\vec{g}, \vec{u}, \vec{v}), \vec{0}) = 0$. Observe first that $R_i$ is a perfectly-hiding commitment to the random polynomial $S_i(\vec{z}) = \sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c)$, and so $S_i(\vec{z})$ itself is uniformly random even conditioned on only one query to $R_i$. \\
+
+\begin{enumerate}
+
+\item For every layer function $\tilde{V}(\vec{z})$, sample $R_i$
+\end{enumerate} 
+\end{proof}
+
 
 
 
