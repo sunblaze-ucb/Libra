@@ -4,6 +4,24 @@
 
 Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for short) is a important building block for our zero knowledge construction. We will use the construction from Zhang et al. \cite{zkvpd}.
 
+\subsubsection{Cryptographic Assumptions}
+
+\begin{assumption}[$q$-Strong Diffie-Hellman]
+	\label{asp::qSDH}
+	For any probabilistic polynomial time (PPT) adversary $\mathcal{A}$, the following holds:
+
+	\[\Pr\left[ \begin{aligned}
+		&bp \leftarrow BilGen(1^\lambda) & \\
+		&s \overset{R}{\leftarrow} \mathbb{Z}^{*}_{p} & : (x, e(g, g)^{\frac{1}{s+x}}) \leftarrow \mathcal{A}(1^\lambda, \sigma)\\
+		&\sigma = (bp, g^s, ..., g^{s^q})
+	\end{aligned} \right] \le \negl{(\lambda)}\]
+\end{assumption}
+\begin{assumption}[$(d,l)$-Extended Power Knowledge of Exponent]
+	\label{asp::dlEPKE}
+\end{assumption}
+
+\subsubsection{Scheme Description}
+
 \begin{definition}
 	\label{def::zkvpd}
 	\begin{enumerate}
