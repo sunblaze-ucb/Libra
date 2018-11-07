@@ -18,9 +18,22 @@ Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for sh
 \end{assumption}
 \begin{assumption}[$(d,l)$-Extended Power Knowledge of Exponent]
 	\label{asp::dlEPKE}
+	For any PPT adversary $\mathcal{A}$, there is a polynomial time algorithm $\mathcal{E}$ (takes the same randomness of $\mathcal{A}$ as input) such that for all benign auxiliary inputs $z \in \{0,1\}^{\poly{\lambda}}$ the following probability is negligible:
+	\[\Pr\left[ \begin{aligned}
+					bp \leftarrow BilGen(1^\lambda) & \\
+					s_1, ..., s_l, s_{l + 1}, \alpha \overset{R}{\leftarrow} Z_{p}^*, s_0=1 & \\
+					\sigma_1 = (\{g^{\prod_{i\in W}s_i}\}_{W\in \mathcal{W}_{l, d}, g^{s_{l+1}}}) &\hspace*{30pt} e(h, g^\alpha)=e(\tilde{h}, g)\\
+					\sigma_2 = (\{g^{\alpha\prod_{i\in Ws_i}}\}_{W\in \mathcal{W}_{l, d}}, g^{\alpha s_{l+1}}) & : \prod_{W\in \mathcal{W}_{l, d}}g^{a_{W}\prod_{i\in W}s_i}g^{b_{s_{l+1}}}\neq h\\
+					\sigma = (bp, \sigma_1, \sigma_2, g^{\alpha}) & \\
+					\mathbb{G} \times \mathbb{G} \ni (h, \tilde{h}) \leftarrow \mathcal{A} \left(1^{\lambda}, \sigma, z\right)& \\
+					\left( a _ { 0 } , \dots , a _ { \left| \mathcal { W } _ { \ell , d } \right| } , b \right) \leftarrow \mathcal { E } \left( 1 ^ { \lambda } , \sigma , z \right) &
+				\end{aligned}\right] \le \negl{(\lambda)}\]
 \end{assumption}
 
 \subsubsection{Scheme Description}
+
+\begin{theorem} Zhang et al.'s construction \cite{zkvpd} is a zero knowledge extractable verifiable polynomial-delegation protocol. For a variable-degree-$d$ $l$-variate polynomial $f \in \mathcal{F}$ with $m$ monomials, algorithm \textnormal{KeyGen} runs in time $O(\binom{ld+l}{ld})$, \textnormal{CommitPoly} in time $O(m)$, \textnormal{CommitValue} in time $O(ldm)$, \textnormal{Ver} in time $O(l)$ and \textnormal{CheckCom} in time $O(1)$. The commitment produced by \textnormal{CommitPoly} consists of $O(1)$ group elements and the proof produced by \textnormal{CommitPoly} consists of $O(l)$ group elements.
+\end{theorem}
 
 \begin{definition}
 	\label{def::zkvpd}
