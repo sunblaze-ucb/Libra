@@ -5,24 +5,24 @@
 \subsubsection{Notation}
 We define the polynomial for each layer as follows:
 \begin{definition} [Polynomial for the circuit]
-$$V_i(g)=\sum_{u, v \in \{0,1\}^{s_{i+1}}}(add_{i+1}(g,u,v)(V_{i+1}(u)+V_{i+1}(v))+mult_{i+1}(g,u,v)(V_{i+1}(u)V_{i+1}(v)))$$
-where the gates are numbered by the binary label, $2^{s_i}$ is the number of gates in $i$-th layer, and $V_i(g)$ means the output of gate $g$ of $i$-th layer.
+	$$V_i(g)=\sum_{u, v \in \{0,1\}^{s_{i+1}}}(add_{i+1}(g,u,v)(V_{i+1}(u)+V_{i+1}(v))+mult_{i+1}(g,u,v)(V_{i+1}(u)V_{i+1}(v)))$$
+	where the gates are numbered by the binary label, $2^{s_i}$ is the number of gates in $i$-th layer, and $V_i(g)$ means the output of gate $g$ of $i$-th layer.
 \end{definition}
 
 We futher define the multi-linear extension of this polynomial. Note $G_{i,add}$ denote all add gate triples in $i$-th layer and so does $G_{i,mult}$
 
 \begin{definition}[Multilinear extension of $V_i(g)$]
-\label{def::multilinear}
-$$\tilde{V}_{i}(z)=\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}f_{i,z}(g,u,v)$$
+	\label{def::multilinear}
+	$$\tilde{V}_{i}(z)=\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}f_{i,z}(g,u,v)$$
 
-$$f_{i,z}(g,u,v)\overset{def}{=}\tilde{\beta_{i}}(z, g)[\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))+\tilde{add}(g,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))]$$
-where $$\tilde{\beta_{i}}(z,g)\overset{def}{=}\prod_{j=1}^{s_{i}}((1-g_{j})(1-z_{j})+g_{j}z_{j})$$
+	$$f_{i,z}(g,u,v)\overset{def}{=}\tilde{\beta_{i}}(z, g)[\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))+\tilde{add}(g,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))]$$
+	where $$\tilde{\beta_{i}}(z,g)\overset{def}{=}\prod_{j=1}^{s_{i}}((1-g_{j})(1-z_{j})+g_{j}z_{j})$$
 
-$$\tilde{mult}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,mult}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
+	$$\tilde{mult}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,mult}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
 
-$$\tilde{add}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,add}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
+	$$\tilde{add}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,add}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
 
-when $a, b$ are binary strings, $\tilde{\beta_{i}}(a, b)$ will output $1$ when $a=b$, and $0$ otherwise. $\tilde{mult},\tilde{add}$ is the multilinear extension of the wiring predicates. A wiring predicates is a function of three gates $g_1, g_2, g_3$, and returns $1$ if $g_1$ takes $g_2, g_3$ as it's input.
+	when $a, b$ are binary strings, $\tilde{\beta_{i}}(a, b)$ will output $1$ when $a=b$, and $0$ otherwise. $\tilde{mult},\tilde{add}$ is the multilinear extension of the wiring predicates. A wiring predicates is a function of three gates $g_1, g_2, g_3$, and returns $1$ if $g_1$ takes $g_2, g_3$ as it's input.
 
 \end{definition}
 
@@ -40,24 +40,24 @@ Instead of directly check two points, we can combine these two points into one b
 The CMT protocol do sumchecks on polynomial $V_{i}$ for each layer and reduces the claim to next layer polynomial $V_{i+1}$. We will explain the protocol in detail.
 
 \begin{protocol}
-\label{protocol::CMT}
-Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ is the prover and $\mathcal{V}$ is the prover. $\mathcal{P}$ wants to convince that $y=C(x)$ where $x$ is the input from the verifier $\mathcal{V}$, and $y$ is the output array, the detailed protocol:
+	\label{protocol::CMT}
+	Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ is the prover and $\mathcal{V}$ is the prover. $\mathcal{P}$ wants to convince that $y=C(x)$ where $x$ is the input from the verifier $\mathcal{V}$, and $y$ is the output array, the detailed protocol:
 
-\begin{itemize}
-	\item Suppose without loss of generality, $|y|=2^k$, we can pad element if the actual length of $y$ is not a power of $2$.
-	\item By the definition of $V_i(j)$, $V_0(j)$ is $y_j$, $j$-th element of the output array. The verifier chooses uniform $r_0 \in \mathbb{F}^k$. Both parties set $a_0=\tilde{V_0}(r_0)$
-	\item For $i=1,...,d$:
 	\begin{itemize}
-		\item Both parties runs sumcheck protocol for $a_{i-1}$ on polynomial $\tilde{V_{i-1}}$, in the last step of sumcheck, verifier need to compute $f_{i,z}(R_{g}, R_{u}, R_{v})$ locally, where $R_{g}, R_{u}, R_{v}$ are chosen randomlly from $\mathbb{F}^{|g|},\mathbb{F}^{|u|},\mathbb{F}^{|v|}$. Here instead compute it locally, the verifier asks the prover to provide $v_0=\tilde{V_{i}}(R_{u}), v_1=\tilde{V_{i}}(R_{v})$ and using these value, the verifier can compute $f_{i,z}$.
-		\item Then the verifier combines $\tilde{V_{i}}(R_{u}), \tilde{V_{i}}(R_{v})$ in this way: 
+		\item Suppose without loss of generality, $|y|=2^k$, we can pad element if the actual length of $y$ is not a power of $2$.
+		\item By the definition of $V_i(j)$, $V_0(j)$ is $y_j$, $j$-th element of the output array. The verifier chooses uniform $r_0 \in \mathbb{F}^k$. Both parties set $a_0=\tilde{V_0}(r_0)$
+		\item For $i=1,...,d$:
 		\begin{itemize}
-			\item Let $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ be a line with $\gamma(0)=R_{u}, \gamma(1)=R_{v}$. 
-			\item The verifier sends $\gamma(x)$ to the prover. 
-			\item Then prover send a degree $s_i$ polynomial $h(x)=\tilde{V_{i}}(\gamma(x))$. The verifier verifies that $h(0)=v_0, h(1)=v_1$. And it compute $a_i=h(r_i)$ by randomly choose $r_i'$ and set $r_i=\gamma(r_i')$ and sends $r_i, a_i$ to prover.
+			\item Both parties runs sumcheck protocol for $a_{i-1}$ on polynomial $\tilde{V_{i-1}}$, in the last step of sumcheck, verifier need to compute $f_{i,z}(R_{g}, R_{u}, R_{v})$ locally, where $R_{g}, R_{u}, R_{v}$ are chosen randomlly from $\mathbb{F}^{|g|},\mathbb{F}^{|u|},\mathbb{F}^{|v|}$. Here instead compute it locally, the verifier asks the prover to provide $v_0=\tilde{V_{i}}(R_{u}), v_1=\tilde{V_{i}}(R_{v})$ and using these value, the verifier can compute $f_{i,z}$.
+			\item Then the verifier combines $\tilde{V_{i}}(R_{u}), \tilde{V_{i}}(R_{v})$ in this way: 
+			\begin{itemize}
+				\item Let $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ be a line with $\gamma(0)=R_{u}, \gamma(1)=R_{v}$. 
+				\item The verifier sends $\gamma(x)$ to the prover. 
+				\item Then prover send a degree $s_i$ polynomial $h(x)=\tilde{V_{i}}(\gamma(x))$. The verifier verifies that $h(0)=v_0, h(1)=v_1$. And it compute $a_i=h(r_i)$ by randomly choose $r_i'$ and set $r_i=\gamma(r_i')$ and sends $r_i, a_i$ to prover.
+			\end{itemize}
 		\end{itemize}
+		\item The verifier accepts iff $a_d = \tilde{V_d}(r_d)$, where $\tilde{V_d}$ is the multi-linear extension representation of input layer.
 	\end{itemize}
-	\item The verifier accepts iff $a_d = \tilde{V_d}(r_d)$, where $\tilde{V_d}$ is the multi-linear extension representation of input layer.
-\end{itemize}
 \end{protocol}
 
 \begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::CMT} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {S}}{|\mathbb{F}|})$, where $S$ is the maximal number of gates per circuit layer. It uses $O(d \log S)$ rounds of interaction and running time of prover $\mathcal{P}$ is $O(|C|\log S)$. Let the optimal computation time for $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of the verifier is $O(n+k+dT)$, in some applications, $T=\poly{\log S}$.

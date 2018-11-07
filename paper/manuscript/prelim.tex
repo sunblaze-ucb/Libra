@@ -6,11 +6,11 @@ Traditional proof involves two static objects: a prover $\mathcal{P}$ and a veri
 
 We formalize the "interactive proof" in the following:	
 \begin{definition}
-Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for f with soundness $\epsilon$ if the following holds:
-\begin{itemize}
-	\item {\bf Completeness.} For every $x$ such that $f(x) = 1$ it holds that $\Pr[\langle\mathcal{P}, \mathcal{V}\rangle(x)=accept]=1$.
-	\item {\bf $\epsilon$-Soundness.} For any $x$ with $f(x) \neq 1$ and any $\mathcal{P}^*$ it holds that $\Pr[\langle\mathcal{P^*},\mathcal{V}\rangle=accept] \le \epsilon$
-\end{itemize}
+	Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for f with soundness $\epsilon$ if the following holds:
+	\begin{itemize}
+		\item {\bf Completeness.} For every $x$ such that $f(x) = 1$ it holds that $\Pr[\langle\mathcal{P}, \mathcal{V}\rangle(x)=accept]=1$.
+		\item {\bf $\epsilon$-Soundness.} For any $x$ with $f(x) \neq 1$ and any $\mathcal{P}^*$ it holds that $\Pr[\langle\mathcal{P^*},\mathcal{V}\rangle=accept] \le \epsilon$
+	\end{itemize}
 \end{definition}
 
 \subsection{Sum Check Protocol}
@@ -18,18 +18,18 @@ The sum check problem is a fundamental problem that serves as a building block f
 Using this protocol, even a polynomial bounded verifier can verify the statement above. Now we formally define the problem and provide a description of the protocol.
 
 \begin{definition}
-Let $g$ be a $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
+	Let $g$ be a $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
 
-$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
+	$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
 \end{definition}
 
 \begin{protocol}[\textbf{Sum Check}]
-The protocol proceeds in $l$ rounds. 
-\begin{itemize}
-\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(x_1, b_2, b_3, ..., b_{l})$$, the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover, and sets $G_1\overset{def}{=}g_{1}(r_1)$.
-\item In $i$-th round, where $2\le i \le l-1$, the prover sends $$g_{i}(x_{i})\overset{def}{=}\sum_{b_{i+1}\in\{0,1\}}\sum_{b_{i+2}\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(r_1, r_2, ..., r_{i-1}, x_{i}, b_{i+1}, b_{i+2}, ..., b_{l})$$. Then the verifier checks $G_{i-1}=g_{i}(0)+g_{i}(1)$, and then sends a random number $r_{i}$ to prover. The verifier sets $G_{i}\overset{def}{=}g_{i}(r_{i})$.
-\item In $l$-th round, the prover sends $$g_{l}(x_{l})\overset{def}{=}g(r_1, r_2, ..., r_{l-1}, x_{l})$$, the verifier checks $G_{l-1}=g_{l}(0)+g_{l}(1)$. Then verifier generate a random number $r_{l}$ and sets $G_{l}\overset{def}{=}g_{l}(r_{l})$. The verifier also compute $Answer\overset{def}{=}g(r_1, r_2, ..., r_{l})$ locally. Verifier will accept iff $G_{l}=Answer$.
-\end{itemize}
+	The protocol proceeds in $l$ rounds. 
+	\begin{itemize}
+		\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(x_1, b_2, b_3, ..., b_{l})$$, the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover, and sets $G_1\overset{def}{=}g_{1}(r_1)$.
+		\item In $i$-th round, where $2\le i \le l-1$, the prover sends $$g_{i}(x_{i})\overset{def}{=}\sum_{b_{i+1}\in\{0,1\}}\sum_{b_{i+2}\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(r_1, r_2, ..., r_{i-1}, x_{i}, b_{i+1}, b_{i+2}, ..., b_{l})$$. Then the verifier checks $G_{i-1}=g_{i}(0)+g_{i}(1)$, and then sends a random number $r_{i}$ to prover. The verifier sets $G_{i}\overset{def}{=}g_{i}(r_{i})$.
+		\item In $l$-th round, the prover sends $$g_{l}(x_{l})\overset{def}{=}g(r_1, r_2, ..., r_{l-1}, x_{l})$$, the verifier checks $G_{l-1}=g_{l}(0)+g_{l}(1)$. Then verifier generate a random number $r_{l}$ and sets $G_{l}\overset{def}{=}g_{l}(r_{l})$. The verifier also compute $Answer\overset{def}{=}g(r_1, r_2, ..., r_{l})$ locally. Verifier will accept iff $G_{l}=Answer$.
+	\end{itemize}
 \end{protocol}
 
 \begin{definition}[\textbf{Multi-linear Extension}]
