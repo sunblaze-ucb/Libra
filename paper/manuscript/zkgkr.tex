@@ -52,53 +52,91 @@ That means $F$ and $Q_{sim}$ is inditinguishable for any verifier. Besides, both
 \noindent
 Now we could move to the general case, where the degree of $F$ is $d$. Using the same idea of mask polynomial, we could use the polynomial $G = a_{0} + G_1(x_1) + G_2(x_2) + \cdots + G_n(x_n)$, where $G_{i}(x_i) = a_{i1}x_i + a_{i2}x_i^2 + \cdots + a_{id}x_i^d$. And all coefficients of $G$ are uniformly randomly chosen from $\mathbb{F}$. And in the sumcheck protocol, the prover needs to send $d+1$ values $g_{i}(0), g_{i}(1), \cdots, g_i(d)$ to the verifier. And the zero knowledge proof is very similar to the above proof. 
 
-\section{zero knowledge GKR}
+\section{Zero knowledge GKR}
 
-For GKR protocol, if we want to make it zero knowledge. We hope that the verifier has no idea about the circuits. However, although we have above zero knowledge sum check protocol, the GKR protocol would still leak some information when it generates from current layer to the next layer. We hope to prevent this leakage.\\
+For GKR protocol, if we want to make it zero knowledge. We hope that the verifier has no idea about the input and the value of the gates in the circuit $C$. However, although we have above zero knowledge sum check protocol, the GKR protocol would still leak some information when it generates from current circuit layer to next circuit layer. We hope to prevent this leakage.\\
 
-We introduce some notation before the proof. We denote by $Z(x_1, x_2, \cdots, x_n) = x_1(1-x_1)x_2(1-x_2) \cdots x_n(1-x_n)$, it is to easy to find that $Z(\vec{x})$ is zero on $\{0, 1\}^n$ and nonzero on $(\mathbb{F} - \{0, 1\})^n$. The intuition is as follows. We would like to use $Z(\vec{x}) \sum\limits_{c \in \{0, 1\}}R(\vec{x}, c)$ to mask $\tilde{V}(x)$ and get a low degree extension of $V(x)$.
+We introduce some notations before the proof. We denotes by $Z(z_1, z_2, \cdots, z_n) = z_1(1-z_1)z_2(1-z_2) \cdots z_n(1-z_n)$, it is to easy to find that $Z(z)$ is zero on $\{0, 1\}^n$ and nonzero on $(\mathbb{F} - \{0, 1\})^n$. The intuition is as follows. We would like to use $Z(z) \sum\limits_{c \in \{0, 1\}}R(z, c)$ to mask $V(z)$ and get a low degree extension of $V(z)$.
 
-$$\dot{V}(\vec{x}) = \tilde{V}(\vec{x}) + Z(\vec{x})\sum\limits_{c \in \{0, 1\}} R(\vec{x}, c)$$
-
-Then we could do sumcheck protocol for $\dot{V}(\vec{x})$ together with the variable $c$. And in the final round of the sumcheck protocol for $\dot{V}(\vec{x})$, the prover would give $R(\vec{r}, r')$ to the verifier, where $\vec{r}, r'$ are randomly chosen by the verifier. We hope that even if the verifier know the value of $R(\vec{r}, r')$. It has no idea of $\sum\limits_{c \in \{0, 1\}}R(\vec{r}, c)$. That means the value of $\sum\limits_{c \in \{0, 1\}}R(\vec{r}, c)$ is still random from the verifier's perspective. For example, let $R(c) = a_0 + a_1c + a_2c^2$, even if the verifier know the value of $R(r) = a_0 + a_1r + a_2r^2$, it could not know $\sum\limits_{c \in \{0, 1\}}R(c)$. Consequently, it achieves the hideness of $\tilde{V}(\vec{x})$. There is a formal proof as follows.
-
-\begin{proof}
 \begin{align*}
- \dot{V}_{i}(z) &\overset{def}{=}\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}\tilde{\beta}(z, g)\tilde{mult}(g, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))+\tilde{add}(g,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
- &+ Z_i(\vec{z})\sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c)\\
- &= \sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}c \in \{0, 1\}}[c\tilde{\beta}(z, g)\tilde{mult}(g, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))+\tilde{add}(g,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
- &+ I((\vec{g}, \vec{u}, \vec{v}), \vec{0})Z_i(\vec{z})\sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c)]
+\dot{V}_{i}(z) \overset{def}{=}\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}\tilde{\beta}(z, g)\tilde{mult}(g, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))&+\tilde{add}(g,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
+ &+ Z_i(z)\sum\limits_{c \in \{0, 1\}}R_i(z, c)\\
 \end{align*}
-$I((\vec{g}, \vec{u}, \vec{v}), \vec{0}) = 1$ if $(\vec{g}, \vec{u}, \vec{v}) = \vec{0}$, otherwise $I((\vec{g}, \vec{u}, \vec{v}), \vec{0}) = 0$. Observe first that $R_i$ is a perfectly-hiding commitment to the random polynomial $S_i(\vec{z}) = \sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c)$, and so $S_i(\vec{z})$ itself is uniformly random even conditioned on only one query to $R_i$. Considering the time complexity, we hope the function $R_i$ is as small as possible. Hence, we define $R_i(\vec{z}, c) = R_i'(z_1, c)$, where $R_i'(z_1, c)$ is a random function of two variables with degree two.\\ 
+
+\begin{align*}
+\dot{V}_{i}(z) = \sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}c \in \{0, 1\}}[c\tilde{\beta}(z, g)\tilde{mult}(g, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))&+\tilde{add}(g,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
+ &+ I((\vec{g}, \vec{u}, \vec{v}), \vec{0})Z_i(z)\sum\limits_{c \in \{0, 1\}}R_i(z, c)]
+\end{align*}
+$I((\vec{g}, \vec{u}, \vec{v}), \vec{0}) = 1$ if $(\vec{g}, \vec{u}, \vec{v}) = \vec{0}$, otherwise $I((\vec{g}, \vec{u}, \vec{v}), \vec{0}) = 0$. Then we could do sumcheck protocol for $\dot{V}_i(z)$ together with the variable $c$. And in the final round of the sumcheck protocol for $\dot{V}_i(z)$, the prover would give $R_i(r, p)$ to the verifier, where $r \in \mathbb{F}^{s_i}, p \in \mathbb{F}$ are randomly chosen by the verifier. We hope that even if the verifier know the value of $R_i(r, p)$. It has no idea of $\sum\limits_{c \in \{0, 1\}}R_i(r, c)$. That means the value of $\sum\limits_{c \in \{0, 1\}}R(r, c)$ is still random from the verifier's perspective. Consequently, it achieves the hideness of $V(z)$. Observe first that $R_i$ is a perfectly-hiding commitment to the random polynomial $S_i(z) = \sum\limits_{c \in \{0, 1\}}R_i(z, c)$, and so $S_i(z)$ itself is uniformly random even conditioned on only one query to $R_i$. Considering the time complexity, we hope the function $R_i$ is as small as possible. Hence, we define $R_i(z, c) = R_i'(z_1, c)$, where $R_i'(z_1, c)$ is a random function of two variables with degree two. There is a formal protocol as follows.\\ 
+
+\begin{enumerate} 
+\item The prover $\mathcal{P}$ gives $\text{Output}$ of the circuit $\dot{V}_0(0)$ to the verifier $\mathcal{V}$. 
+\item $\mathcal{P}$ samples $R_1(X, Y), R_2(X, Y), \cdots, R_d(X, Y)$ randomly from $\mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$
+\item $\mathcal{P}$ and $\mathcal{V}$ run the zero knowledge sumcheck protocol on the claim:
+$$\dot{V}_0(0) = \sum_{g\in\{0,1\} u, v\in \{0,1\}^{s_1}}\tilde{\beta}(0, g)\tilde{mult}(g, u, v)(\dot{V}_1(u)\dot{V}_1(v))+\tilde{add}(g,u,v)(\dot{V}_1(u)+\dot{V}_1(v))$$
+
+At the end of the sumcheck protocol, $\mathcal{P}$ sends $\dot{V}_1(r)$ and $\dot{V}_1(s)$ to $\mathcal{V}$ if $r_1 \neq s_1$, where $r, s$ are randomly chosen by $\mathcal{V}$, If $r_1 = s_1$ $\mathcal{P}$ aborts. If it does not pass the sum check protocol, $\mathcal{V}$ rejects. 
+
+\item For layer $i(1 \leq i \leq d - 1)$:
+	\begin{itemize}
+	\item $\mathcal{V}$ samples $\alpha_1, \alpha_2$ at random and sends them to $\mathcal{P}$.
+	\item $\mathcal{V}$ and $\mathcal{P}$ run the zero knowledge sumcheck on the claim
+	$$\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$$
+	Let $z^{(1)} = r$ and $z^{(2)} = s$.
+	\item At the end of the sumcheck protocol, $\mathcal{P}$ receives the random vector $t, r, s, p$ with $t \in (\mathbb{F} - \{0, 1\})^{s_i}$ $r, s \in (\mathbb{F} - \{0, 1\})^{s_{i+1}}$ and $p \in \mathbb{F}$. 
+	\begin{align*}
+		\sum_{j = 1, 2} \alpha_j (\tilde{\beta}(z^{(j)}, t)\tilde{mult}(t, r, s)(\dot{V}_{i+1}(r)\dot{V}_{i+1}(s))&+\tilde{add}(t,r,s)(\dot{V}_{i+1}(r)+\dot{V}_{i+1}(s))\\
+ 		&+ Z_i(z^{(j)})\sum\limits_{c \in \{0, 1\}}R_i(z^{(j)}_1, c))
+	\end{align*}
+	\item If $r_1 = s_1$, abort. 
+	\item $\mathcal{P}$ replies with the value $a_r = \dot{V}_{i+1}(r)$, $a_s = \dot{V}_{i+1}(s)$ and $a, b$.
+	\item $\mathcal{P}$ and $\mathcal{V}$ run zero knowledge VPD on claims $a = R_i(z^{(1)}_1, p)$ and $b = R_i(z^{(2)}_1, p)$. If $\mathcal{P}$ does not pass the sumcheck protocol or VPD protocol, $\mathcal{V}$ rejects.
+	\end{itemize}
+
+\item For input layer $d$, $\mathcal{P}$ and $\mathcal{V}$ run the zero knowledge VPD protocol on the claim $\dot{V}_d(r) = \tilde{V}_d(r) + \sum\limits_{c \in \{0, 1\}}R(r_1, c)$ and $\dot{V}_d(s) = \tilde{V}_d(s) + \sum\limits_{c \in \{0, 1\}}R(s_1, c)$. $\mathcal{V}$ accepts if $\mathcal{P}$ passes the zero knowledge VPD protocol. Otherwise, $\mathcal{V}$ rejects. 
+\end{enumerate}
+
+\noindent
+\textbf{Completeness}. The completeness property immediately follows from the construction of the protocol and the completeness of zero knowledge sumcheck and zero knowledge VPD. WE now proceed to argue about the soundness.
+
+\noindent
+\textbf{Soundness}. Let $\mathcal{P}^*$ be an cheating prover which convinces $\mathcal{V}$ of a claim ``Output = C(Input)'' for some Input and C such that Output $\neq$ C(Input). That means $\dot{V_0(0)} \neq \text{Output}$ in the beginning of the protocol. We claim that if the exists $\dot{V}_i(r) \neq a_r$, then after this iteration with high probability either $(a)$ $\mathcal{V}$ rejects, or $(b)$ in the next iteration, $\dot{V}_{i+1}(r) \neq a_r$ or $\dot{V}_{i+1}(s) \neq a_s$.
+
+\noindent
+\textbf{Zero knowledge}. We prove that the protocol's has perfect zero knowledge by exhibiting a polynomial-time simulator $\mathcal{S}$ with $\text{Ouptut}$ and the circuit $C$ that perfectly samples the view of any malicious verifier. 
 
 \begin{enumerate}
 
-\item For every layer $i(0 \leq i \leq d)$ and the function $\dot{V}_i(\vec{z})$, sample $R_i^{sim} \in \mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$ uniformly at random. Use $R_i^{sim}$ to answer queries to $R_i$.
+\item For every layer $i(0 \leq i \leq d)$ and the function $\dot{V}_i(\vec{z})$, sample $R_i^{sim} \in \mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$ uniformly at random satisfying some conditions. Use $R_i^{sim}$ to answer queries to $R_i$.
 
 \item For every layer function $\dot{V}_i(\vec{z})$, run the zero knowledge sumcheck simulator on input $(\mathbb{F}, \cdot)$, and use it to answer quries of the verifier $\mathcal{V}^*$. 
 
+\item For the output layer(layer $0$), run the zero knowledge sumcheck simulator on the claim
+
+$$\text{Output} = \dot{V}_0(0) = \sum_{g\in\{0,1\} u, v\in \{0,1\}^{s_1}}\tilde{\beta}(0, g)\tilde{mult}(g, u, v)(\dot{V}_1(u)\dot{V}_1(v))+\tilde{add}(g,u,v)(\dot{V}_1(u)+\dot{V}_1(v))$$ 
+At the end of the zero knowledge sumcheck protocol, the simulator receives the random vector $\vec{q} = (t, \vec{r}, \vec{s})$ with with $t \in \mathbb{F}$ and $\vec{r}, \vec{s} \in \mathbb{F}^{s_1}$. If $r_1 = s_1$, abort. Otherwise, sample $\dot{V}_1(\vec{r})$ and $\dot{V}_1{\vec{s}}$ at random conditioned on satifying the sumcheck protocol. 
 \item For layer $i(1 \leq i \leq d - 1)$:
 	\begin{itemize}
 	\item Receive $\alpha_1$ and $\alpha_2$ from the verifier.
 	\item Using the subsimulator for $\dot{V}_i$, simulate the strong zero knowledge sumcheck protocol on the claim
-	$$\alpha_1 \dot{V}_i(\vec{r}_{(i+1)}) + \alpha_2 \dot{V}_i(\vec{s}_{(i+1)}) = \alpha_1 a_{\vec{r}_{(i)}} + \alpha_2 a_{\vec{s}_{(i)}}$$
-	\item Then the simulator receives the random vector $\vec{q}_{(i+1)} = (\vec{t}_{(i+1)}, \vec{r}_{(i+1)}, \vec{s}_{(i+1)}, p_{(i+1)})$ with $\vec{t}_{(i+1)} \in \mathbb{F}^{i}$ $\vec{r}_{(i+1)}, \vec{s}_{(i+1)} \in \mathbb{F}^{s_{i+1}}$ and $p_{i+1} \in \mathbb{F}$. Reply with the value
-
+	$$\alpha_1 \dot{V}_i(\vec{r}) + \alpha_2 \dot{V}_i(\vec{s}) = \alpha_1 a_{\vec{r}} + \alpha_2 a_{\vec{s}}$$
+	\item Then the simulator receives the random vector $\vec{q} = (\vec{t}, \vec{r}, \vec{s}, p)$ with $\vec{t} \in \mathbb{F}^{s_i}$ $\vec{r}, \vec{s} \in \mathbb{F}^{s_{i+1}}$ and $p \in \mathbb{F}$. 
+	\item If $r_1 = s_1$, abort. 
+	\item Otherwise, reply with the value
 	\begin{align}
-		\sum_{j = 1, 2} \alpha_j (\tilde{\beta}(z, \vec{t})\tilde{mult}(\vec{t}, \vec{r}, \vec{s})(\dot{V}_{i+1}(\vec{r})\dot{V}_{i+1}(\vec{s}))&+\tilde{add}(\vec{t},\vec{r},\vec{s})(\dot{V}_{i+1}(\vec{r})+\dot{V}_{i+1}(\vec{s}))\\
- 		&+ Z_i(\vec{z})\sum\limits_{c \in \{0, 1\}}R_i(\vec{z}, c))
+		\sum_{j = 1, 2} \alpha_j (\tilde{\beta}(\vec{z}, \vec{t})\tilde{mult}(\vec{t}, \vec{r}, \vec{s})(\dot{V}_{i+1}(\vec{r})\dot{V}_{i+1}(\vec{s}))&+\tilde{add}(\vec{t},\vec{r},\vec{s})(\dot{V}_{i+1}(\vec{r})+\dot{V}_{i+1}(\vec{s}))\\
+ 		&+ Z_i(\vec{z})\sum\limits_{c \in \{0, 1\}}R_i(z_1, c))
 	\end{align}
-	\item Sample $\dot{V}_{i+1}(\vec{r})$ and $\dot{V}_{i+1}(\vec{s})$ at random. And  
+	\item Sample $\dot{V}_{i+1}(\vec{r})$ and $\dot{V}_{i+1}(\vec{s})$ at random. And randomly choose the function $R^{sim}_i(X, Y)$ satisfying the above claim. The verifier does zero knowledge VPD on $R^{sim}_i(z_1, p)$.   
 	\end{itemize}
-\item For input layer $d$, use the zero knowledge VPD to answer $\dot{V}_d(\vec{r}_{(d)})$ and $\dot{V}_d(\vec{s}_{(d)})$.
+\item For input layer $d$, the verifier uses zero knowledge VPD to verify the values of $\dot{V}_d(\vec{r})$ and $\dot{V}_d(\vec{s})$.
 \end{enumerate} 
 
-If we want to make it zero knowledge. We need to prove that $\{View_{V^*}(\mathcal{P} \leftrightarrow \mathcal{V^*})\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}\}$. We claim that in the real world execution, the distribution of $\dot{V}_i(\vec{r})$ and $\dot{V}_i(\vec{s})$ are also uniformly at random in $\mathbb{F}$. In the real world, for every mask function $R_i$, the verifier only knows tha value of $R_i(r_1, p)$ and $R_i(s_1, p)$, where $r_1 \neq s_1$ and $r_1, s_1, p$ are randomly chosen by the verifier. If the verifier still have any no idea about the value of $\sum\limits_{c \in \{0, 1\}}R_i(r_1, c)$ and $\sum\limits_{c \in \{0, 1\}}R_i(s_1, c)$ conditioned on it, then $\dot{V}_i(\vec{r})$ and $\dot{V}_i(\vec{r})$ are uniformly at random.\\
+If we want to make it zero knowledge, we need to prove that $\{View_{V^*}(\mathcal{P}(\text{Output, C, Input}) \leftrightarrow \mathcal{V^*}(\text{Output, C}))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(\text{Output, C})\}$. We claim that in the real world execution, the distribution of $\dot{V}_i(\vec{r})$ and $\dot{V}_i(\vec{s})$ are also uniformly at random in $\mathbb{F}$. In the real world, for every mask function $R_i$, the verifier only knows the value of $R_i(r_1, p)$ and $R_i(s_1, p)$, where $r_1 \neq s_1$ and $r_1, s_1, p$ are randomly chosen by the verifier. If the verifier still have any no idea about the value of $\sum\limits_{c \in \{0, 1\}}R_i(r_1, c)$ and $\sum\limits_{c \in \{0, 1\}}R_i(s_1, c)$ conditioned on it, then $\dot{V}_i(\vec{r})$ and $\dot{V}_i(\vec{r})$ are uniformly at random.\\
 
-Therefore, we only need to claim that $R(s, r), R(t, r), \sum\limits_{c \in \{0, 1\}}R(s, c), \sum\limits_{c \in \{0, 1\}}R(t, c)$ are independent if $R(x, y)$ are uniformly sampled from $\mathbb{F}(X^{\leqslant 2}, Y^{\leqslant 2})$. That is because of algebraic query complexity of polynomial summation.  
+Therefore, we only need to claim that $R(s, r), R(t, r), \sum\limits_{c \in \{0, 1\}}R(s, c), \sum\limits_{c \in \{0, 1\}}R(t, c)$ are independent if $R(x, y)$ are uniformly sampled from $\mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$ and $s \neq t$. That is obvious since $s \neq t$ and both of the degrees of $X, Y$ are two. \\
 
-
-\end{proof}
+Other things are also distinguishable for the verifier $\mathcal{V^*}$ because of zero knowledge VPD protocol and zero knowledge sumcheck protocol. So our entire protocol is zero knowledge, which completes our proof.   
 
 
 
