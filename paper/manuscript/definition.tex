@@ -15,14 +15,14 @@ Let $R$ be an NP relation and let $\lambda$ be a security parameter. A tuple of 
 
 \begin{itemize}
 
-\item Correctness. For every $(vk, pk)$ output by $\mathcal{G}(1^\lambda)$ and $(x, w) \in R$ we have
+\item \textbf{Correctness}. For every $(vk, pk)$ output by $\mathcal{G}(1^\lambda)$ and $(x, w) \in R$ we have
 $$\langle \mathcal{P}(pk, w), \mathcal{V}(vk) \rangle(x) = accept$$
 
-\item Soundness. For any probabilistic polynomial time prover $\mathcal{P^*}$ there exists a probabilisitic polynomial extractore $\mathcal{\epsilon}$ which runs on the same randomness as $\mathcal{P^*}$ such that for any $x$ it holds that
+\item \textbf{Soundness}. For any probabilistic polynomial time prover $\mathcal{P^*}$ there exists a probabilisitic polynomial extractore $\mathcal{E}$ which runs on the same randomness as $\mathcal{P^*}$ such that for any $x$ it holds that
 
-$$Pr[\langle\mathcal{P^*}(pk), \mathcal{V}(vk) \rangle(x) = accept \wedge (x, w) \in R] \leq neg(\lambda)$$
+$$Pr[\langle\mathcal{P^*}(pk), \mathcal{V}(vk) \rangle(x) = accept \wedge (x, w) \notin R | w \leftarrow \mathcal{E}(pk, x)] \leq neg(\lambda)$$
 
-\item Zero knowledge. There exists a probabilistic polynomial simulator $\mathcal{S}$ such that for any probabilistic polynomail time adversary $\mathcal{V^*}$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$ the following holds
+\item \textbf{Zero knowledge}. There exists a probabilistic polynomial simulator $\mathcal{S}$ such that for any probabilistic polynomail time adversary $\mathcal{V^*}$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$ the following holds
 
 $$\{View_{V^*}(\mathcal{P}(x, w) \leftrightarrow \mathcal{V^*}(x, z))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(x, z)\}$$
 
