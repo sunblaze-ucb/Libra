@@ -76,7 +76,7 @@ Now we could move to the general case, where the individual degree of $F$ is $d$
 
 \section{Zero knowledge GKR}
 
-For GKR protocol, if we want to make it zero knowledge. We hope that the verifier has no idea about the input and the value of the gates in the circuit $C$. However, although we have above zero knowledge sum check protocol, the GKR protocol would still leak some information when it generates from current circuit layer to next circuit layer. We hope to prevent this leakage.\\
+For GKR protocol, we want to make it zero knowledge since we hope that the verifier has no idea about the input and the value of the gates in the circuit $C$. However, although we have above zero knowledge sumcheck protocol, the GKR protocol would still leak some information when it generates from current circuit layer to next circuit layer. We try to prevent this leakage.\\
 
 We introduce some notations before the proof. We denotes by $Z(z_1, z_2, \cdots, z_n) = z_1(1-z_1)z_2(1-z_2) \cdots z_n(1-z_n)$, it is to easy to find that $Z(z)$ is zero on $\{0, 1\}^n$ and nonzero on $(\mathbb{F} - \{0, 1\})^n$. The intuition is as follows. We would like to use $Z(z) \sum\limits_{c \in \{0, 1\}}R(z, c)$ to mask $V(z)$ and get a low degree extension of $V(z)$.
 
