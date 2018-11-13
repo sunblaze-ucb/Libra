@@ -11,19 +11,44 @@ We define the polynomial for each layer as follows:
 
 We futher define the multi-linear extension of this polynomial. Note $G_{i,add}$ denote all add gate triples in $i$-th layer and so does $G_{i,mult}$
 
+\begin{definition}[Multilinear extension of identity fucntion]
+Here we present a multilinear extension of identity function
+\begin{eqnarray}\beta_{l}(a, b)=
+	\begin{cases}
+	1, &a=b\cr 0, &a\neq b
+	\end{cases}
+\end{eqnarray}
+Where $a, b$ are binary strings with length $l$. The multilinear extension is the following:
+
+$$\tilde{\beta_{l}}(a,b)\overset{def}{=}\prod_{j=1}^{l}((1-a_{j})(1-b_{j})+a_{j}b_{j})$$
+
+We have $\tilde{\beta_{l}}(a,b)=\beta_{l}(a, b)$ when $a, b$ are binary.
+\end{definition}
+
+\begin{definition}[Multilinear extension of $add$, $mult$]
+We will define the multilinear extension of two component of $V_i$.
+$$\tilde{add}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, add}}\tilde{\beta}_{s_i}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')$$
+
+$$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_i}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')$$
+\end{definition}
+
 \begin{definition}[Multilinear extension of $V_i(g)$]
 	\label{def::multilinear}
-	$$\tilde{V}_{i}(z)=\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}f_{i,z}(g,u,v)$$
+	%$$\tilde{V}_{i}(z)=\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}f_{i,z}(g,u,v)$$
 
-	$$f_{i,z}(g,u,v)\overset{def}{=}\tilde{\beta_{i}}(z, g)[\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))+\tilde{add}(g,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))]$$
-	where $$\tilde{\beta_{i}}(z,g)\overset{def}{=}\prod_{j=1}^{s_{i}}((1-g_{j})(1-z_{j})+g_{j}z_{j})$$
+	%$$f_{i,z}(g,u,v)\overset{def}{=}\tilde{\beta_{i}}(z, g)[\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))+\tilde{add}(g,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))]$$
+	%where $$\tilde{\beta_{i}}(z,g)\overset{def}{=}\prod_{j=1}^{s_{i}}((1-g_{j})(1-z_{j})+g_{j}z_{j})$$
 
-	$$\tilde{mult}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,mult}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
+	%$$\tilde{mult}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,mult}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
 
-	$$\tilde{add}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,add}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
+	%$$\tilde{add}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,add}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
 
-	when $a, b$ are binary strings, $\tilde{\beta_{i}}(a, b)$ will output $1$ when $a=b$, and $0$ otherwise. $\tilde{mult},\tilde{add}$ is the multilinear extension of the wiring predicates. A wiring predicates is a function of three gates $g_1, g_2, g_3$, and returns $1$ if $g_1$ takes $g_2, g_3$ as it's input.
+	%when $a, b$ are binary strings, $\tilde{\beta_{i}}(a, b)$ will output $1$ when $a=b$, and $0$ otherwise. $\tilde{mult},\tilde{add}$ is the multilinear extension of the wiring predicates. A wiring predicates is a function of three gates $g_1, g_2, g_3$, and returns $1$ if $g_1$ takes $g_2, g_3$ as it's input.
 
+	We define the multilinear extension of $V_i(g)$ in the following way:
+
+	$$\tilde{V}_i(g)=\sum_{u, v \in \{0,1\}^{s_{i+1}}}(\tilde{add}_{i+1}(g, u, v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))+\tilde{mult}_{i+1}(g,u,v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v)))\textnormal{,}$$
+	where $\tilde{mult}$ and $\tilde{add}$ are multilinear extension of $mult$ and $add$.
 \end{definition}
 
 \subsubsection{High Level Ideas}
