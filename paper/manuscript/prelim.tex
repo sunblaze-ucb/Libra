@@ -14,7 +14,8 @@ We formalize the "interactive proof" in the following:
 	\end{itemize}
 \end{definition}
 
-\subsection{Sum Check Protocol}
+\subsection{Sumcheck Protocol}
+\label{subsec::sumcheck}
 The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_1, b_2, ..., b_{l})$ for a given polynomial $g(x_1, x_2, ..., x_{l})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
 Using this protocol, even a polynomial bounded verifier can verify the statement above. Now we formally define the problem and provide a description of the protocol.
 
