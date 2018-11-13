@@ -1,8 +1,8 @@
 %!TEX root = fastZKP.tex
 
-\section{Zero knowledge proof}
+\section{Zero knowledge proof}\label{ZKP}
 
-We have learned the interactive proof in the prelim part. We would introduce the zero knowledge proof system based on the interactive proof system in this section.\\
+We have learned the interactive proof in the preliminary. We would introduce the zero knowledge proof system based on the interactive proof system in this section.\\
 
 \noindent
 \textbf{Argument Systems.} Let $R$ be an $NP$ relation. An argument system for $R$ is a protocol between
@@ -24,9 +24,9 @@ $$Pr[\langle\mathcal{P^*}(pk), \mathcal{V}(vk) \rangle(x) = accept \wedge (x, w)
 
 \item \textbf{Zero knowledge}. There exists a probabilistic polynomial simulator $\mathcal{S}$ such that for any probabilistic polynomail time adversary $\mathcal{V^*}$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$ the following holds
 
-$$\{View_{V^*}(\mathcal{P}(x, w) \leftrightarrow \mathcal{V^*}(x, z))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(x, z)\}$$
+$$\{View_{V^*}(\mathcal{P}(x, w) \leftrightarrow \mathcal{V^*}(x, z))\} = \{\mathcal{S}^{\mathcal{V^*}}(x, z)\}$$
 
-where $\simeq_{c}$ means computational inditinguishability. 
+where $=$ means perfect zero knowledge. 
 
 \end{itemize}
 

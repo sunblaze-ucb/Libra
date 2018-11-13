@@ -1,10 +1,10 @@
 %!TEX root = fastZKP.tex
 
 
-\section{Zero Knowledge Sumcheck}
+\section{Zero Knowledge Sumcheck}\label{ZKSumcheck}
 \subsection{Intuition}
-In $GKR$ protocol, for every layer of the circuit, the prover needs to prove one equation to the verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck protocol.\\
-
+As presented in \nameref{}, In GKR protocol\cite{GKR}, for every layer of the circuit, the prover needs to prove one equation to the verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck protocol.\\
+{}
 \noindent
 For sumcheck protocol, the prover needs to prove $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ to the verifier. And the verifier accepts if and only if it verifies $f_{i-1}(r_{i-1}) = f_i(0) + f_i(1)$ for every round and $s = F(r_1, r_2, \cdots, r_n)$ at the end of the protocol, where $r_1, r_2, \cdots, r_n$ are randomly chosen by the verifier and $s$ is given by the oracle. We could use verifiable polynomial delegation(VPD) to be the oracle to confirm verifier the value of $F(r_1, r_2, \cdots, r_n)$. Zero knowledge sumcheck means that the verifier could learn nothing about the polynomial $F$ except for the value of $a$ and the query value of $s$ on $r_1, r_2, \cdots, r_n$.\\
 
