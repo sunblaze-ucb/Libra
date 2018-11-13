@@ -3,11 +3,11 @@
 \label{sec::prelim}
 In this section, we will introduce some useful results and definitions.
 \subsection{Interactive Proof}
-Traditional proof involves two static objects: a prover $\mathcal{P}$ and a verifier $\mathcal{V}$. The prover $\mathcal{P}$ takes a statement $x$ as input and generate a string $\pi$ as a proof, then the verifier $\mathcal{V}$ checks if the statement $x$ and proof $\pi$ are correct. A interactive proof is a stronger notion of proof, it allows a prover $\mathcal{P}$ to convince a verifier $\mathcal{V}$ of the validity of some statement. The interactive proof runs in several rounds, allows the verifier to ask questions in each round based on prover's answers of previous rounds. We phrase this in term of $\mathcal{P}$ trying to convince $\mathcal{V}$ that $f(x)=1$. The proof system is interesting iff the running time of $\mathcal{V}$ is less than the time of directly computing the function $f$.
+Traditional proof involves two static objects: a prover $\mathcal{P}$ and a verifier $\mathcal{V}$. The prover $\mathcal{P}$ takes a statement $x$ as input and generate a string $\pi$ as proof, then the verifier $\mathcal{V}$ checks if the statement $x$ and the proof $\pi$ are correct. An interactive proof is a stronger notion of proof, it allows the prover $\mathcal{P}$ to convince the verifier $\mathcal{V}$ of the validity of some statement. The interactive proof runs in several rounds, allowing the verifier to ask questions in each round based on prover's answers of previous rounds. We phrase this in terms of $\mathcal{P}$ trying to convince $\mathcal{V}$ that $f(x)=1$. The proof system is interesting if and only if the running time of $\mathcal{V}$ is less than the time of directly computing the function $f$.
 
 We formalize the "interactive proof" in the following:	
 \begin{definition}
-	Let f be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for f with soundness $\epsilon$ if the following holds:
+	Let $f$ be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for $f$ with soundness $\epsilon$ if the following holds:
 	\begin{itemize}
 		\item {\bf Completeness.} For every $x$ such that $f(x) = 1$ it holds that $\Pr[\langle\mathcal{P}, \mathcal{V}\rangle(x)=accept]=1$.
 		\item {\bf $\epsilon$-Soundness.} For any $x$ with $f(x) \neq 1$ and any $\mathcal{P}^*$ it holds that $\Pr[\langle\mathcal{P^*},\mathcal{V}\rangle=accept] \le \epsilon$
@@ -16,16 +16,16 @@ We formalize the "interactive proof" in the following:
 
 \subsection{Sumcheck Protocol}
 \label{subsec::sumcheck}
-The sum check problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_1, b_2, ..., b_{l})$ for a given polynomial $g(x_1, x_2, ..., x_{l})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computational unbounded prover $\mathcal{P}$ can convince a computational bounded verifier $\mathcal{V}$ that $$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
+The sumcheck problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_1, b_2, ..., b_{l})$ for a given polynomial $g(x_1, x_2, ..., x_{l})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computationally unbounded prover $\mathcal{P}$ can convince a computationally bounded verifier $\mathcal{V}$ that $$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
 Using this protocol, even a polynomial bounded verifier can verify the statement above. Now we formally define the problem and provide a description of the protocol.
 
 \begin{definition}
-	Let $g$ be a $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
+	Let $g$ be an $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
 
 	$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
 \end{definition}
 
-\begin{protocol}[\textbf{Sum Check}]
+\begin{protocol}[\textbf{Sumcheck}]
 	The protocol proceeds in $l$ rounds. 
 	\begin{itemize}
 		\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(x_1, b_2, b_3, ..., b_{l})$$, the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover, and sets $G_1\overset{def}{=}g_{1}(r_1)$.
