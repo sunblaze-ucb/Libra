@@ -14,13 +14,13 @@ We will deal with these queries seperately. The equation in sumcheck queries are
 
 For a generic sumcheck protocol, if we can initialize all binary values to an array, we can answer the first sumcheck query by scanning through the array, and reduce the array into a new array with only half size of the previous array since the summation size in the sumcheck is halved. By reducing the array, we can answer all queries in linear time to the initial array size.
 
-Unfortunatelly, we cannot directly use this technique to our protocol since if we directly initialize the array, the time complexity would be the square of the current layer size since we have two variables. But notice that the array is extremely sparse, and the equation is well structured, we still have the chance to optimize the computation.
+Unfortunatelly, we cannot directly use this technique to our protocol since if we directly initialize the array, the time complexity would be the square of the current layer size since we have two variables. But noticed that these two variables are well seperated, we can calculate them seperately. In the first part of sumcheck, the verifier will only asks questions about $u$, in this part we can preprocess the calculation of $v$, since we are doing the exact the same summation on $v$, we do not need to recalculate it every round. In the second part, we can use the generic sumcheck protocol since we only have one variable left, and we will show an algorithm to initialize arrays in the generic sumcheck protocol.
 
 For the combination part, it's quite straightforward, we defer the introduction to the detailed protocol.
 
-\subsection{Detailed Protocol}
-We will follow the CMT protocol, and improve the performance of sumcheck and the performance of combining two points.
 \subsubsection{Linear Prover Time Sumcheck}
+We will follow the CMT protocol, and improve the performance of sumcheck and the performance of combining two points. We will break the protocol into two parts, the first part deal with queries about $u$, and the second part will deal with queries about $v$.
+\subsubsection{Part One} In this part, we will deal with queries in first $s_{i+1}$ rounds.
 \paragraph{Review the sumcheck}
 In this subsection, we focus on answering the sumcheck queries. In the first round, the verifier asks the prover to give a univariate function: 
 
@@ -34,16 +34,73 @@ f_{i,k}(x_k)=\sum_{u_k \in \{0, 1\}, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i}(g
 \end{align*}
 where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}}\}$ is the representation of $u$.
 
-\paragraph{Definition and analysis of building blocks}
-In the first round, we calculate two arraies, where each array element is a pair $(a, b)$ representing a linear function $ax+b$.
+\paragraph{The Definition of Building Block}
+In the first round, we calculate two arraies to help speed up calculation, where each array element is a pair $(a, b)$ representing a linear function $ax+b$.
 
 The first array is $\overline{mult}_1$, where $\overline{mult}_1[p]$ is a pair $(a, b)$ representing a linear function as follows:
 $$\overline{mult}_1[p]\overset{def}{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{x_1, p\}, v)\tilde{V}_{i+1}(v),$$
 here $p$ is a $s_{i+1}-1$ bits binary number. $\{x_1, p\}$ is the representation of $u$. Similarly we define our second array $\overline{V}_1[p]$ as follows:
 $$\overline{V}_1[p]\overset{def}{=}\tilde{V}_i(\{x_1, p\})$$
 
-We will treat both arrays as a linear function or a pair of field elements interchangeably, for example $\overline{mult}_k[p](x)$ means we treat it as a linear function, and $\overline{mult}_k[p].a, \overline{mult}_k[p].b$ means we treat it as a pair.
+We will treat both arrays as a linear function or a pair of field elements interchangeably, for example $\overline{mult}_1[p](x)$ means we treat it as a linear function, and $\overline{mult}_1[p].a, \overline{mult}_1[p].b$ means we treat it as a pair.
 
+Similarly we define arrays that used in $k$-th round as follows:
+\begin{definition}[Linear Function Array]
+
+	The definition for $k=1$ is the statement above, for $k\ge 2$
+	\begin{enumerate}
+		\item $\overline{mult}_k[p]\overset{def}{=}\sum_{v\in \{0, 1\}^{s_{i+1}}}\tilde{mult}_i(g, \{r_1, ..., r_{k-1}, x_k, p\}, v)\tilde{V}_{i+1}(v)$
+		\item $\overline{V}_k[p]\overset{def}{=}\tilde{V}_i(\{r_1, ..., r_{k-1}, x_k, p\})$
+		\item Where $p$ is a $s_{i+1}-k$ bits binary number and $\{r_1, ..., r_{k-1}, x_k, p\}$ is the representation of $u$.
+	\end{enumerate}
+\end{definition}
+
+\paragraph{Initialize Arrays}
+We will try to initialize $\overline{mult}_1, \overline{V}_1$. And we will calculate next arrays using these arrays.
+
+For $\overline{V}_1$, we can scan through the circuit and get all values of $\tilde{V}_{i+1}(u)$ when $u \in \{0, 1\}^{s_{i+1}}$, and we have the following equations:
+\begin{align*}
+\overline{V}_1[p](0)=\tilde{V}_{i+1}(0||p)\\
+\overline{V}_1[p](1)=\tilde{V}_{i+1}(1||p)
+\end{align*}
+We can solve for $\overline{V}_1[p]$ easily.
+
+For $\overline{mult}_1$, the idea is the same as $\overline{V}_1$, but it's non-trivil to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumberate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tilde{V}_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
+\begin{figure}[p]
+\begin{algorithm}[H]
+\label{alg::premult}
+\caption{Preprocess $\overline{mult}_1$}
+\begin{algorithmic}[1]
+\parState{Assuming we have global access to $g$, $s_i$, $s_{i+1}$, which is resonable since prover knows these values, and $g[k]$ means the $k$-th field element of $g$, starting from $0$ since we are writing pseudo-code}
+\Procedure{{\sf DFS}}{$A$, $g'$, $depth$, $Value$}
+	\parState{Note $A$, $g'$ is the pointer to the array, any change to $A$ or $g'$ will change it globally.}
+	\parState{In this function, we will recurse on the bits of $g$}
+	\If {$depth=s_{i}$} \Comment{We have enumerate enough bits}
+		\State Let $u', v'$ is input gates to $g'$
+		\State Find $\tilde{V}_{i+1}(v')$ in circuit.
+		\State $A[u'] = A[u'] + \tilde{V}_{i+1}(v')\times Value$
+	\Else
+		\State set $g'[depth]=0$
+		\State Call {\sf DFS}($A$, $g'$, $depth+1$, $Value\times(1-g[depth])$)
+		\State set $g'[depth]=1$
+		\State Call {\sf DFS}($A$, $g'$, $depth+1$, $Value\times g[depth]$)
+	\EndIf
+\EndProcedure
+\Procedure{{\sf InitializeMult}}{}
+	\State Let array $\overline{mult}_1$ be filled with zeros.
+	\parState{Since calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ is enough to initialize array $\overline{mult}_1$, we will call a subroutine to initialize every binary $u$, and store the result into array $A$.}
+	\State Initialize array $A$ with zeros.
+	\State let $g'$ be a vector of $s_{i+1}$ bits.
+	\State Call {\sf DFS}($A$, $g'$, $0$, $1$)
+	\For each element of $\overline{mult}_1[p]$
+	\EndFor
+\EndProcedure
+\end{algorithmic}
+
+\end{algorithm}
+\end{figure}
+
+\paragraph{The Protocol}
 The answer to the first query is the following univariate function:
 
 $$\sum_{p}\overline{mult}_1[p](x)\times\overline{V}_1[p](x),$$
@@ -85,7 +142,5 @@ We can conclude that $$$$
 
 \end{proof}
 
-\paragraph{Initialize the array}
-$\overline{mult}_1, \overline{V}_1$ can be initialized in linear time using the following algorithm
 \subsubsection{Combine two points}
 \subsubsection{Running Time Analysis}
