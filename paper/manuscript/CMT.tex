@@ -52,13 +52,15 @@ $$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_
 \end{definition}
 
 \subsubsection{High Level Ideas}
-CMT Protocol (Cormode et al.)\cite{CMT} is based on the work of Goldwasser et al. \cite{GKR}, gives us a efficient implementation of GKR protocol. We will futhur improve CMT protocol to optimal prover time and make it zero knowledge without any assumption on the circuit. In this section, we will introduce the original CMT protocol here.
+CMT Protocol (Cormode et al.)\cite{CMT} is based on the work of Goldwasser et al. \cite{GKR}, gives us a efficient implementation of interactive proof. In this section, we will introduce the original CMT protocol here.
 
 Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite field $\mathbb{F}$. The gates in $i$-th layer takes input from $i+1$-th layer and outputs to $i-1$-th layer; layer $0$ is the output layer, and layer $d$ is the input layer. 
 
-The protocol proceeds layer by layer. The prover starts by sending the output value to the verifier. Then the protocol starts from the output layer. In $i$-th round both party runs the sum check protocol on the previous prover's claim, for the first round, they run check sumcheck to check the output. The sumcheck will eventually reduce the claim into the evalution to one specific random point. Each point of current layer $f_{i,z}(R_g,R_u,R_v)$, corresponds to two points of next layer $V_{i+1}(R_u), V_{i+1}(R_v)$. A simple idea is to recursively check these two points. However the number of threads will grow exponentially, which would result in a very inefficient protocol.
+%The protocol proceeds layer by layer. The prover starts by sending the output value to the verifier. Then the protocol starts from the output layer. In $i$-th round both party runs the sum check protocol on the previous prover's claim, for the first round, they run check sumcheck to check the output. The sumcheck will eventually reduce the claim into the evalution to one specific random point. Each point of current layer $f_{i,z}(R_g,R_u,R_v)$, corresponds to two points of next layer $V_{i+1}(R_u), V_{i+1}(R_v)$. A simple idea is to recursively check these two points. However the number of threads will grow exponentially, which would result in a very inefficient protocol.
 
-Instead of directly check two points, we can combine these two points into one by linear combination. And recursively check on the combined point of next layer. For the final input layer, the verifier checks the claim by calculating the value by himself.
+%Instead of directly check two points, we can combine these two points into one by linear combination. And recursively check on the combined point of next layer. For the final input layer, the verifier checks the claim by calculating the value by himself.
+
+The protocol proceeds layer by layer. The protocol start by checking the output layer ($0$-th layer). In the initialization, the verifier request a random claim about the output layer from the prover, and the prover answer the request by scanning through the layer. In the first round, both parties runs the sumcheck protocol on the claim about the output, and reduces to two claims about the next layer ($1$-st layer). The verifier will combine these two claims into one claim about $1$-st layer and runs into next round. In $i$-th round, both parties runs a sumcheck on the previous layer and reduce to a claim about current layer. Finally the protocol will get a claim about the input layer. The verifier will verify the claim by asking the oracle about the input layer. We will provide a implemetation about the oracle latter.
 
 \subsubsection{Protocol Details}
 
