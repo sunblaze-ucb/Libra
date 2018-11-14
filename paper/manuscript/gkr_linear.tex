@@ -1,37 +1,75 @@
 %!TEX root = fastZKP.tex
 \section{Linear Prover Time GKR Protocol}
 \label{sec::gkrlin}
-In this section, we will present an implementation of GKR protocol\cite{GKR}, which is a improved version of CMT protocol\cite{CMT}. In this section we will improve the original CMT protocol and then propose slightly modified verion of improved CMT to make it zero knowledge.
+In this section we will improve the GKR protocol\cite{GKR} to make the prover runs in linear time. Our work is based on the CMT protocol \cite{CMT}.
 
 \subsection{Roadmap}
-Through out the whole CMT protocol, the prover has to answer two type of queries, one is the query related to sumcheck, another one is the query to combine the points. We will deal with these queries seperately. The equation in sumcheck queries are well structured. For each sumcheck we are going to check the claim $a_i=\tilde{V_i}(r_i)$ where $\tilde{V_i}(r_i)=\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}f_{i,r_i}(g,u,v)$. Since the sumcheck deal with the parameters one by one, we can divide the sumcheck into three stages as follows: $\tilde{V_i}(r_i)=\sum_{g\in\{0,1\}^{s_i}}\sum_{u \in \{0,1\}^{s_{i+1}}} \sum_{v\in \{0,1\}^{s_{i+1}}}f_{i,r_i}(g,u,v)$, where $f_{i,r_i}(g,u,v)\overset{def}{=}\tilde{\beta_{i}}(r_i, g)[\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))+\tilde{add}(g,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))]$, the first stage is the summation of $g$, the second and the third stage is the summation of $u$ and $v$. Also notice that $\tilde{mult}$ and $\tilde{add}$ are independent in the equation, independent means that we can calculate them seperately and the final answer is the sum of these two. So we can treat them seperately using two similar algorithm.
+Through out the whole CMT protocol, the prover has to answer two type of queries:
+\begin{enumerate}
+	\item the query related to sumcheck.
+	\item the query to combine the points. 
+\end{enumerate}
 
-For simplicity, in this subsection we only discuss the idea of calcuate $\tilde{mult}$ part. our simplified equiation becomes 
-$$a_{i_{mult}}=\sum_{g\in\{0,1\}^{s_i}}\sum_{u \in \{0,1\}^{s_{i+1}}} \sum_{v\in \{0,1\}^{s_{i+1}}}f_{i, r_i}(g, u, v)$$ where $$f_{i, r_i}(g, u, v)=\tilde{\beta_{i}}(r_i, g)\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))$$
+We will deal with these queries seperately. The equation in sumcheck queries are well structured. For each sumcheck we are going to check the claim $a_i=\tilde{V_i}(r_i)$. Since the sumcheck deal with the parameters one by one, we can divide the sumcheck into two stages as follows: the first stage is the sumcheck about variables in $u$ and the second stage is the sumcheck about the variaibles in $v$. Also notice that $\tilde{mult}$ and $\tilde{add}$ are independent in the equation, where independent means that we can calculate them seperately and the final answer is the sum of these two. So we can treat them seperately using two similar algorithm. For simplicity, in this subsection we only discuss the idea of calculate $\tilde{mult}$ part. 
 
+For a generic sumcheck protocol, if we can initialize all binary values to an array, we can answer the first sumcheck query by scanning through the array, and reduce the array into a new array with only half size of the previous array since the summation size in the sumcheck is halved. By reducing the array, we can answer all queries in linear time to the initial array size.
 
-During the sumcheck, the verifier will asks a univariate function. In the first stage $i$-th round, the univariate function would be: $f_i(x_i)=\sum_{g_{i+1} \in \{0, 1\}, ..., g_{s_{i}} \in \{0, 1\}} \sum_{u} \sum_{v} \tilde{\beta_{i}}(r_i, g')\tilde{mult}(g', u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))$, where $g' = a_1, a_2, ..., a_{i-1}, x_{i}, g_{i+1}, ..., g_{s_i}$, $a_i$ is the random number in earlier rounds from the verifier. Clearly $x_i$ appears in two subfunctions: $\tilde{\beta}$, $\tilde{mult}$. The univariate function is the product of two 1-degree polynomial. The idea is to calculate the coefficient of these 1-degree polynomials. This observation also apply for the second and third stage. A 1-degree polynomial can be determined by two points. In the binary tree, we node represent a single 1-degree polynomial, and we ensure that the child's polynomial will equals to father's polynomial when the inputs are either \{0, 1\}. If it's left child, they agree on input $0$, and if it's right child, they agree on $1$.
+Unfortunatelly, we cannot directly use this technique to our protocol since if we directly initialize the array, the time complexity would be the square of the current layer size since we have two variables. But notice that the array is extremely sparse, and the equation is well structured, we still have the chance to optimize the computation.
 
-Combining two points is a relatively easy part, we will directly discuss the detailed algorithm in next subsection.
+For the combination part, it's quite straightforward, we defer the introduction to the detailed protocol.
 
 \subsection{Detailed Protocol}
-\subsubsection{Binary tree structrue}
-In the whole algorithm, we will construct a $s_i$-depth binary tree to process $g$, a $s_{i+1}$-depth binary tree for $u$, a $s_{i+1}$-depth binary tree for $v$. Each binary tree node represents two $1$-degree polynomials. They share the same structure, but the initialization is different for each tree. In this section, we assume the value in leaves are already initialized. We will present a linear initialization algorithm in latter section.
+\subsubsection{Sumcheck query}
+In this subsection, we focus on answering the sumcheck queries. In the first round, the verifier asks the prover to give a univariate function: 
 
-In this subsection , we will use $g$'s binary tree as example, it describes two $1$-degree polynomial generated by $\tilde{\beta}$ and $\tilde{mult}$.
+$$f_{i, 1}(x_1)=\sum_{u_{k} \in \{0, 1\}, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i}(g, \{x_1, u_{2},..., u_{s_{i+1}}\}, v)(\tilde{V}_{i+1}(x_1, u_{2},..., u_{|u|})\tilde{V}_{i+1}(v)),$$
+where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{x_1, u_{2},..., u_{s_{i+1}}\}$ is the representation of $u$.
 
-In figure \ref{fig::bin_structure}, the root represent the polynomial used in the last step of sumcheck. The left child of the root represent the polynomials $\tilde{\beta}(z, (r_1, r_2, ..., r_{s-2}, x, 0))$, $\sum_{u, v}\tilde{mult}(z, (r_1, r_2, ..., r_{s-2}, x, 0), u, v)$ and it's similar for the right child. Let $L_{k, j, \tilde{\beta}}(x), L_{k, j, \tilde{mult}}$ be polynomials represented by $j$-th node with depth $s_i - k$ where $k=0$ represents leaves. $child_{k, j, 0}, child_{k, j, 1}$ be it's left and right child. 
+In the $k$-th round where $2\le k\le s_{i+1}$, the verifier asks the prover to give a univariate function:
+\begin{align*}
+f_{i,k}(x_k)=\sum_{u_k \in \{0, 1\}, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i}(g, \{r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}}\}, v)\times\\
+(\tilde{V}_{i+1}(r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}})\tilde{V}_{i+1}(v))
+\end{align*}
+where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}}\}$ is the representation of $u$.
 
-For $k \ge 1$, we have $L_{k, j, \tilde{\beta}}(0)=L_{k-1, child_{k, j, 0}}(r_{k-1})$ and $L_{k, j, \tilde{\beta}}(1)=L_{k-1, child_{k, j, 1}}(r_{k-1})$, having these two points, we can get the $1$-degree polynomial in constant time. We can conclude that if we can initialize the leaf nodes, we can calculate the whole tree in linear time.
+In the first round, we calculate two arraies, each array element is a linear function:
+$$\overline{mult}_1[p]\overset{def}{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{x_1, p\}, v)\tilde{V}_{i+1}(v),$$
+where $p$ is a $s_{i+1}-1$ bits binary number. $\{x_1, p\}$ is the representation of $u$. Similarly we define:
+$$\overline{V}_1[p]\overset{def}{=}\tilde{V}_i(\{x_1, p\})$$
 
-For each $k$-th sumcheck query, the answer would be $\sum_{j}(L_{k, j, \tilde{\beta}}(x)L_{k, j, \tilde{mult}}(x))$, we can calculate it by scanning through the $s_i-k$-th layer of the binary tree. The whole sumcheck for the first stage costs linear time since we only need to scan the binary tree once.
+The answer to the first query is:
 
-\begin{figure}
-\label{fig::bin_structure}
-\includegraphics[width=15cm]{structurebintree.png}
-\caption{The structure of the binary tree, each tree node stores a $1$-degree polynomial, and the leaf degenerate to constant.}
-\end{figure}
+$$\sum_{p}\overline{mult}_1[p]\times\overline{V}_1[p],$$
 
-\subsubsection{First Stage Preprocessing}
+It's easy to get this result by doing some transformation on the original equation.
 
-\subsection{Running Time Analysis}
+And we reduce these arraies to the second round:
+
+$$\overline{mult}_2[p']\overset{def}{=}\overline{mult}_1[0||p'](r_1)+\overline{mult}_1[1||p'](r_1)$$
+$$\overline{V}_2[p']\overset{def}{=}\overline{V}_1[0||p'](r_1)+\overline{V}_1[1||p'](r_1),$$
+
+Where $p'$ is a $s_{i+1}-2$ bit binary number. And the answer to $i$-th round is 
+
+$$\sum_{p'}\overline{mult}_2[p']\times\overline{V}_2[p']$$
+
+And we define arrays for the $k$-th round ($k\ge 2$) in the following
+$$\overline{mult}_k[p]\overset{def}{=}\overline{mult}_{k-1}[0||p](r_{k-1})+\overline{mult}_{k-1}[1||p](r_{k-1})$$
+$$\overline{V}_k[p]\overset{def}{=}\overline{V}_{k-1}[0||p](r_{k-1})+\overline{V}_{k-1}[1||p](r_{k-1}),$$
+where $p$ is a $s_{i+1}-k$ binary number.
+
+The answer to the $k$-th round query is 
+$$\sum_{p}\overline{mult}_k[p]\times\overline{V}_k[p]$$
+
+We will prove above statements here.
+
+\begin{theorem} For every round, the algorithm above correctly answered the query.
+\end{theorem}
+
+\begin{proof}
+
+\end{proof}
+
+\paragraph{Initialize the array}
+$\overline{mult}_1, \overline{V}_1$ can be initialized in linear time using the following algorithm
+\subsubsection{Combine two points}
+\subsubsection{Running Time Analysis}

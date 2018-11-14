@@ -22,17 +22,17 @@ Using this protocol, even a polynomial bounded verifier can verify the statement
 \begin{definition}
 	Let $g$ be an $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
 
-	$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
+	$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(b_1,b_2,...,b_{l})$$
 \end{definition}
 
 \begin{protocol}[\textbf{Sumcheck}]
 	The protocol proceeds in $l$ rounds. 
 	\begin{itemize}
-		\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(x_1, b_2, b_3, ..., b_{l})\textnormal{,}$$ the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover, and sets $G_1\overset{def}{=}g_{1}(r_1)$.
+		\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(x_1, b_2, b_3, ..., b_{l})\textnormal{,}$$ the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover.
 		\item In the $i$-th round, where $2\le i \le l-1$, the prover sends 
-		$$g_{i}(x_{i})\overset{def}{=}\sum_{b_{i+1}\in\{0,1\}}\sum_{b_{i+2}\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(r_1, r_2, ..., r_{i-1}, x_{i}, b_{i+1}, b_{i+2}, ..., b_{l})\textnormal{.}$$ 
-		The verifier checks $G_{i-1}=g_{i}(0)+g_{i}(1)$, and then sends a random number $r_{i}$ to prover. The verifier sets $G_{i}\overset{def}{=}g_{i}(r_{i})$.
-		\item In the $l$-th round, the prover sends $$g_{l}(x_{l})\overset{def}{=}g(r_1, r_2, ..., r_{l-1}, x_{l})$$, the verifier checks $G_{l-1}=g_{l}(0)+g_{l}(1)$. Then verifier generate a random number $r_{l}$ and sets $G_{l}\overset{def}{=}g_{l}(r_{l})$. Given oracle access to $g$, the verifier will accept the prover if and only if $G_l = g(r_1, r_2, ..., r_l)$. We will provide a implemetation of the oracle latter. 
+		$$g_{i}(x_{i})\overset{def}{=}\sum_{b_{i+1}\in\{0,1\}}\sum_{b_{i+2}\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(r_1, r_2, ..., r_{i-1}, x_{i}, b_{i+1}, b_{i+2}, ..., b_{l})\textnormal{.}$$ 
+		The verifier checks $g_{i-1}(r_{i-1})=g_{i}(0)+g_{i}(1)$, and then sends a random number $r_{i}$ to prover.
+		\item In the $l$-th round, the prover sends $$g_{l}(x_{l})\overset{def}{=}G(r_1, r_2, ..., r_{l-1}, x_{l})$$, the verifier checks $g_{l-1}(r_{l-1})=g_{l}(0)+g_{l}(1)$. Then verifier generate a random number $r_{l}$. Given oracle access to $g$, the verifier will accept the prover if and only if $g_{l}(r_l) = G(r_1, r_2, ..., r_l)$. We will provide a implemetation of the oracle latter. 
 		%The verifier also compute $Answer\overset{def}{=}g(r_1, r_2, ..., r_{l})$ locally. Verifier will accept iff $G_{l}=Answer$.
 	\end{itemize}
 \end{protocol}
