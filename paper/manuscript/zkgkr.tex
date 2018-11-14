@@ -3,76 +3,72 @@
 
 \section{Zero Knowledge Sumcheck}\label{ZKSumcheck}
 \subsection{Intuition}
-As presented in \nameref{}, In GKR protocol\cite{GKR}, for every layer of the circuit, the prover needs to prove one equation to the verifier based on the sumcheck protocol. That means if we want to get the zero knowledge $GKR$ protocol, we should first design an efficient zero knowlege sumcheck protocol.\\
-{}
-\noindent
-For sumcheck protocol, the prover needs to prove $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ to the verifier. And the verifier accepts if and only if it verifies $f_{i-1}(r_{i-1}) = f_i(0) + f_i(1)$ for every round and $s = F(r_1, r_2, \cdots, r_n)$ at the end of the protocol, where $r_1, r_2, \cdots, r_n$ are randomly chosen by the verifier and $s$ is given by the oracle. We could use verifiable polynomial delegation(VPD) to be the oracle to confirm verifier the value of $F(r_1, r_2, \cdots, r_n)$. Zero knowledge sumcheck means that the verifier could learn nothing about the polynomial $F$ except for the value of $a$ and the query value of $s$ on $r_1, r_2, \cdots, r_n$.\\
+As presented in \nameref{sec::prelim}, in GKR protocol\cite{GKR}, for every layer of the circuit, the prover needs to prove one equation to the verifier based on the sumcheck protocol. That means if we want to get the zero knowledge GKR protocol, we should first design an efficient zero knowlege sumcheck protocol.\\
 
-\noindent
-The idea to make sumcheck protocol zero knowledge is very easy. We hope to use another sumcheck polynomial with the same individual degree and variables to mask $\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$. In addition, we hope that the mask polynomial is as simple as possible since the time complexity of VPD is related to the number of monomials in the mask polynomial.\\
+For sumcheck protocol, the prover needs to prove $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ to the verifier. And the verifier accepts if and only if it verifies $f_{i-1}(r_{i-1}) = f_i(0) + f_i(1)$ for every round and $f_n(r_n) = F(r_1, r_2, \cdots, r_n)$ at the end of the protocol, where $r_1, r_2, \cdots, r_n$ are randomly chosen by the verifier and $F(r_1, r_2, \cdots, r_n)$ is given by the oracle of $F$. It would leak some information about $F$ since the verifier could learn partial sums of $F$. We hope the verifier learns nothing about the polynomial $F$ except for the value of $a$ and the query value of $s$ on $r_1, r_2, \cdots, r_n$.\\
 
-\subsection{Protocol}
-\noindent
-Consider the simplest example, where $F(x_1, x_2, \cdots, x_n)$ is a multilinear polynomial. Then we could use a very simple function $G(x_1, x_2, \cdots, x_n) = a_0 + a_1x_1 + a_2x_2 + \cdots + a_nx_n$ to mask $F$, where $a_0, a_1, \cdots, a_n$ is randomly chosen from $\mathbb{F}$. Suppose that $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$ and we would use the sumcheck protocol to verify
+Chiesa et al\cite{zksumcheck} proposed a zero knowledge sumcheck protocol with the idea of mask polynomial. In this new protocol, they use another sumcheck polynomial $G$ with the same individual degree and variables of $F$ to mask the original polynomial. The protocol thus proceeds as follows. The prover randomly chosen $G$ and sends the sum of $F$ and the sum of $G$ to the verifier. Later on, the verifier sends a random number $\rho \neq 0$ to the prover and then they run the sumcheck protocol of $F + \rho G$. Finally, the prover needs to open the value of $G$ on a random point chosen by the verifier during the sumcheck protocol. Since all coefficients of $F$ are masked by $G$'s' coefficients, this protocol is perfect zero knowledge.\\
+
+Unfortunately, however, the mask polynomial $G$ is so large that opening $G$ on a random point needs exponential time at the end of the protocol, which is really bad for the efficiency. Therefore, we proposed a new zero knowledge sumcheck protocol with the simplest mask polynomial. And our method could reduce the time complexity of opening $G$ on a random point to polynomial time.\\
+
+To be specific, suppose $F(x_1, x_2, \cdots, x_n)$ is a sumcheck polynomial with individual degree of d and $n$-variables. Then we could use a very simple function $G = a_{0} + G_1(x_1) + G_2(x_2) + \cdots + G_n(x_n)$ to mask $F$, where $G_{i}(x_i) = a_{i1}x_i + a_{i2}x_i^2 + \cdots + a_{id}x_i^d$ and all coefficients of $G$ are uniformly randomly chosen from $\mathbb{F}$. Suppose that $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$ and we would use the sumcheck protocol to verify
 
 $$a + \rho b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}[F(x_1, x_2, \cdots, x_n) + \rho G(x_1, x_2, \cdots, x_n)]$$. 
 
-Where $\rho$ is randomly chosen by the verifier $\mathcal{V}$. In the beginning of sumcheck protocol, the prover sends the summation to the verifier firstly. Later on, the prover sends $h_i(x_i)(h_i = f_i + \rho g_i)$ to the verifier in round $i$, where $1 \leq i \leq n$. And the verifier computes $h_i(0) + h_i(1) = h_{i-1}(r_{i-1})$. Finally, the verifier queries $F(r_1, r_2, \cdots, r_n)$, $G(r_1, r_2, \cdots, r_n)$ and verifies $h_n(r_n) = F(r_1, r_2, \cdots, r_n) + \rho G(r_1, r_2, \cdots, r_n)$. In our simple example, where $F$ and $G$ are multilinear, the prover could use $h_i(0)$ and $h_i(1)$ to replace $h_i(x_i)$. Suppose the verifier is $\mathcal{V}$ and the prover is $\mathcal{P}$. The formal protocol on the claim $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}} F(x_1, x_2, \cdots, x_n)$ as follows.\\
+Where $\rho \neq 0$ is randomly chosen by the verifier. Just like Chiesa's protocol, the prover sends $h_i(x_i)(h_i = f_i + \rho g_i)$ to the verifier in round $i$, where $1 \leq i \leq n$. And the verifier computes $h_i(0) + h_i(1) = h_{i-1}(r_{i-1})$. Finally, the verifier queries $F(r_1, r_2, \cdots, r_n)$, $G(r_1, r_2, \cdots, r_n)$ and verifies $h_n(r_n) = F(r_1, r_2, \cdots, r_n) + \rho G(r_1, r_2, \cdots, r_n)$. In our setting, since the individual degree is $d$ for $F$ and $G$, the prover could send the verifier $h_i(0), h_i(1), \cdots, h_i(d)$ to replace $h_i(x_i)$.\\
 
-\noindent
+\subsection{Protocol}
+Suppose the verifier is $\mathcal{V}$ and the prover is $\mathcal{P}$. The formal protocol on the claim $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}} F(x_1, x_2, \cdots, x_n)$ is as follows.\\
 \begin{enumerate}
 
-\item $\mathcal{P}$ uniformly choose a function $G(x_1, x_2, \cdots, x_n) = a_0 + a_1x_1 + a_2x_2 + \cdots + a_nx_n$ at random. Then $\mathcal{P}$ sends $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}} F(x_1, x_2, \cdots, x_n)$ and $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}} G(x_1, x_2, \cdots, x_n)$ to $\mathcal{V}$.
-\item $\mathcal{V}$ uniformly sample $\rho \in \mathbb{F}$, and sends $\rho$ to $\mathcal{P}$.
+\item $\mathcal{P}$ uniformly choose a function $G$ at random, where $G = a_{0} + G_1(x_1) + G_2(x_2) + \cdots + G_n(x_n)$ and $G_{i}(x_i) = a_{i1}x_i + a_{i2}x_i^2 + \cdots + a_{id}x_i^d$. Then $\mathcal{P}$ sends $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}} F(x_1, x_2, \cdots, x_n)$ and $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}} G(x_1, x_2, \cdots, x_n)$ to $\mathcal{V}$.
+\item $\mathcal{V}$ uniformly sample $\rho \in \mathbb{F}/\{0\}$, and sends $\rho$ to $\mathcal{P}$.
 \item $\mathcal{P}$ and $\mathcal{V}$ run the sumcheck protocol on the claim
 $$a + \rho b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}[F(x_1, x_2, \cdots, x_n) + \rho G(x_1, x_2, \cdots, x_n)]$$
-\item At the last round of the sumcheck protocol, $\mathcal{V}$ sends $r_n$ to $\mathcal{P}$. And $\mathcal{P}$ replies with $s = F(r_1, r_2, \cdots, r_n)$ and $t = G(r_1, r_2, \cdots, r_n)$, where $r_1, r_2, \cdots, r_n$ are randomly sampled by $\mathcal{V}$. 
-\item If $s + \rho t \neq h_n(r_n)(h_n = f_n + \rho g_n)$, $\mathcal{V}$ rejects. Otherwise, $\mathcal{V}$ and $\mathcal{P}$ run the zero knowledge VPD protocol to verify $s = F(r_1, r_2, \cdots, r_n)$ and $t = G(r_1, r_2, \cdots, r_n)$.  
+\item At the last round of the sumcheck protocol, $\mathcal{V}$ sends $r_1, r_2, \cdots, r_n$ to the oracle of $F$ and $G$. And the oracle replies with $s = F(r_1, r_2, \cdots, r_n)$ and $t = G(r_1, r_2, \cdots, r_n)$, where $r_1, r_2, \cdots, r_n$ are randomly sampled by $\mathcal{V}$. 
+\item If $s + \rho t \neq h_n(r_n)(h_n = f_n + \rho g_n)$, $\mathcal{V}$ rejects. Otherwise, $\mathcal{V}$ accepts.  
 
 \end{enumerate}
 \noindent
 \textbf{Completeness}. It is obvious that the zero knowledge sumcheck protocol satifies the completeness property.\\
 
 \noindent
-\textbf{Soundness}. Let $\mathcal{P}^*$ be a cheating prover which convinces $\mathcal{V}$ of a claim ``$a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$'' such that $a \neq \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ actually. If $a \neq \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$, then $a + \rho b \neq \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n) + \rho \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$ with probability $1 - 1 / \mathbb{F}$. And we also know the soundness of sumcheck protocol for $n$ variables and individual degree $d$ is $d n /|\mathbb{F}|$. Therefore, $\mathcal{V}$ accepts with probability at most $(1 + dn) / |\mathbb{F}|$. Since the soundness of zero knowledge VPD is negligible of $\lambda$, the soundness of zero knowledge sumcheck protocol is also negligible of $\lambda$.\\
+\textbf{Soundness}. Let $\mathcal{P}^*$ be a cheating prover which convinces $\mathcal{V}$ of a claim ``$a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$'' such that $a \neq \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ actually. If $a \neq \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$, then $a + \rho b \neq \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n) + \rho \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$ with probability $1 - 1 / |\mathbb{F} - 1|$ since $\rho$ is random chosen from $\mathbb{F}$. And we also know the soundness of sumcheck protocol for $n$ variables and individual degree of $d$ is $d n /|\mathbb{F}|$. Consequently, the soundness of the protocol is $\mathcal{O}(nd/|\mathbb{F}|)$.\\
 
 \noindent
-\textbf{Zero knowledge}. We prove that the protocol's has perfect zero knowledge by exhibiting a polynomial-time simulator $\mathcal{S}$ with $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ that perfectly samples the view of any malicious verifier. The simulator $\mathcal{S}$ given straightline access to $\mathcal{V^*}$ and the oracle access to $f$, works as follows.
+\textbf{Zero knowledge}. We prove that the protocol has perfect zero knowledge by exhibiting a polynomial-time simulator $\mathcal{S}$ with $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ that perfectly samples the view of any malicious verifier. The simulator $\mathcal{S}$ given straightline access to $\mathcal{V^*}$, works as follows.
 
 \begin{enumerate}
 
-\item Draw a multilinear polynomial $Z_{sim} = a_0 + a_1x_1 + \cdots + a_nx_n$, where $a_0, a_1, \cdots, a_n$ are uniformly randomly chosen from $\mathbb{F}$. 
+\item Draw a multilinear polynomial $Z_{sim} = a_{0} + Z_{sim_1}(x_1) + Z_{sim_2}(x_2) + \cdots + Z_{sim_n}(x_n)$, where $Z_{sim_i}(x_i) = a_{i1}x_i + a_{i2}x_i^2 + \cdots + a_{id}x_i^d$ at random. 
 
-\item Draw a multilinear polynomial $Q_{sim} \in \mathbb{F}[x_{1, 2, \cdots, n}^{\leqslant 1}]$ uniform at random conditioned on $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n)$.
+\item Begin simulating $\mathcal{V}^*$. The simulator sends $a$ and $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$ to $\mathcal{V}^*$.
 
-\item Begin simulating $\mathcal{V}^*$. The simulator sends $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n)$ and $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Z_{sim}(x_1, x_2, \cdots, x_n)$ to $\mathcal{V}^*$. 
+\item $\mathcal{S}$ receives $\rho \neq 0$ from $\mathcal{V^*}$. Draw a polynomial $Q_{sim} \in \mathbb{F}[x_{1, 2, \cdots, n}^{\leqslant d}]$ uniform at random conditioned on $$ \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n) = a + \rho b$$ 
 
-\item $\mathcal{S}$ receives $\rho$ from $\mathcal{V^*}$, then engage in the sumcheck protocol on the claim ``$\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n) + \rho Z_{sim}(x_1, x_2, \cdots, x_n) = a + \rho b$''. 
+Then engage in the sumcheck protocol on the claim $$\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}Q_{sim}(x_1, x_2, \cdots, x_n) = a + \rho b$$
 
-\item Let $\vec{r} \in \mathbb{F}^n$ be the point chosen by $\mathcal{V}^*$ in the sumcheck protocol. $\mathcal{S}$ sends $s = Q_{sim}(\vec{r})$ and $t = Z_{sim}(\vec{r})$ to $\mathcal{V^*}$. 
+\item Let $\vec{r} \in \mathbb{F}^n$ be the point chosen by $\mathcal{V}^*$ in the sumcheck protocol. $\mathcal{V}^*$ queries the oracle to get $s = Q_{sim}(\vec{r}) - \rho Z_{sim}(\vec{r})$ and $t = Z_{sim}(\vec{r})$. 
 
-\item $\mathcal{V}^*$ utilizes zero knowledge VPD protocol to verify $s = Q_{sim}(\vec{r})$ and $t = Z_{sim}(\vec{r})$. 
-
+\item Output the view of the simulated $\mathcal{V}^*$.
 \end{enumerate} 
 
-If we would like to prove this protocol is zero knowledge. We need to argue that in the real world, the distribution of $F(x_1, x_2, \cdots, x_n)$ should be uniformly at random conditioned on
-$$\sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n) = a$$.
+If we would like to prove this protocol is perfect zero knowledge, we need to argue that in the real world, the view of the verifier should be the same distributions of the simulator $\mathcal{S}$. However, the view of the verifier consists of $b$ and $h_i(x_i)$ in every round of the sumcheck protocol.\\
 
-In every round $i$ of the sumcheck, the verifier only receives $h_i(0) = f_i(0) + \rho g_i(0)$ and $h_i(1) = f_i(1) + \rho g_i(1)$. Since the verifier knows $h_{i-1}(0) = f_i(0) + \rho g_i(0)$ and $h_{i-1}(1) = f_{i-1}(1) + \rho g_{i-1}(1)$ and the random number $r_{i-1}$ in previous round, the verifier could get $h_{i}(1)$ itself if he knows $h_{i}(0)$ as $h_{i}(0) + h_{i}(1) = h_{i-1}(r_{i-1}) = (1 - r_{i-1})h_{i-1}(0) + r_{i-1}h_{i-1}(1)$ for honest prover. So the actual valid information for the verifier is $h_{1}(0), h_{2}(0), \cdots, h_{n}(0)$. We hope that the verifier could learn nothing of $F(x_1, x_2, \cdots, x_n)$ except for $a$ using these information. In other words, the mask polynomial $G(x_1, x_2, \cdots, x_n)$ would hide the information of $F$. Therefore, the verifier wants to remove the information of $G$ but remains some information about $F$. That is equavilent to $g(0), g_{1}(0), g_{2}(1), \cdots, g_{n}(0)$ are linear independent about random variables $a_0, a_1, \cdots, a_n$.
+In fact, the verifier receives $b$ in the beginning. Then in every round $i$ of the sumcheck, the verifier only receives $h_i(0) = f_i(0) + \rho g_i(0), h_i(1) = f_i(1) + \rho g_i(1), \cdots, h_i(d) = f_i(d) + \rho g_i(d)$. Since the verifier knows $h_{i-1}(0), h_{i-1}(1), \cdots, h_{i-1}(d)$ and the random number $r_{i-1}$ in previous round, the verifier could get $h_{i}(0)$ itself if he knows $h_{i}(1)$ as $h_{i}(0) + h_i(1) = h_{i-1}(r_{i-1})$ for honest prover and the veifier could calculate $h_{i-1}(r_{i-1})$ itself. So the actual valid information for the verifier is $h_{1}(1), \cdots, h_{1}(d), h_{2}(1), \cdots, h_2(d), \cdots, h_{n}(1), \cdots, h_{n}(d)$. \\
+
+For the simulator, all of the information is random since $Q_{sim}$ is uniformly chosen at random. We hope that in the real world, all of the information is also random since all coefficients of $G$ are random and independent with $F$. In other words, that is equavilent to $g_{1}(1), \cdots, g_{1}(d), g_{2}(1), \cdots, g_2(d), \cdots$, $g_{n}(1), \cdots, g_{n}(d)$. are linear independent about random variables $a_0$ and $a_{ij}(1 \leq i \leq n, 1 \leq j \leq d)$. Then the veiw of the verifier should be the same whenever in the simulated world or the real world. 
 
 \begin{proof}
-Consider that if we run the sumcheck only for $G(x_1, x_2, \cdots, x_n)$. The verifier could know exactly what $G(x_1, x_2, \cdots, x_n)$ is. The reason is that the verifier could know $g_{i}(0)$ and $g_{i}(1)$, and $G$ is a linear function of $x_i$, so it is easy to compute the coefficient of $x_i$, which is $a_i$ for $i$ from 1 to $n$. Finally, since the verifier knows $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$, he could compute $a_0$. So the verifier could get the exact function $G$ after sumcheck.\\  
+Consider that if we run the sumcheck only for $G(x_1, x_2, \cdots, x_n)$. The verifier could know exactly what $G(x_1, x_2, \cdots, x_n)$ is. The reason is that the verifier could know $g_{i}(0), g_{i}(1), \cdots, g_{i}(d)$ in round $i$, and $G$ is a function of $x_i$ with degree at most $d$, so it is easy to compute the coefficient of $x_i, x^2_i, \cdots, x^d_i$, which are exact $a_{i1}, a_{i2}, \cdots, a_{id}$. Finally, since the verifier knows $b = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}G(x_1, x_2, \cdots, x_n)$, he could compute $a_0$. So the verifier could get the exact function $G$ after the sumcheck protocol.\\  
 
-Notice that in this sumcheck, the valid information for the verifier is still $g(0), g_{1}(0), \cdots, g_{n}(0)$. The verifier has only $n + 1$ equations about $n$ variables and could get the exact value of $a_0, a_1, \cdots, a_n$. Therefore, $g(0), g_{1}(0), \cdots, g_{n}(0)$ must be linear independent about random variables $a_0, a_1, \cdots, a_n$.
+Notice that in this sumcheck, the valid information for the verifier is still $b, g_i(j)(1 \leq i \leq n, 1 \leq j \leq d)$. The verifier has only $nd + 1$ equations about $nd + 1$ variables and could get the exact value of $a_0$ and $a_{ij}(1 \leq i \leq n, 1 \leq j \leq d)$. Therefore, $b, g_i(j)(1 \leq i \leq n, 1 \leq j \leq d)$ must be linear independent about random variables $a_0$ and $a_{ij}(1 \leq i \leq n, 1 \leq j \leq d)$.
 \end{proof}
 
-That means $F$ and $Q_{sim}$ is inditinguishable for any verifier. Besides, both of $G$ and $Z_{sim}$ are uniformly at random, so they are also indistinguishable for the verifier. By hybrid argument, we could know that $\{View_{V^*}(\mathcal{P}(a, F) \leftrightarrow \mathcal{V^*}(a))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(a)\}$, which means it is zero knowledge.\\
+That means the $b$ and $h_i(x_i)$ are inditinguishable for any verifier. We could know that $\{View_{V^*}(\mathcal{P}(a, F) \leftrightarrow \mathcal{V^*}(a))\} \simeq_{c} \{\mathcal{S}^{\mathcal{V^*}}(a)\}$, which means it is zero knowledge.\\
 
 \noindent
-Now we could move to the general case, where the individual degree of $F$ is $d$. Using the same idea of mask polynomial, we could denote by $G = a_{0} + G_1(x_1) + G_2(x_2) + \cdots + G_n(x_n)$, where $G_{i}(x_i) = a_{i1}x_i + a_{i2}x_i^2 + \cdots + a_{id}x_i^d$. And all coefficients of $G$ are uniformly randomly chosen from $\mathbb{F}$. And in the sumcheck protocol, the prover needs to send $d+1$ values $g_{i}(0), g_{i}(1), \cdots, g_i(d)$ to the verifier. And the zero knowledge proof is very similar to the above proof. \\
-
-\noindent
-\textbf{Complexity}. Consider the time complexity of the prover $\mathcal{P}$. The prover time consists of sampling a polynomial $G$, running sumcheck protocol and zero knowledge sumcheck protocol. Since the complexity of the general sumcheck protocol for $F$ is determined by the self property of $F$, we only consider the overhead complextiy while maintaining zero knowledge property. Suppose $F$ has $n$ variables with individual degree at most $d$. Then the sample complexity is $\mathcal{O}(nd)$ and running sumcheck protocol for mask polynomial $G$ is $\mathcal{O}(nd)$. Besides, the zero knowledge VPD for $G(r_1, r_2, \cdots, r_n)$ runs in total time $\mathcal{O}(n^2d^2)$. So the total overhead complexity is $\mathcal{O}(n^2d^2)$.  
+\textbf{Complexity}. Consider the time complexity of the prover $\mathcal{P}$. The prover time consists of sampling a polynomial $G$, running sumcheck protocol and zero knowledge sumcheck protocol. Since the complexity of the general sumcheck protocol for $F$ is determined by the self property of $F$, we only consider the overhead complextiy while maintaining zero knowledge property. Suppose $F$ has $n$ variables with individual degree at most $d$. Then the sample complexity is $\mathcal{O}(nd)$ and running sumcheck protocol for mask polynomial $G$ is $\mathcal{O}(nd)$. Besides, the zero knowledge VPD for the oracle of $G$ runs in total time $\mathcal{O}(nd)$. So the total overhead complexity is $\mathcal{O}(nd)$.  
 
 \section{Zero knowledge GKR}
 
