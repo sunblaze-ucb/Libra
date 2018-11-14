@@ -75,7 +75,10 @@ The CMT protocol do sumchecks on polynomial $V_{i}$ for each layer and reduces t
 		\item By the definition of $V_i(j)$, $V_0(j)$ is $y_j$, $j$-th element of the output array. The verifier chooses uniform $r_0 \in \mathbb{F}^k$. Both parties set $a_0=\tilde{V_0}(r_0)$
 		\item For $i=1,...,d$:
 		\begin{itemize}
-			\item Both parties runs sumcheck protocol for $a_{i-1}$ on polynomial $\tilde{V_{i-1}}$, in the last step of sumcheck, verifier need to compute $f_{i,z}(R_{g}, R_{u}, R_{v})$ locally, where $R_{g}, R_{u}, R_{v}$ are chosen randomlly from $\mathbb{F}^{|g|},\mathbb{F}^{|u|},\mathbb{F}^{|v|}$. Here instead compute it locally, the verifier asks the prover to provide $v_0=\tilde{V_{i}}(R_{u}), v_1=\tilde{V_{i}}(R_{v})$ and using these value, the verifier can compute $f_{i,z}$.
+			\item Both parties runs sumcheck protocol for $a_{i-1}$ on polynomial $\tilde{V_{i-1}}$, in the last step of sumcheck, verifier need to access the oracle to compute $$\tilde{add}_{i-1}(g, R_{u}, R_{v})(\tilde{V}_{i}(R_{u})+\tilde{V}_{i}(R_v))+\tilde{mult}_{i-1}(g, R_{u}, R_{v})(\tilde{V}_{i}(R_{u})\tilde{V}_{i}(R_v))\textnormal{,}$$ 
+			where $R_{u}, R_{v}$ are chosen randomlly from $\mathbb{F}^{|u|},\mathbb{F}^{|v|}$. 
+
+			\item Here we implement the oracle: the verifier asks the value of $\tilde{V}_i(u), \tilde{V}_i(v)$ from the prover, and the verifier compute $\tilde{add}, \tilde{mult}$ locally. 
 			\item Then the verifier combines $\tilde{V_{i}}(R_{u}), \tilde{V_{i}}(R_{v})$ in this way: 
 			\begin{itemize}
 				\item Let $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ be a line with $\gamma(0)=R_{u}, \gamma(1)=R_{v}$. 
