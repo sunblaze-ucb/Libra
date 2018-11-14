@@ -45,7 +45,7 @@ $$\overline{V}_1[p]\overset{def}{=}\tilde{V}_i(\{x_1, p\})$$
 We will treat both arrays as a linear function or a pair of field elements interchangeably, for example $\overline{mult}_1[p](x)$ means we treat it as a linear function, and $\overline{mult}_1[p].a, \overline{mult}_1[p].b$ means we treat it as a pair.
 
 Similarly we define arrays that used in $k$-th round as follows:
-\begin{definition}[Linear Function Array]
+\begin{definition}[Linear Function Array Part One]
 
 	The definition for $k=1$ is the statement above, for $k\ge 2$
 	\begin{enumerate}
@@ -140,5 +140,24 @@ The answer to the verifier is correct by the definition of $\overline{mult}_k, \
 \end{proof}
 
 \subsubsection{Part two}
+In this part, we will deal with next $s_{i+1}$ rounds. In these rounds, $g, u$ are fixed random vector with $s_{i}, s_{i+1}$ random field elements respectively.
+
+We define two arrays $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$ analogue to $\overline{mult}_k, \overline{V}_k$.
+
+\begin{definition}[Linear Function Array Part Two]
+	For $k=1$, we define 
+	\begin{enumerate}
+		\item $\overline{\overline{mult}}_1[p] = \tilde{mult}_i(g, u, \{x_1, p\})\tilde{V}_{i+1}(u)$
+		\item $\overline{\overline{V}}_1[p] = \tilde{V}_{i+1}(\{x_1, p\})$
+	\end{enumerate}
+	For $k\ge 2$, we define
+	\begin{enumerate}
+		\item $\overline{mult}_k[p]\overset{def}{=}\tilde{mult}_i(g, u, \{r_1, ..., r_{k-1}, x_k, p\})\tilde{V}_{i+1}(u)$
+		\item $\overline{V}_k[p]\overset{def}{=}\tilde{V}_i(\{r_1, ..., r_{k-1}, x_k, p\})$
+		\item Where $p$ is a $s_{i+1}-k$ bits binary number and $\{r_1, ..., r_{k-1}, x_k, p\}$ is the representation of $v$.
+	\end{enumerate}
+\end{definition}
+
+As we discussed in Part One, we only need to calculate all the values of $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three seperate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed 
 
 \subsubsection{Combining two points}
