@@ -92,55 +92,53 @@ For $\overline{mult}_1$, the idea is the same as $\overline{V}_1$, but it's non-
 	\State Initialize array $A$ with zeros.
 	\State let $g'$ be a vector of $s_{i+1}$ bits.
 	\State Call {\sf DFS}($A$, $g'$, $0$, $1$)
-	\For each element of $\overline{mult}_1[p]$
+	\For{each $p \in \{0, 1\}^{s_{i+1}-1}$}
+		\parState{By solving the linear equations, we can get the following statements}
+		\State $\overline{mult}_1[p].b=A[0||p]$
+		\State $\overline{mult}_1[p].a=A[1||p]-A[0||p]$
 	\EndFor
 \EndProcedure
 \end{algorithmic}
-
 \end{algorithm}
 \end{figure}
 
-\paragraph{The Protocol}
+\paragraph{Answer Queries}
 The answer to the first query is the following univariate function:
 
 $$\sum_{p}\overline{mult}_1[p](x)\times\overline{V}_1[p](x),$$
 
 It's easy to get this result by doing some transformation on the original equation.
 
-And we reduce these arraies to the second round using the following way
+We reduce these arraies to the second round using the following way
 
 \begin{enumerate}
-	\item Observe that $\overline{mult}_2[p'](0)=\overline{mult}_1[0||p'](r_1)$ and $\overline{mult}_2[p'](1)=\overline{mult}_1[1||p'](r_1)$
-	\item Observe that $\overline{V}_2[p'](0)=\overline{V}_1[0||p'](r_1)$ and $\overline{V}_2[p'](1)=\overline{V}_1[1||p'](r_1)$
+	\item By definition, $\overline{mult}_2[p'](0)=\overline{mult}_1[0||p'](r_1)$ and $\overline{mult}_2[p'](1)=\overline{mult}_1[1||p'](r_1)$
+	\item By definition, $\overline{V}_2[p'](0)=\overline{V}_1[0||p'](r_1)$ and $\overline{V}_2[p'](1)=\overline{V}_1[1||p'](r_1)$
 
 	\item Since both $\overline{mult}, \overline{V}$ are linear equations, we can solve the $\overline{mult}_2, \overline{V}_2$ by solving linear equations.
 	\item By solving linear equations we found that $\overline{mult}_2[p'].b=\overline{mult}_1[0||p'](r_1)$ and $\overline{mult}_2[p'].a=\overline{mult}_1[1||p'](r_1)-\overline{mult}_1[0||p'](r_1)$
 \end{enumerate}
 
-Where $p'$ is a $s_{i+1}-2$ bit binary number. And the answer to the second round is 
+The answer to the second round is 
 
 $$\sum_{p'}\overline{mult}_2[p']\times\overline{V}_2[p']$$
 
-We define arrays for the $k$-th round ($k\ge 2$) in the similarly using the result from $k-1$-th round.
+We define arrays for the $k$-th round ($k\ge 2$) in the similarly using the result from $k-1$-th round, and solving the linear equation.
 
 The answer to the $k$-th round query is 
 $$\sum_{p}\overline{mult}_k[p]\times\overline{V}_k[p]$$
 
-\begin{theorem} For every round, the algorithm above correctly answered the query.
+\begin{theorem} For every round, the algorithm above correctly answered the query. And the running time of the algorithm runs in time $O(\max(2^{s_i}, 2^{s_{i+1}}))$.
 \end{theorem}
 
 \begin{proof}
-For $1$-st round, we have the following invariant holds by definition:
-$$\overline{mult}_1[p]{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{x_1, p\}, v)\tilde{V}_{i+1}(v)$$
-$$\overline{V}_1[p]{=}\tilde{V}_i(\{x_1, p\})$$
+It's trivial to see that $\overline{mult}_k, \overline{V}_k$ are computed correctly. 
 
-Suppose in $k-1$-th round ($i \ge 2$), the following invariant holds:
-$$\overline{mult}_{k-1}[p]{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{r_1,r_2,...,r_{k-2},x_{k-1}, p\}, v)\tilde{V}_{i+1}(v)$$
-$$\overline{V}_{k-1}[p]{=}\tilde{V}_i(\{r_1, r_2,...,r_{k-2},x_{k-1}, p\})$$
+For time complexity part, $\overline{mult}_k, \overline{V}_k$ are computed in linear time since Algorithm \ref{alg::premult} runs in linear time, and for $k$-th layer, the size of $\overline{mult}_k$ is half size of $\overline{mult}_{k-1}$, by total size of these arraies is linear to the circuit size.
 
-We can conclude that $$$$
-
+The answer to the verifier is correct by the definition of $\overline{mult}_k, \overline{V}_k$.
 \end{proof}
 
-\subsubsection{Combine two points}
-\subsubsection{Running Time Analysis}
+\subsubsection{Part two}
+
+\subsubsection{Combining two points}
