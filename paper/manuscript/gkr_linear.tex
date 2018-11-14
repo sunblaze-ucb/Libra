@@ -69,7 +69,7 @@ For $\overline{mult}_1$, the idea is the same as $\overline{V}_1$, but it's non-
 \begin{figure}[p]
 \begin{algorithm}[H]
 \label{alg::premult}
-\caption{Preprocess $\overline{mult}_1$}
+\caption{Preprocess $\overline{mult}_1, \overline{V}_1$}
 \begin{algorithmic}[1]
 \parState{Assuming we have global access to $g$, $s_i$, $s_{i+1}$, which is resonable since prover knows these values, and $g[k]$ means the $k$-th field element of $g$, starting from $0$ since we are writing pseudo-code}
 \Procedure{{\sf DFS}}{$A$, $g'$, $depth$, $Value$}
@@ -158,6 +158,21 @@ We define two arrays $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$ a
 	\end{enumerate}
 \end{definition}
 
-As we discussed in Part One, we only need to calculate all the values of $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three seperate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed 
+As we discussed in Part One, we only need to calculate all the values of $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three seperate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed algorithm in Algorithm \ref{alg::parttwo}.
+
+\begin{figure}[p]
+\begin{algorithm}[H]
+\label{alg::parttwo}
+\caption{Preprocess $\overline{\overline{mult}}_1, \overline{\overline{V}}_1$}
+\begin{algorithmic}[1]
+\Procedure{{\sf DFS}}{$A, randomVector, depth, maxDepth, value$}
+\EndProcedure
+\Procedure{{\sf PreprocessBeta}}{$BetaMult, BetaV$}
+\EndProcedure
+\Procedure{{\sf Preprocess}}{}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\end{figure}
 
 \subsubsection{Combining two points}
