@@ -65,11 +65,11 @@ For ${V}_1^1$, we can scan through the circuit and get all values of $\tilde{V}_
 \end{align*}
 We can solve for ${V}_1^1[p]$ easily.
 
-For $\overline{mult}_1$, the idea is the same as $\overline{V}_1$, but it's non-trivil to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumberate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tilde{V}_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
+For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivil to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumberate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tilde{V}_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
 \begin{figure}[p]
 \begin{algorithm}[H]
 \label{alg::premult}
-\caption{Preprocess $\overline{mult}_1, \overline{V}_1$}
+\caption{Preprocess ${mult}_1^1, {V}_1^1$}
 \begin{algorithmic}[1]
 \parState{Assuming we have global access to $g$, $s_i$, $s_{i+1}$, which is resonable since prover knows these values, and $g[k]$ means the $k$-th field element of $g$, starting from $0$ since we are writing pseudo-code}
 \Procedure{{\sf DFS}}{$A$, $g'$, $depth$, $Value$}
@@ -87,15 +87,15 @@ For $\overline{mult}_1$, the idea is the same as $\overline{V}_1$, but it's non-
 	\EndIf
 \EndProcedure
 \Procedure{{\sf InitializeMult}}{}
-	\State Let array $\overline{mult}_1$ be filled with zeros.
-	\parState{Since calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ is enough to initialize array $\overline{mult}_1$, we will call a subroutine to initialize every binary $u$, and store the result into array $A$.}
+	\State Let array ${mult}_1^1$ be filled with zeros.
+	\parState{Since calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ is enough to initialize array ${mult}_1^1$, we will call a subroutine to initialize every binary $u$, and store the result into array $A$.}
 	\State Initialize array $A$ with zeros.
 	\State let $g'$ be a vector of $s_{i+1}$ bits.
 	\State Call {\sf DFS}($A$, $g'$, $0$, $1$)
 	\For{each $p \in \{0, 1\}^{s_{i+1}-1}$}
 		\parState{By solving the linear equations, we can get the following statements}
-		\State $\overline{mult}_1[p].b=A[0||p]$
-		\State $\overline{mult}_1[p].a=A[1||p]-A[0||p]$
+		\State ${mult}_1^1[p].b=A[0||p]$
+		\State ${mult}_1^1[p].a=A[1||p]-A[0||p]$
 	\EndFor
 \EndProcedure
 \end{algorithmic}
@@ -105,60 +105,61 @@ For $\overline{mult}_1$, the idea is the same as $\overline{V}_1$, but it's non-
 \paragraph{Answer Queries}
 The answer to the first query is the following univariate function:
 
-$$\sum_{p}\overline{mult}_1[p](x)\times\overline{V}_1[p](x),$$
+$$\sum_{p}{mult}_1^1[p](x)\times{V}_1^1[p](x),$$
 
 It's easy to get this result by doing some transformation on the original equation.
 
 We reduce these arraies to the second round using the following way
 
 \begin{enumerate}
-	\item By definition, $\overline{mult}_2[p'](0)=\overline{mult}_1[0||p'](r_1)$ and $\overline{mult}_2[p'](1)=\overline{mult}_1[1||p'](r_1)$
-	\item By definition, $\overline{V}_2[p'](0)=\overline{V}_1[0||p'](r_1)$ and $\overline{V}_2[p'](1)=\overline{V}_1[1||p'](r_1)$
+	\item By definition, ${mult}_2^1[p'](0)={mult}_1^1[0||p'](r_1)$ and ${mult}_2^1[p'](1)={mult}_1^1[1||p'](r_1)$
+	\item By definition, ${V}_2^1[p'](0)={V}_1^1[0||p'](r_1)$ and ${V}_2^1[p'](1)={V}_1^1[1||p'](r_1)$
 
-	\item Since both $\overline{mult}, \overline{V}$ are linear equations, we can solve the $\overline{mult}_2, \overline{V}_2$ by solving linear equations.
-	\item By solving linear equations we found that $\overline{mult}_2[p'].b=\overline{mult}_1[0||p'](r_1)$ and $\overline{mult}_2[p'].a=\overline{mult}_1[1||p'](r_1)-\overline{mult}_1[0||p'](r_1)$
+	\item Since both ${mult}_2^1, {V}_2^1$ are linear equations, we can solve the ${mult}_2^1, {V}_2^1$ by solving linear equations.
+	\item By solving linear equations we found that ${mult}_2^1[p'].b={mult}_1^1[0||p'](r_1)$ and ${mult}_2^1[p'].a={mult}_1^1[1||p'](r_1)-{mult}_1^1[0||p'](r_1)$
 \end{enumerate}
 
 The answer to the second round is 
 
-$$\sum_{p'}\overline{mult}_2[p']\times\overline{V}_2[p']$$
+$$\sum_{p'}{mult}_2^1[p']\times{V}_2^1[p']$$
 
 We define arrays for the $k$-th round ($k\ge 2$) in the similarly using the result from $k-1$-th round, and solving the linear equation.
 
 The answer to the $k$-th round query is 
-$$\sum_{p}\overline{mult}_k[p]\times\overline{V}_k[p]$$
+$$\sum_{p}{mult}_k^1[p]\times{V}_k^1[p]$$
 
 \begin{theorem} For every round, the algorithm above correctly answered the query. And the running time of the algorithm runs in time $O(\max(2^{s_i}, 2^{s_{i+1}}))$.
 \end{theorem}
 
 \begin{proof}
-It's trivial to see that $\overline{mult}_k, \overline{V}_k$ are computed correctly. 
+It's trivial to see that ${mult}_k^1, {V}_k^1$ are computed correctly. 
 
-For time complexity part, $\overline{mult}_k, \overline{V}_k$ are computed in linear time since Algorithm \ref{alg::premult} runs in linear time, and for $k$-th layer, the size of $\overline{mult}_k$ is half size of $\overline{mult}_{k-1}$, by total size of these arraies is linear to the circuit size.
+For time complexity part, ${mult}_k^1, {V}_k^1$ are computed in linear time since Algorithm \ref{alg::premult} runs in linear time, and for $k$-th layer, the size of ${mult}_k^1$ is half size of ${mult}_{k-1}^1$, by total size of these arraies is linear to the circuit size.
 
-The answer to the verifier is correct by the definition of $\overline{mult}_k, \overline{V}_k$.
+The answer to the verifier is correct by the definition of ${mult}_k^1, {V}_k^1$.
 \end{proof}
 
 \subsubsection{Part two}
 In this part, we will deal with next $s_{i+1}$ rounds. In these rounds, $g, u$ are fixed random vector with $s_{i}, s_{i+1}$ random field elements respectively.
 
-We define two arrays $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$ analogue to $\overline{mult}_k, \overline{V}_k$.
+\paragraph*{Initialize Arrays}
+We define two arrays ${mult}_k^2, {V}_k^2$ analogue to ${mult}_k^1, {V}_k^1$.
 
 \begin{definition}[Linear Function Array Part Two]
 	For $k=1$, we define 
 	\begin{enumerate}
-		\item $\overline{\overline{mult}}_1[p] = \tilde{mult}_i(g, u, \{x_1, p\})\tilde{V}_{i+1}(u)$
-		\item $\overline{\overline{V}}_1[p] = \tilde{V}_{i+1}(\{x_1, p\})$
+		\item ${mult}_1^2[p] = \tilde{mult}_i(g, u, \{x_1, p\})\tilde{V}_{i+1}(u)$
+		\item ${V}_1^2[p] = \tilde{V}_{i+1}(\{x_1, p\})$
 	\end{enumerate}
 	For $k\ge 2$, we define
 	\begin{enumerate}
-		\item $\overline{mult}_k[p]\overset{def}{=}\tilde{mult}_i(g, u, \{r_1, ..., r_{k-1}, x_k, p\})\tilde{V}_{i+1}(u)$
-		\item $\overline{V}_k[p]\overset{def}{=}\tilde{V}_i(\{r_1, ..., r_{k-1}, x_k, p\})$
+		\item ${mult}_k^2[p]\overset{def}{=}\tilde{mult}_i(g, u, \{r_1, ..., r_{k-1}, x_k, p\})\tilde{V}_{i+1}(u)$
+		\item ${V}_k^2[p]\overset{def}{=}\tilde{V}_i(\{r_1, ..., r_{k-1}, x_k, p\})$
 		\item Where $p$ is a $s_{i+1}-k$ bits binary number and $\{r_1, ..., r_{k-1}, x_k, p\}$ is the representation of $v$.
 	\end{enumerate}
 \end{definition}
 
-As we discussed in Part One, we only need to calculate all the values of $\overline{\overline{mult}}_k, \overline{\overline{V}}_k$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three seperate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed algorithm in Algorithm \ref{alg::parttwo}.
+As we discussed in Part One, we only need to calculate all the values of ${mult}_k^2, {V}_k^2$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three seperate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed algorithm in Algorithm \ref{alg::parttwo}.
 
 \begin{figure}[p]
 \begin{algorithm}[H]
@@ -178,15 +179,35 @@ As we discussed in Part One, we only need to calculate all the values of $\overl
 \EndProcedure
 \Procedure{{\sf PreprocessBeta}}{$BetaMult, BetaV$}
 	\State let $g', u'$ be zero $s_{i}, s_{i+1}$ length vector
-	\State Call DFS($BetaMult$, $g'$, $g$, $0$, $s_{i}$, $1$)
-	\State Call DFS($BetaV$, $u'$, $u$, $0$, $s_{i + 1}$, $1$)
+	\State Call {\sf DFS}($BetaMult$, $g'$, $g$, $0$, $s_{i}$, $1$)
+	\State Call {\sf DFS}($BetaV$, $u'$, $u$, $0$, $s_{i + 1}$, $1$)
 \EndProcedure
-\Procedure{{\sf Preprocess}}{$\overline{\overline{Mult}}_1, \overline{\overline{V}}_1$}
+\Procedure{{\sf Preprocess}}{${Mult}_1^2, {V}_1^2$}
 	\State Let $BetaMult, BetaV$ be a array with length $2^{s_{i}}, 2^{s_{i+1}}$ respectively
-	\State 
+	\State Call {\sf PreprocessBeta}($BetaMult$, $BetaV$)
+	\State Let $MultBinaryU$ be a array with $2^{s_{i+1}}$ field elements, initially set to $0$.
+	\parState{The array $MultBinaryU[v'] \overset{def}{=}\tilde{mult}_i(g, u, v')\tilde{V}_{i+1}(u)$}, we will show that how to compute this array in this For loop.
+	\For{Each $v' \in \{0, 1\}^{s_{i+1}}$}
+		\For{Each $(g', u')$ that is connected to $v'$ in the circuit}
+			\State $MultBinaryU[v'] += BetaMult[g'] \times BetaV[u'] \times \tilde{V}_{i+1}[u]$
+			\parState{Since $u$ is a constant, $\tilde{V}_{i+1}[u]$ is a constant all the time as well, we can obtain the value from the result of Part One (It equals to $V_{s_{i+1}-1}^1[0](r_{s_{i+1}})$ by the definition of $V_{k}^1$).}
+		\EndFor
+	\EndFor
+
+	\For {each $p \in \{0, 1\}^{s_{i+1}-1}$}
+		\parState{By solving the linear equations , we can get the following statements}
+		\State $Mult_1^2[p].b = MultBinaryU[0||p]$
+		\State $Mult_1^2[p].a = MultBinaryU[1||p]-MultBinaryU[0||p]$
+		\parState{$\tilde{V}_{s_{i+1}}[v']$ is the value directly from the circuit, we assume it's preprocessed into a array.}
+		\State $V_1^2[p].b = \tilde{V}_{s_{i+1}}[0||p]$
+		\State $V_1^2[p].a = \tilde{V}_{s_{i+1}}[1||p]-\tilde{V}_{s_{i+1}}[0||p]$
+	\EndFor
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 \end{figure}
+
+\paragraph*{Answer Queries}
+
 
 \subsubsection{Combining two points}
