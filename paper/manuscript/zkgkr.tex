@@ -3,7 +3,7 @@
 
 \section{Zero Knowledge Sumcheck}\label{ZKSumcheck}
 \subsection{Intuition}
-As presented in \nameref{sec::prelim}, in GKR protocol\cite{GKR}, for every layer of the circuit, the prover needs to prove one equation to the verifier based on the sumcheck protocol. That means if we want to get the zero knowledge GKR protocol, we should first design an efficient zero knowlege sumcheck protocol.\\
+As presented in \ref{prot::sumcheck}, in GKR protocol\cite{GKR}, for every layer of the circuit, the prover needs to prove one equation to the verifier based on the sumcheck protocol. That means if we want to get the zero knowledge GKR protocol, we should first design an efficient zero knowlege sumcheck protocol.\\
 
 For sumcheck protocol, the prover needs to prove $a = \sum\limits_{x_1, x_2, \cdots, x_n \in \{0, 1\}}F(x_1, x_2, \cdots, x_n)$ to the verifier. And the verifier accepts if and only if it verifies $f_{i-1}(r_{i-1}) = f_i(0) + f_i(1)$ for every round and $f_n(r_n) = F(r_1, r_2, \cdots, r_n)$ at the end of the protocol, where $r_1, r_2, \cdots, r_n$ are randomly chosen by the verifier and $F(r_1, r_2, \cdots, r_n)$ is given by the oracle of $F$. It would leak some information about $F$ since the verifier could learn partial sums of $F$. We hope the verifier learns nothing about the polynomial $F$ except for the value of $a$ and the query value of $s$ on $r_1, r_2, \cdots, r_n$.\\
 
@@ -166,10 +166,8 @@ Other things are also distinguishable for the verifier $\mathcal{V^*}$ because o
 \textbf{Complexity}. Consider the time complexity of zero knowledge GKR protocol. We would like to focus on the prover time. Since we have analyzed the prover time in our linear GKR protocol, we only need to think about the overhead complexity while maintaining zero knowledge for GKR protocol. For every layer of the circuit $C$, the prover samples $R_i(X, Y)$, runs the zeor knowledge sumcheck protocol for at most $3s_i$ variables with individual degree at most $2$ and run the zero knowledge oracle(ZK VPD) for $R(X, Y)$ on $2$ random points. The total complexity is $\mathcal{O}(s_i)$ since the size of $R_i(X, Y)$ is only constant. Suppose the depth of the circuit $C$ is $d$ and the maximum number of gates in one layer is $S$. The total complexity is $\mathcal{O}(d \log S)$. In addition, at the end of the protocol, the prover needs to run the zero knowledge oracle(ZK VPD) for $\dot{V}_d$ on $2$ random points. It needs $\mathcal{O}(S)$. So the total complexity is $\mathcal{O}(S \times d)$, which is linear of the circuit size and it is optimal as the prover must evaluate the circuit $C$. 
 
 \section{Zero knowledge VPD}
-
-
-
-
+\subsection{intuition}
+In this section, we explain how to exemplify the oracles of using the zero knowledge VPD protocol. In the preliminary part, we have defined the general zero knowledge VPD. We could use it as an oracle to get a random point for any polynomial function. However, at the end of our zero knowledge GKR protocol, the verifier needs to query $\sum\limits_{c \in \{0, 1\}}R(r_1, c)$ and $\sum\limits_{c \in \{0, 1\}}R(s_1, c)$, it is a little different from the general zero knowledge VPD protocol. We could modify it 
 
 
 
