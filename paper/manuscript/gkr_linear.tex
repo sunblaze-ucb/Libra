@@ -165,11 +165,25 @@ As we discussed in Part One, we only need to calculate all the values of $\overl
 \label{alg::parttwo}
 \caption{Preprocess $\overline{\overline{mult}}_1, \overline{\overline{V}}_1$}
 \begin{algorithmic}[1]
-\Procedure{{\sf DFS}}{$A, randomVector, depth, maxDepth, value$}
+\parState{Array/Vector parameters are passed by pointer, any change to the array will effect the array globally}
+\Procedure{{\sf DFS}}{$A, x, randVec, depth, maxDepth, value$}
+	\If{$depth=maxDepth$}
+		\State $A[x]=value$
+	\Else
+		\State set $x[depth]=0$
+		\State Call DFS($A$, $x$, $depth + 1$, $value \times (1-randVec[depth])$)
+		\State set $x[depth]=1$
+		\State Call DFS($A$, $x$, $depth + 1$, $value \times randVec[depth]$)
+	\EndIf
 \EndProcedure
 \Procedure{{\sf PreprocessBeta}}{$BetaMult, BetaV$}
+	\State let $g', u'$ be zero $s_{i}, s_{i+1}$ length vector
+	\State Call DFS($BetaMult$, $g'$, $g$, $0$, $s_{i}$, $1$)
+	\State Call DFS($BetaV$, $u'$, $u$, $0$, $s_{i + 1}$, $1$)
 \EndProcedure
-\Procedure{{\sf Preprocess}}{}
+\Procedure{{\sf Preprocess}}{$\overline{\overline{Mult}}_1, \overline{\overline{V}}_1$}
+	\State Let $BetaMult, BetaV$ be a array with length $2^{s_{i}}, 2^{s_{i+1}}$ respectively
+	\State 
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
