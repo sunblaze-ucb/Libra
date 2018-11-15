@@ -26,6 +26,7 @@ Using this protocol, even a polynomial bounded verifier can verify the statement
 \end{definition}
 
 \begin{protocol}[\textbf{Sumcheck}]
+\label{prot::sumcheck}
 	The protocol proceeds in $l$ rounds. 
 	\begin{itemize}
 		\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(x_1, b_2, b_3, ..., b_{l})\textnormal{,}$$ the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover.
