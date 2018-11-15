@@ -208,6 +208,27 @@ As we discussed in Part One, we only need to calculate all the values of ${mult}
 \end{figure}
 
 \paragraph*{Answer Queries}
+The answer to the first query is the following univariate function:
 
+$$\sum_{p}mult_{1}^2[p](x)\times V_1^2[p](x)$$
+
+It's easy to check that this summation is equals to the original sumcheck summation.
+
+To answer $k$-th query ($k\ge 2$), we suppose we have answered the $k-1$-th query and generated arrays $mult_{k-1}^2, V_{k-1}^2$, we generate $mult_{k}^2, V_{k}^2$ and answer the $k$-th query in the following way:
+
+\begin{enumerate}
+	\item By definition, $\forall p \in {\{0, 1\}^{s_{i+1}-k}}$, $mult_{k}^2[p](0)=mult_{k-1}^2[0||p](r_{k-1}), mult_{k}^2[p](1)=mult_{k-1}^2[1||p](r_{k-1})$
+	\item By definition, $\forall p \in {\{0, 1\}^{s_{i+1}-k}}$, $V_{k}^2[p](0)=V_{k-1}^2[0||p](r_{k-1}), V_{k}^2[p](1)=V_{k-1}^2[1||p](r_{k-1})$
+	\item Since $mult_{k}^2[p], V_{k}^2[p]$ are linear function, we can solve the equations above. We have the following results.
+	\item $\forall p \in {\{0, 1\}^{s_{i+1}-k}}$, $mult_{k}^2[p].b = mult_{k-1}^2[0||p](r_{k-1}), mult_{k}^2[p].a = mult_{k-1}^2[1||p](r_{k-1})-mult_{k-1}^2[0||p](r_{k-1})$
+	\item $\forall p \in {\{0, 1\}^{s_{i+1}-k}}$, $V_{k}^2[p].b = V_{k-1}^2[0||p](r_{k-1}), V_{k}^2[p].a = V_{k-1}^2[1||p](r_{k-1})-V_{k-1}^2[0||p](r_{k-1})$
+	\item For $k$-th round, the answer to the query is $\sum_{p} mult_{k}^2[p](x)\times V_{k}^2[p](x)$
+\end{enumerate}
+
+\begin{theorem} The algorithm above correctly answered querys of last $s_{i+1}$ rounds, and runs in time $O(\max(2^{s_{i}}, 2^{s_{i+1}}))$.
+\end{theorem}
+
+\begin{proof}
+\end{proof}
 
 \subsubsection{Combining two points}
