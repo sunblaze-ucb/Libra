@@ -229,6 +229,11 @@ To answer $k$-th query ($k\ge 2$), we suppose we have answered the $k-1$-th quer
 \end{theorem}
 
 \begin{proof}
+Since we only need to scan through the circuit, the time complexity is linear for initialize $mult_{1}^2, V_1^2$. The size of $mult_{k}^2, V_k^2$ is half of $mult_{k-1}^2, V_{k-1}^2$. The total size of $mult_{k}^2, V_k^2$ is linear to the size of $mult_1^2, V_1^2$, which is the circuit size. And to answer the query, we only need to scan through these arrays. The total time complexity is linear to the circuit size.
+
+If $mult_k^2, V_k^2$ are generated correctly, the answer to the query is correct by definition.
+
+$V_1^2$ is correct since it's equal to the circuit value. $mult_1^2$ is correct if and only if $MultBinaryU$ is generated correctly.
 \end{proof}
 
 \subsubsection{Combining two points}
