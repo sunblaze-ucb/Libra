@@ -233,7 +233,31 @@ Since we only need to scan through the circuit, the time complexity is linear fo
 
 If $mult_k^2, V_k^2$ are generated correctly, the answer to the query is correct by definition.
 
-$V_1^2$ is correct since it's equal to the circuit value. $mult_1^2$ is correct if and only if $MultBinaryU$ is generated correctly.
+$V_1^2$ is correct since it's equal to the circuit value. $mult_1^2$ is correct if and only if $MultBinaryU$ is generated correctly. $\forall g'$, $BetaMult[g']$ is correct because we calculated it bit by bit according to definition in $DFS$ part. And so does $BetaV[u']$. By definition 
+\begin{align*}
+MultBinaryU[v']&\overset{def}{=}\tilde{mult}_{i}(g, u, v')\tilde{V}_{i+1}(u)
+\\&=\sum_{v=v', (g', u', v) \in G_{i, mult}}\tilde{\beta}_{s_{i}}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')\tilde{V}_{i+1}(u)
+\\&=\sum_{v=v', (g', u', v) \in G_{i, mult}}\tilde{\beta}_{s_{i}}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{V}_{i+1}(u)
+\end{align*}
+
+Since $BetaMult[g'], BetaV[u']$ are correct, we have $MultBinaryU$ is correct. Thus $mult_1^2$ is correct.
+
+To prove $mult_k^2, V_k^2$ is correct ($k \ge 2$). We assume $mult_{k-1}^2, V_{k-1}^2$ is correct. According to the definition of $mult_k^2$, $mult_k^2[p](0)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 0, p})=mult_{k-1}^2[0||p](r_{k-1})$, $mult_k^2[p](1)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 1, p})=mult_{k-1}^2[1||p](r_{k-1})$, by solving the linear equation, we can get the right value of $mult_k^2[p]$. And we have a similar arguement of $V_k^2$.
 \end{proof}
 
 \subsubsection{Combining two points}
+In original CMT protocol, after the final round of sumcheck, we have two claimed value about the next layer, $\tilde{V}_{i+1}(u), \tilde{V}_{i+1}(v)$ where $u, v$ are random vector from sumcheck. We can setup a line $\gamma(x)$ where $\gamma(0) = u, \gamma(1)=v$. The prover need to provide $\tilde{V}_{i+1}(\gamma(x))$ to verifier, and the verifier can chooses next random point.
+
+Unfortunately, if the prover naively compute $\tilde{V}_{i+1}(\gamma(x))$, it would incur $O(2^{s_{i+1}}s_{i+1})$ complexity. To optimize the computing, we need to look at the structure of the summation. 
+
+\begin{align*}
+\tilde{V}_{i+1}(\gamma(x))&=\sum_{u, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i+1}(\gamma(x), u, v)\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)\\
+&=\sum_{u, v\in \{0, 1\}^{s_{i+1}}}\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)
+\end{align*}
+
+The interesting thing is that, $\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)$ is non-zero if and only if $u=u', v=v'$. Thus we can optimize the summation to :
+
+$$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{V}_{i+2}(u')\tilde{V}_{i+2}(v')$$
+
+
+\paragraph*{An Alternative Way}
