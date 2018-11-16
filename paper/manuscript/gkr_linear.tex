@@ -257,7 +257,38 @@ Unfortunately, if the prover naively compute $\tilde{V}_{i+1}(\gamma(x))$, it wo
 
 The interesting thing is that, $\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)$ is non-zero if and only if $u=u', v=v'$. Thus we can optimize the summation to :
 
-$$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{V}_{i+2}(u')\tilde{V}_{i+2}(v')$$
+$$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{V}_{i+2}(u')\tilde{V}_{i+2}(v').$$ Now we present a efficient algorithm \ref{alg::comb} to calculate this summation.
 
+\begin{figure}[p]
+\begin{algorithm}[H]
+\label{alg::comb}
+\caption{Calculate $\tilde{V}_{i+1}(\gamma(x))$}
+\begin{algorithmic}[1]
+\parState{We define a polynomial type here to represent a polynomial. The cost of mutiplying two polynomials with degree $d_1, d_2$ is $d_1\times d_2$, and the cost of evaluating a polynomial with degree $d$ is $d+1$.}
+\Procedure{{\sf DFS}}{$g$, $G$, $depth$, $maxDepth$}
+	\If{$depth=maxDepth$}
+		\State Return $Poly(G[g])$
+	\Else
+		\State $sum = Poly(0)$
+		\State set $g[depth]=0$
+		\State $polyleft = DFS(g, G, depth + 1, maxDepth) \times (1-\gamma[depth](x))$
+		\State set $g[depth]=1$
+		\State $polyright = DFS(g, G, depth + 1, maxDepth) \times \gamma[depth](x)$
+		\State $sum = polyleft + polyright$
+		\State Return $sum$
+	\EndIf
+\EndProcedure
+\Procedure{{\sf Combine}}{$\gamma$}
+\parState{Here $\gamma$ is a pair array with length $s_{i+1}$, a pair $(a, b)$ can be treated as a pair or a linear function $ax+b$, we will use both notation interchangely.}
+\State Let $G[g]$ be a array with $2^{s_{i+1}}$ elements
+\State $G[g]\overset{def}{=}\sum_{g'=g, (g', u', v')\in G_{i+1, mult}}\tilde{V}_{i+1}(u')\tilde{V}_{i+1}(v')$.
+\State $G[g]$ can be computed by a single scan through the circuit. We assume it's initialized apporiately.
+\State The answer is $\sum_{g \in \{0, 1\}^{s_{i+1}}}G[g]\times \tilde{\beta}_{s_{i+1}}(\gamma(x), g)$, we will show that how to compute this answer in linear time.
 
+\State Return {\sf DFS}($\vec{0}$, G, $0$, $s_{i+1}$)
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\end{figure}
 \paragraph*{An Alternative Way}
+There is another way to deal with this problem. This approach is proposed by Alessandro et al.\cite{zksumcheck} In the first round, the sumcheck protocol will eventually reduce to two random claims $\tilde{V}_{2}(u), \tilde{V}_2(v)$. Their protocol just recursively check these two claims parallelly with shared randomness. These two sub thread will run the sumcheck protocol, and eventually reduced to $\tilde{V}_{3}(u_1), \tilde{V}_{3}(v_1), \tilde{V}_{3}(u_2), \tilde{V}_{3}(v_2)$. Since they share the same randomness, we have $u_1=u_2, v_1=v_2$. In this case, the size of recursion will not change. And for next rounds of both recursion thread, they still share the same randomness. The size of recursion will not grow at all. Applying our linear time sumcheck, this algorithm will be linear time.
