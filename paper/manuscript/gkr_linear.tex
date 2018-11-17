@@ -1,23 +1,52 @@
 %!TEX root = fastZKP.tex
 \section{Linear Prover Time GKR Protocol}
 \label{sec::gkrlin}
-In this section we will improve the GKR protocol\cite{GKR} to make the prover runs in linear time. Our work is based on the CMT protocol \cite{CMT}.
 
-\subsection{Roadmap}
-Through out the whole CMT protocol, the prover has to answer two type of queries:
-\begin{enumerate}
-	\item the query related to sumcheck.
-	\item the query to combine the points. 
-\end{enumerate}
+In this section, we present our improvements on the GKR protocol~\cite{GKR} to make the prover run in linear time. 
 
-We will deal with these queries seperately. The equation in sumcheck queries are well structured. For each sumcheck we are going to check the claim $a_i=\tilde{V_i}(r_i)$. Since the sumcheck deal with the parameters one by one, we can divide the sumcheck into two stages as follows: the first stage is the sumcheck about variables in $u$ and the second stage is the sumcheck about the variaibles in $v$. Also notice that $\tilde{mult}$ and $\tilde{add}$ are independent in the equation, where independent means that we can calculate them seperately and the final answer is the sum of these two. So we can treat them seperately using two similar algorithm. For simplicity, in this subsection we only discuss the idea of calculate $\tilde{mult}$ part. 
+\subsection{Linear Time Sumcheck in GKR}
 
-For a generic sumcheck protocol, if we can initialize all binary values to an array, we can answer the first sumcheck query by scanning through the array, and reduce the array into a new array with only half size of the previous array since the summation size in the sumcheck is halved. By reducing the array, we can answer all queries in linear time to the initial array size.
+We start with the sumcheck protocol to reduce a claim on layer $i$ to two claims on layer $i+1$, as defined in Definition~\ref{def::multilinear}. As shown in~\cite{CMT}, in the sumcheck protocol, the parts corresponding to $\tilde{V}_{i+1}(u)$ (and $\tilde{V}_{i+1}(v)$) can be computed in linear time by the prover using dynamic programming. In particular, the prover initializes an array of size $2^{s_{i+1}}$ storing all evaluations of $\tilde{V}_{i+1}$ on the boolean hypercube (i.e., $\tilde{V}_{i+1}(b) = V_{i+1}(b) \forall b\in\{0,1\}^{s_{i+1}}$). In every round of the sumcheck protocol, the parts corresponding to $\tilde{V}_{i+1}(u)$ can be computed in linear time to the size of the array, and the array is updated to half of the size based on the random number chosen by the verifier in this round. In this way, the total complexity is $O(2^{s_{i+1}})+ O(2^{s_{i+1}-1}) + O(2^{s_{i+1}-2}) + \ldots = O(2^{s_{i+1}})$. We give the full protocol in Figure~\ref{dynamic}.
 
-Unfortunatelly, we cannot directly use this technique to our protocol since if we directly initialize the array, the time complexity would be the square of the current layer size since we have two variables. But noticed that these two variables are well seperated, we can calculate them seperately. In the first part of sumcheck, the verifier will only asks questions about $u$, in this part we can preprocess the calculation of $v$, since we are doing the exact the same summation on $v$, we do not need to recalculate it every round. In the second part, we can use the generic sumcheck protocol since we only have one variable left, and we will show an algorithm to initialize arrays in the generic sumcheck protocol.
+Unfortunately, this technique cannot be applied on $\tilde{add}_{i+1}$ and $\tilde{mult}_{i+1}$, as the size of their boolean hypercube is $2^{2s_{i+1}}$, and naively applying the same technique would incur quadratic prover time $O(2^{2s_{i+1}}) = O(S_{i+1}^2)$. This is the main reason why piror work~\cite{CMT,...} take a different approach, resulting in $O(S_{i+1}\log S_{i+1})$ prover time.
 
-For the combination part, it's quite straightforward, we defer the introduction to the detailed protocol.
+In this paper, we develop a new algorithm to initialize an array of size only $2^{s_{i+1}}$ efficiently for $\tilde{add}_{i+1}$ ($\tilde{mult}_{i+1}$), making the whole sumcheck protocol in GKR run in linear time. 
 
+Our protocol divides the sumcheck into two phases: the first $s_{i+1}$ rounds bounding the variables of $u$, and the last $s_{i+1}$ rounds bounding the variables of $v$.
+
+\subsubsection{Phase one}
+
+For simplicity, we first focus on 
+\begin{equation}\label{eq:sum_mult}
+H = \sum_{u, v \in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,u,v)\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v)
+\end{equation}
+The term with $\tilde{add}_{i+1}$ can be computed in a similar way. 
+
+During the first $s_{i+1}$ rounds, as $v$ does not change (always being summed on the boolean hypercube), we can write Equation~\ref{eq:sum_mult} as 
+\[
+H = \sum_{u\in\{0,1\}^{s_{i+1}}}h(u)\tilde{V}_{i+1}(u),
+\]
+where $h(u) = \sum_{v\in\{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,u,v)\tilde{V}_{i+1}(v)$. Note here that $h(u)$ contains only $s_{i+1}$ variables and if we can initialize an array of $h(b)$ for $b\in\{0,1\}^{s_{i+1}}$ efficiently, we can use the dynamic programming technique in Figure~\ref{dynamic} to generate all the messages in this phase of the sumcheck protocol in linear time. 
+
+The way to initialize the array \textbf{H} is as following: we first compute an array \textbf{Z} where $\textbf{Z}[a] = \prod_{i=0}^{s_i} ((1-z_i)(1-a_i)+z_ia_i)$. This can be computed in $O(2^{s_i})$ as shown in Figure~\ref{expand}. For each gate in layer $i$ labeled as $a$, let $b$ be the label of its left input, and $c$ be the label of its right input, if it is a multiplication gate, we simply add $\textbf{Z}[a]\cdot \tilde{V}_{i+1}(c)$ to $\textbf{H}[b]$. We then use the dynamic programming in Figure~\ref{dynamic} to generate the messages and update both $h(u)$ and $\tilde{V}_{i+1}(u)$. In this way, the prover runs in $O(2^{s_i}+2^{s_{i+1}})$ in phase one. The full protocol is presented in Figure~\ref{phase1}.
+
+\subsubsection{Phase two}
+
+At this point, all variables in $u$ have been bounded to random numbers $R_u$. In the second phase, the equation to sum on becomes 
+\[
+\sum_{v\in\{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,R_u,v)\tilde{V}_{i+1}(R_u)\tilde{V}_{i+1}(v)
+\]
+Note here that $\tilde{V}_{i+1}(R_u)$ is merely a single value which we already computed in phase one at the end of the dynamic programming for $\tilde{V}_{i+1}(u)$. It remains to initialize an array for $\tilde{mult}_{i+1}(z,R_u,b)$ for $b\in\{0,1\}^{s_{i+1}}$. The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^{s_{i+1}} ((1-R_{u,i})(1-b_i)+R_{u,i}b_i)$. The for each gate $a$ in layer $i$ with gate $b$ as left input and $c$ as right input from layer $i+1$, if it is a multiplication gate, we simply add $\textbf{Z}[a]\cdot\textbf{U}[b]$ to $\textbf{V}[c]$. Then we use the algorithm in Figure~\ref{dynamic} to run the sumcheck in this phase in linear time. The protocol is presented in Figure~\ref{phase2}.
+
+\smallskip\noindent\textbf{Computing $\tilde{add}_{i+1}$.} The term with $\tilde{add}_{i+1}$ in Definition~\ref{def::multilinear} can be viewed as: 
+\[\sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v)) =
+\]
+\[
+ \sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)\tilde{V}_{i+1}(u)+\sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)\tilde{V}_{i+1}(v)
+\]
+The first sum can be computed using the same protocol in Figure~\ref{phase1,phase2} without $\tilde{V}_{i+1}(v)$, and the second sum can be computed without $\tilde{V}_{i+1}(u)$. The complexity for both cases remains linear. Due to linearity of the sumcheck equation, during the whole sumcheck protocol in Definition~\ref{def::multilinear}, every message sent by the prover can be computed as the sum of the messages from the three individual sums, one for $\tilde{mult}_{i+1}$ and two for $\tilde{add}_{i+1}$. 
+
+\ignore{
 \subsubsection{Linear Prover Time Sumcheck}
 We will follow the CMT protocol, and improve the performance of sumcheck and the performance of combining two points. We will break the protocol into two parts, the first part deal with queries about $u$, and the second part will deal with queries about $v$.
 \subsubsection{Part One} In this part, we will deal with queries in first $s_{i+1}$ rounds.
@@ -244,8 +273,25 @@ Since $BetaMult[g'], BetaV[u']$ are correct, we have $MultBinaryU$ is correct. T
 
 To prove $mult_k^2, V_k^2$ is correct ($k \ge 2$). We assume $mult_{k-1}^2, V_{k-1}^2$ is correct. According to the definition of $mult_k^2$, $mult_k^2[p](0)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 0, p})=mult_{k-1}^2[0||p](r_{k-1})$, $mult_k^2[p](1)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 1, p})=mult_{k-1}^2[1||p](r_{k-1})$, by solving the linear equation, we can get the right value of $mult_k^2[p]$. And we have a similar arguement of $V_k^2$.
 \end{proof}
+}
 
-\subsubsection{Combining two points}
+\subsection{Combining Two Points}
+
+As described in Section~\ref{sec::gkr}, the prover and the verifier need to combine the two claims about $\tilde{V}_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
+
+\subsubsection{Random linear combination}
+It is quite straight forward to modify our protocol for this approach. As presented in Section~\ref{sec::gkr}, at the end of the sumcheck protocol, the verifier receives $\tilde{V}_{i+1}(R_u)$ and $\tilde{V}_{i+1}(R_v)$. \yupeng{Can remove the next sentence if we have it in the prelim. Change to $z_1,z_2$ for better understanding.} He locally computes $\tilde{add}_{i+1}(z,R_u,R_v)$ and $\tilde{mult}_{i+1}(z,R_u,R_v)$ to check that they are consistent with the last message of the sumcheck (i.e., $f_z(R_u,R_v) = \tilde{add}_{i+1}(z,R_u,R_v)(\tilde{V}_{i+1}(R_u)+\tilde{V}_{i+1}(R_v))+\tilde{mult}_{i+1}(z,R_u,R_v)\tilde{V}_{i+1}(R_u)\tilde{V}_{i+1}(R_v)$). The verifier then selects $\alpha,\beta$ randomly and runs sumcheck protocol on a different function with the prover for the next layer:
+\[
+\alpha\tilde{V}_{i+1}(R_u)+\beta\tilde{V}_{i+1}(R_v) = \sum_{u,v\in\{0,1\}}^{s_{i+2}}((\alpha\tilde{add}_{i+2}(R_u,u,v)+\beta\tilde{add}_{i+2}(R_v,u,v))(\tilde{V}_{i+2}(u)+\tilde{V}_{i+2}(v))
+\]
+\[+(\alpha\tilde{mult}_{i+2}(R_u,u,v)+\beta\tilde{mult}_{i+2}(R_v,u,v))(\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)))
+\]
+Therefore, when dealing with $\tilde{add}$ and $\tilde{mult}$ in our protocols, we initialize two arrays $\textbf{Z}_1$ with $R_u$ and $\textbf{Z}_2$ with $R_v$ in step ?? of Figure~\ref{phase1}, and multiply $\textbf{Z}_1$ with $\alpha$ and $\textbf{Z}_2$ with $\beta$ when using them in step?? of Figure~\ref{phase1} and step?? of Figure~\ref{phase2}. The prover still runs in linear time and this modification incurs a small overhead in practice in our implementation.
+
+\subsubsection{Condensing to one point}
+
+Though we already have a linear prover using the approach above, the technique to condense two points to one point proposed in the original GKR protocol~\cite{GKR} may still be interesting in some scenarios (e.g., it requires only one query to the multi-linear extension of the input, which may be more efficient in some schemes). In this section, we show an algorithm to reduce the complexity of this protocol to linear.
+
 In original CMT protocol, after the final round of sumcheck, we have two claimed value about the next layer, $\tilde{V}_{i+1}(u), \tilde{V}_{i+1}(v)$ where $u, v$ are random vector from sumcheck. We can setup a line $\gamma(x)$ where $\gamma(0) = u, \gamma(1)=v$. The prover need to provide $\tilde{V}_{i+1}(\gamma(x))$ to verifier, and the verifier can chooses next random point.
 
 Unfortunately, if the prover naively compute $\tilde{V}_{i+1}(\gamma(x))$, it would incur $O(2^{s_{i+1}}s_{i+1})$ complexity. To optimize the computing, we need to look at the structure of the summation. 
@@ -290,5 +336,4 @@ $$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_
 \end{algorithmic}
 \end{algorithm}
 \end{figure}
-\paragraph*{An Alternative Way}
-There is another way to deal with this problem. This approach is proposed by Alessandro et al.\cite{zksumcheck} In the first round, the sumcheck protocol will eventually reduce to two random claims $\tilde{V}_{2}(u), \tilde{V}_2(v)$. Their protocol just recursively check these two claims parallelly with shared randomness. These two sub thread will run the sumcheck protocol, and eventually reduced to $\tilde{V}_{3}(u_1), \tilde{V}_{3}(v_1), \tilde{V}_{3}(u_2), \tilde{V}_{3}(v_2)$. Since they share the same randomness, we have $u_1=u_2, v_1=v_2$. In this case, the size of recursion will not change. And for next rounds of both recursion thread, they still share the same randomness. The size of recursion will not grow at all. Applying our linear time sumcheck, this algorithm will be linear time.
+

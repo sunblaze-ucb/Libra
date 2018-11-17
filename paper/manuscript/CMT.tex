@@ -11,6 +11,8 @@ We define the polynomial for each layer as follows:
 
 We futher define the multi-linear extension of this polynomial. Note $G_{i,add}$ denote all add gate triples in $i$-th layer and so does $G_{i,mult}$
 
+\yupeng{try to remove $\beta$.}
+
 \begin{definition}[Multilinear extension of identity fucntion]
 Here we present a multilinear extension of identity function
 \begin{eqnarray}\beta_{l}(a, b)=
@@ -62,7 +64,7 @@ Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite
 
 The protocol proceeds layer by layer. The protocol start by checking the output layer ($0$-th layer). In the initialization, the verifier request a random claim about the output layer from the prover, and the prover answer the request by scanning through the layer. In the first round, both parties runs the sumcheck protocol on the claim about the output, and reduces to two claims about the next layer ($1$-st layer). The verifier will combine these two claims into one claim about $1$-st layer and runs into next round. In $i$-th round, both parties runs a sumcheck on the previous layer and reduce to a claim about current layer. Finally the protocol will get a claim about the input layer. The verifier will verify the claim by asking the oracle about the input layer. We will provide a implemetation about the oracle latter.
 
-\subsubsection{Protocol Details}
+\subsubsection{Protocol Details}\label{sec::gkr}
 
 The CMT protocol do sumchecks on polynomial $V_{i}$ for each layer and reduces the claim to next layer polynomial $V_{i+1}$. We will explain the protocol in detail.
 
