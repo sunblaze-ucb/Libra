@@ -19,6 +19,7 @@ We have `3` different types of gates for now. They are addition, multiplication,
 ## Example
 ```
 3 \\two layers
+4 0 1 1 1 2 1 3 1
 2 0 0 0 1 1 1 2 3 \\first gate is addition, and second is a multiplication
 1 1 0 0 1 \\this is the output layer, it's a multiplication gate
 ```
