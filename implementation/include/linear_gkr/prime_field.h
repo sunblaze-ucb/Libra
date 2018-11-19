@@ -1,68 +1,32 @@
+#pragma once
 #ifndef __prime_field
 #define __prime_field
 
-#include <gmp>
-#include <gmpxx>
+#include <gmp.h>
+#include <gmpxx.h>
+#include <cassert>
+#include <string>
 
 namespace prime_field
 {
-	gmp_class mod;
-	bool initialized = false;
-	void init(gmp_class m)
-	{
-		assert(!initialized);
-		mod = m;
-		initialized = true;
-	}
+	extern mpz_class mod;
+	extern bool initialized;
+	void init(std::string, int);
+	void init(mpz_class);
 	/*
 	This defines a prime field
 	*/
 	class field_element
 	{
 	private:
-		gmp_class value;
+		mpz_class value;
 	public:
-		field_element()
-		{
-
-		}
-		~field_element()
-		{
-
-		}
-		field_element operator + (const field_element &b) const
-		{
-			assert(initialized);
-			field_element ret;
-			ret.value = (b.value + value) % mod;
-			return ret;
-		}
-		field_element operator * (const field_element &b) const
-		{
-			assert(initialized);
-			field_element ret;
-			ret.value = (b.value * value) % mod;
-			return ret;
-		}
-		field_element operator / (const field_element &b) const
-		{
-			assert(initialized);
-			field_element ret, inv;
-			mpz_invert(inv.value,get_mpz_t(), b.value,get_mpz_t(), mod,get_mpz_t());
-			ret.value = (value * inv);
-			return ret;
-		}
-		field_element operator - (const field_element &b) const
-		{
-			assert(initialized);
-			field_element ret;
-			ret.value = (value + mod - b.value) % mod;
-			return ret;
-		}
-		string to_string(int base = 10)
-		{
-			return value.get_str(base);
-		}
+		field_element operator + (const field_element &b) const;
+		field_element operator * (const field_element &b) const;
+		field_element operator / (const field_element &b) const;
+		field_element operator - (const field_element &b) const;
+		void set_value(const mpz_class &);
+		std::string to_string(int);
 	};
 }
 #endif
