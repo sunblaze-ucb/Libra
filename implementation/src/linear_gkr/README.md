@@ -5,10 +5,12 @@
 In the first line, input a integer `d` represent the number of layers.
 Input layer has layer number `0` output layer has layer number `d-1`
 
-For next `d - 1` lines, each line specify a layer.
+For next `d` lines, each line specify a layer.
 
-For `i`-th line, it specify the layer `i`, the first number is `n`, specify the number of gates in this layer. `n` must be a multiple of `2`.
-The rest of this line contains `4n` integers, represent `n` gates. For each gate, we use for integers to describe: `ty g u v`, indicates the type of the gate, and the connection of the gate, `g` is the gate number, `u` is the left input of the gate, `v` is the right input of the gate.
+In this first line, it specifies the input layer, the first number is `n`, specifies the number of gates in this layer, next `2n` numbers represents `n` gates. For each gate, we use 2 integers to describe: `gate_id value`, indicates the id of the gate and the input value of the gate.
+
+For `i`-th line, it specifies the layer `i`, the first number is `n`, specifies the number of gates in this layer. `n` must be a multiple of `2`.
+The rest of this line contains `4n` integers, represent `n` gates. For each gate, we use 4 integers to describe: `ty g u v`, indicates the type of the gate, and the connection of the gate, `g` is the gate number, `u` is the left input of the gate, `v` is the right input of the gate.
 
 We have `3` different types of gates for now. They are addition, multiplication, dummy. Dummy gate takes no input, and never serves as a input of other gate.
 

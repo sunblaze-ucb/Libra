@@ -6,6 +6,7 @@ namespace prime_field
 	bool initialized = false;
 	void init(std::string s, int base)
 	{
+		assert(!initialized);
 		initialized = true;
 		mod.set_str(s, base);
 	}
@@ -15,40 +16,45 @@ namespace prime_field
 		mod = m;
 		initialized = true;
 	}
-	field_element field_element::operator + (const field_element &b) const
+	inline void add_non_mod(const field_element &b)
+	{
+		assert(initialized);
+		return value + b.value;
+	}
+	inline field_element field_element::operator + (const field_element &b) const
 	{
 		assert(initialized);
 		field_element ret;
 		ret.value = (b.value + value) % mod;
 		return ret;
 	}
-	field_element field_element::operator * (const field_element &b) const
+	inline field_element field_element::operator * (const field_element &b) const
 	{
 		assert(initialized);
 		field_element ret;
 		ret.value = (b.value * value) % mod;
 		return ret;
 	}
-	field_element field_element::operator / (const field_element &b) const
+	inline field_element field_element::operator / (const field_element &b) const
 	{
 		assert(initialized);
 		field_element ret, inv;
 		mpz_invert(inv.value.get_mpz_t(), b.value.get_mpz_t(), mod.get_mpz_t());
-		ret.value = (value * inv.value);
+		ret.value = (value * inv.value) % mod;
 		return ret;
 	}
-	field_element field_element::operator - (const field_element &b) const
+	inline field_element field_element::operator - (const field_element &b) const
 	{
 		assert(initialized);
 		field_element ret;
 		ret.value = (value + mod - b.value) % mod;
 		return ret;
 	}
-	void field_element::set_value(const mpz_class &x)
+	inline void field_element::set_value(const mpz_class &x)
 	{
 		value = x;
 	}
-	std::string field_element::to_string(int base = 10)	
+	inline std::string field_element::to_string(int base = 10)	
 	{
 		return value.get_str(base);
 	}
