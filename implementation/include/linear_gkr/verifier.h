@@ -11,7 +11,7 @@ class verifier
 public:
 	layered_circuit C;
 	prover *p;
-	void read_circuit();
+	void read_circuit(char *);
 	bool verify();
 	void get_prover(prover*);
 };
