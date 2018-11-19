@@ -19,8 +19,10 @@ namespace prime_field
 	class field_element
 	{
 	private:
-		mpz_class value;
 	public:
+		mpz_class value;
+		field_element();
+		field_element(const mpz_class&);
 		inline field_element add_non_mod(const field_element &b);
 		inline field_element operator + (const field_element &b) const;
 		inline field_element operator * (const field_element &b) const;

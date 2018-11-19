@@ -11,13 +11,15 @@ public:
 	prime_field::field_element (*add)(std::vector<prime_field::field_element>);
 	prime_field::field_element (*mult)(std::vector<prime_field::field_element>);
 	std::unordered_map<int, std::pair<int, std::pair<int, int> > > gates;
+	std::vector<int> gate_id;
 };
 
 class layered_circuit
 {
 public:
 	std::vector<layer> circuit;
-	void read(std::string);
+	prime_field::field_element (*input_add)(std::vector<prime_field::field_element>);
+	prime_field::field_element (*input_mult)(std::vector<prime_field::field_element>);
 };
 
 #endif

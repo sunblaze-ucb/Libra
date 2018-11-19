@@ -16,10 +16,18 @@ namespace prime_field
 		mod = m;
 		initialized = true;
 	}
-	inline void add_non_mod(const field_element &b)
+	field_element::field_element(){}
+	field_element::field_element(const mpz_class &t)
 	{
 		assert(initialized);
-		return value + b.value;
+		value = t;
+	}
+	inline field_element field_element::add_non_mod(const field_element &b)
+	{
+		assert(initialized);
+		field_element ret;
+		ret.value = value + b.value;
+		return ret;
 	}
 	inline field_element field_element::operator + (const field_element &b) const
 	{

@@ -7,19 +7,19 @@ Input layer has layer number `0` output layer has layer number `d-1`
 
 For next `d` lines, each line specify a layer.
 
-In this first line, it specifies the input layer, the first number is `n`, specifies the number of gates in this layer, next `2n` numbers represents `n` gates. For each gate, we use 2 integers to describe: `gate_id value`, indicates the id of the gate and the input value of the gate.
+In this first line, it specifies the input layer, the first number is `n`, specifies the number of gates in this layer, next `4n` numbers represents `n` gates. For each gate, we use 4 integers to describe: `ty gate_id value dummy`, indicates the type of the gate, the id of the gate and the input value of the gate, last value is a dummy value for alignment purpose.
 
-For `i`-th line, it specifies the layer `i`, the first number is `n`, specifies the number of gates in this layer. `n` must be a multiple of `2`.
+For `i`-th line, it specifies the layer `i - 1`, the first number is `n`, specifies the number of gates in this layer. `n` must be a multiple of `2`.
 The rest of this line contains `4n` integers, represent `n` gates. For each gate, we use 4 integers to describe: `ty g u v`, indicates the type of the gate, and the connection of the gate, `g` is the gate number, `u` is the left input of the gate, `v` is the right input of the gate.
 
 We have `3` different types of gates for now. They are addition, multiplication, dummy. Dummy gate takes no input, and never serves as a input of other gate.
 
-`ty=0` is addition gate, `ty=1` is multiplication gate, `ty=2` is dummy gate.
+`ty=0` is addition gate, `ty=1` is multiplication gate, `ty=2` is dummy gate, `ty=3` is input gate.
 
 ## Example
 ```
 3 \\two layers
-4 0 1 1 1 2 1 3 1
+4 3 0 1 1 1 2 1 3 1
 2 0 0 0 1 1 1 2 3 \\first gate is addition, and second is a multiplication
 1 1 0 0 1 \\this is the output layer, it's a multiplication gate
 ```
