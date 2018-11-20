@@ -56,3 +56,8 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 	}
 	return ret;
 }
+
+void prover::proof_init()
+{
+	//todo
+}

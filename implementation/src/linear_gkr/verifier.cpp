@@ -31,6 +31,10 @@ void verifier::read_circuit(const char *path)
 	}
 
 	fclose(circuit_in);
-	return;
-	//TODO
 }
+
+bool verifier::verity()
+{
+	p -> proof_init();
+}
+
