@@ -19,8 +19,6 @@ class layered_circuit
 {
 public:
 	std::vector<layer> circuit;
-	prime_field::field_element (*input_add)(std::vector<prime_field::field_element>);
-	prime_field::field_element (*input_mult)(std::vector<prime_field::field_element>);
 };
 
 #endif

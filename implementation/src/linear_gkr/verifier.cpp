@@ -124,7 +124,7 @@ bool verifier::verify()
 	a_0 = alpha * a_0;
 	prime_field::field_element a_1 = prime_field::field_element(mpz_class(0)) * beta;
 
-	printf("a0 = %s\n", a_0.to_string(10).c_str());
+	printf("a_0 = %s\n", a_0.to_string(10).c_str());
 
 	for(int i = 1; i < C.circuit.size(); ++i)
 	{
