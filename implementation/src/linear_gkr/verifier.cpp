@@ -64,6 +64,7 @@ void verifier::read_circuit(const char *path)
 			cnt++;
 			max_gate >>= 1;
 		}
+		fprintf(stderr, "layer %d, bit_length %d\n", i, cnt);
 		C.circuit[i].bit_length = cnt;
 	}
 
@@ -117,18 +118,31 @@ bool verifier::verify()
 	beta.value = 0;
 	random_oracle oracle;
 	//initial random value
-	std::vector<prime_field::field_element> r_0 = generate_randomness(C.circuit[C.circuit.size() - 1].bit_length);
+	std::vector<prime_field::field_element> r_0 = generate_randomness(C.circuit[C.circuit.size() - 1].bit_length), r_1 = generate_randomness(C.circuit[C.circuit.size() - 1].bit_length);
 
 	auto a_0 = p -> V_0(r_0, result);
 	a_0 = alpha * a_0;
 	prime_field::field_element a_1 = prime_field::field_element(mpz_class(0)) * beta;
 
+	printf("a0 = %s\n", a_0.to_string(10).c_str());
+
 	for(int i = 1; i < C.circuit.size(); ++i)
 	{
-		
+		//p -> init_sumcheck(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length);
+		for(int j = 0; j < C.circuit[i].bit_length; ++j)
+		{
+
+		}
+		for(int j = 0; j < C.circuit[i].bit_length; ++j)
+		{
+
+		}
+		for(int j = 0; j < C.circuit[i].bit_length; ++j)
+		{
+
+		}
 	}
 
-	printf("a0 = %s\n", a0.to_string(10).c_str());
 
 	return true;
 }
