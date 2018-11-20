@@ -12,6 +12,7 @@ public:
 	prime_field::field_element (*mult)(std::vector<prime_field::field_element>);
 	std::unordered_map<int, std::pair<int, std::pair<int, int> > > gates;
 	std::vector<int> gate_id;
+	int bit_length;
 };
 
 class layered_circuit

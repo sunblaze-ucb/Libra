@@ -1,4 +1,5 @@
 #define __debug__
+#define __timer__
 #include "linear_gkr/verifier.h"
 #include "linear_gkr/prover.h"
 #include "linear_gkr/prime_field.h"
@@ -12,11 +13,7 @@ int main()
 	v.get_prover(&p);
 	v.read_circuit("test_circuit.txt");
 	p.get_circuit(v.C);
-	auto result = p.evaluate();
-	printf("evaluation result:\n");
-	for(auto x : result)
-	{
-		printf("%d %s\n", x.first, x.second.to_string(10).c_str());
-	}
+	bool result = v.verify();
+	printf("%s\n", result ? "Pass" : "Fail");
 	return 0;
 }

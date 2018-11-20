@@ -42,7 +42,11 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 			}
 			else if(ty == 2)
 			{
-				continue;
+				circuit_value[i][g] = mpz_class(0);
+			}
+			else if(ty == 3)
+			{
+				circuit_value[i][g] = mpz_class(u);
 			}
 			else
 			{
