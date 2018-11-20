@@ -12,6 +12,11 @@ int main()
 	v.get_prover(&p);
 	v.read_circuit("test_circuit.txt");
 	p.get_circuit(v.C);
-	
+	auto result = p.evaluate();
+	printf("evaluation result:\n");
+	for(auto x : result)
+	{
+		printf("%d %s\n", x.first, x.second.to_string(10).c_str());
+	}
 	return 0;
 }

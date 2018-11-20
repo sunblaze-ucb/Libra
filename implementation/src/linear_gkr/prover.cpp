@@ -17,21 +17,42 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 		ty = info.first;
 		u = info.second.first;
 		v = info.second.second;
-		if(ty == 0) //addition
+		assert(ty == 3);
+		circuit_value[0][g] = mpz_class(v);
+	}
+	std::vector<std::pair<int, prime_field::field_element> > ret;
+	for(int i = 1; i < C.circuit.size(); ++i)
+	{
+		circuit_value.push_back(std::unordered_map<int, prime_field::field_element>());
+		for(int j = 0; j < C.circuit[i].gate_id.size(); ++j)
 		{
-			circuit_value[0][g] = 
-		}
-		else if(ty == 1) //mult
-		{
-
-		}
-		else if(ty == 2) //dummy
-		{
-
-		}
-		else
-		{
-			assert(false);
+			int g, u, v, ty;
+			g = C.circuit[i].gate_id[j];
+			std::pair<int, std::pair<int, int> > info = C.circuit[i].gates[g];
+			ty = info.first;
+			u = info.second.first;
+			v = info.second.second;
+			if(ty == 0)
+			{
+				circuit_value[i][g] = circuit_value[i - 1][u] + circuit_value[i - 1][v];
+			}
+			else if(ty == 1)
+			{
+				circuit_value[i][g] = circuit_value[i - 1][u] * circuit_value[i - 1][v];
+			}
+			else if(ty == 2)
+			{
+				continue;
+			}
+			else
+			{
+				assert(false);
+			}
+			if(i + 1 == C.circuit.size())
+			{
+				ret.push_back(std::make_pair(g, circuit_value[i][g]));
+			}
 		}
 	}
+	return ret;
 }

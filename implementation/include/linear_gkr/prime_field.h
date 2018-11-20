@@ -23,13 +23,13 @@ namespace prime_field
 		mpz_class value;
 		field_element();
 		field_element(const mpz_class&);
-		inline field_element add_non_mod(const field_element &b);
-		inline field_element operator + (const field_element &b) const;
-		inline field_element operator * (const field_element &b) const;
-		inline field_element operator / (const field_element &b) const;
-		inline field_element operator - (const field_element &b) const;
-		inline void set_value(const mpz_class &);
-		inline std::string to_string(int);
+		field_element add_non_mod(const field_element &b);
+		field_element operator + (const field_element &b) const;
+		field_element operator * (const field_element &b) const;
+		field_element operator / (const field_element &b) const;
+		field_element operator - (const field_element &b) const;
+		void set_value(const mpz_class &);
+		std::string to_string(int);
 	};
 }
 #endif
