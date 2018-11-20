@@ -16,21 +16,8 @@ void verifier::read_circuit(const char *path)
 
 	fscanf(circuit_in, "%d", &d);
 	int n;
-	fscanf(circuit_in, "%d", &d);
-
-	C.input_gates.clear();
-	C.input_gate_id.clear();
-	for(int i = 0; i < n; ++i)
-	{
-		int g;
-		fscanf(circuit_in, "%d%s", &d, str);
-		mpz_class t;
-		t.set_str(std::string(str), 10);
-		C.input_gates[d] = t;
-		C.input_gate_id.push_back(d);
-	}
 	C.circuit.clear();
-	for(int i = 0; i < d - 1; ++i)
+	for(int i = 0; i < d; ++i)
 	{
 		C.circuit.push_back(layer());
 		fscanf(circuit_in, "%d", &n);
@@ -42,7 +29,6 @@ void verifier::read_circuit(const char *path)
 			C.circuit[i].gate_id.push_back(g);
 		}
 	}
-
 
 	fclose(circuit_in);
 	assert(false);
