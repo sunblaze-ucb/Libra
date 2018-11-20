@@ -16,6 +16,8 @@ public:
 	void proof_init();
 	polynomial sumcheck_step();
 	polynomial sumcheck_final();
+	prime_field::field_element V_0(const std::vector<prime_field::field_element> &r_0, 
+								std::vector<std::pair<int, prime_field::field_element> > output);
 };
 
 #endif

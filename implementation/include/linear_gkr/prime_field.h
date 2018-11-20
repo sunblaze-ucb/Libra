@@ -28,6 +28,7 @@ namespace prime_field
 		field_element operator * (const field_element &b) const;
 		field_element operator / (const field_element &b) const;
 		field_element operator - (const field_element &b) const;
+		bool operator != (const field_element &b) const;
 		void set_value(const mpz_class &);
 		std::string to_string(int);
 	};

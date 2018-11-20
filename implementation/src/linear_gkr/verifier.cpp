@@ -25,10 +25,17 @@ void verifier::read_circuit(const char *path)
 		C.circuit.push_back(layer());
 		fscanf(circuit_in, "%d", &n);
 		int max_gate = -1;
+		int previous_g = -1;
 		for(int j = 0; j < n; ++j)
 		{
 			int ty, g, u, v;
 			fscanf(circuit_in, "%d%d%d%d", &ty, &g, &u, &v);
+			if(g < previous_g)
+			{
+				printf("Error, gates must be in sorted order.");
+			}
+			assert(g > previous_g);
+			previous_g = g;
 			if(g > max_gate)
 				max_gate = g;
 			C.circuit[i].gates[g] = std::make_pair(ty, std::make_pair(u, v));
@@ -72,14 +79,6 @@ prime_field::field_element mult(const layered_circuit &C, int depth, std::vector
 
 }
 
-prime_field::field_element V_0(const std::vector<prime_field::field_element> &r_0, 
-								std::vector<std::pair<int, prime_field::field_element> > output)
-{
-	
-	assert(false);
-	return prime_field::field_element();
-}
-
 gmp_randstate_t rstate;
 
 std::vector<prime_field::field_element> generate_randomness(unsigned int size)
@@ -119,7 +118,17 @@ bool verifier::verify()
 	random_oracle oracle;
 	//initial random value
 	std::vector<prime_field::field_element> r_0 = generate_randomness(C.circuit[C.circuit.size() - 1].bit_length);
-	prime_field::field_element a0 = V_0(r_0, result);
 
-	return false;
+	auto a_0 = p -> V_0(r_0, result);
+	a_0 = alpha * a_0;
+	prime_field::field_element a_1 = prime_field::field_element(mpz_class(0)) * beta;
+
+	for(int i = 1; i < C.circuit.size(); ++i)
+	{
+		
+	}
+
+	printf("a0 = %s\n", a0.to_string(10).c_str());
+
+	return true;
 }

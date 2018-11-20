@@ -66,4 +66,8 @@ namespace prime_field
 	{
 		return value.get_str(base);
 	}
+	bool field_element::operator != (const field_element &b) const
+	{
+		return value != b.value;
+	}
 }
