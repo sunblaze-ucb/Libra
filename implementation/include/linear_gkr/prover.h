@@ -14,8 +14,8 @@ public:
 	void get_circuit(const layered_circuit &from_verifier);
 	std::vector<std::pair<int, prime_field::field_element> > evaluate();
 	void proof_init();
-	polynomial sumcheck_step();
-	polynomial sumcheck_final();
+	void sumcheck_init();
+	quadratic_poly sumcheck_step();
 	prime_field::field_element V_0(const std::vector<prime_field::field_element> &r_0, 
 								std::vector<std::pair<int, prime_field::field_element> > output);
 };
