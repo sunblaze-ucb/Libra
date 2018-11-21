@@ -177,6 +177,13 @@ void prover::sumcheck_phase1_init()
 	total_time += clock() - t0;
 }
 
+quadratic_poly prover::sumcheck_phase1_update()
+{
+	
+	//place holder
+	return quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+}
+
 void prover::sumcheck_phase2_init()
 {
 

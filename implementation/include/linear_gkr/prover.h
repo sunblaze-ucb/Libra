@@ -31,6 +31,7 @@ public:
 		const prime_field::field_element &, const std::vector<prime_field::field_element>&, const std::vector<prime_field::field_element>&);
 	void sumcheck_phase1_init();
 	void sumcheck_phase2_init();
+	quadratic_poly sumcheck_phase1_update();
 	prime_field::field_element V_0(const std::vector<prime_field::field_element> &r_0, 
 								std::vector<std::pair<int, prime_field::field_element> > output);
 };

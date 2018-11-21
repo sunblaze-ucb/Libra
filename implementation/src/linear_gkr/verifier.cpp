@@ -133,7 +133,12 @@ bool verifier::verify()
 		p -> sumcheck_phase2_init();
 		for(int j = 0; j < C.circuit[i].bit_length; ++j)
 		{
-
+			quadratic_poly poly = p -> sumcheck_phase1_update();
+			if(poly.eval(0) + poly.eval(1) != (alpha * a_0 + beta * a_1))
+			{
+				fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
+				return false;
+			}
 		}
 		for(int j = 0; j < C.circuit[i].bit_length; ++j)
 		{
