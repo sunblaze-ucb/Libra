@@ -8,6 +8,7 @@ void prover::get_circuit(const layered_circuit &from_verifier)
 prime_field::field_element prover::V_0(const std::vector<prime_field::field_element> &r_0, 
 								std::vector<std::pair<int, prime_field::field_element> > output)
 {
+	clock_t t0 = clock();
 	std::vector<std::pair<int, prime_field::field_element> > tmp;
 	for(int i = (int)r_0.size() - 1; i >= 0; --i)
 	{
@@ -44,11 +45,13 @@ prime_field::field_element prover::V_0(const std::vector<prime_field::field_elem
 		output = tmp;
 	}
 	assert(output.size() == 1);
+	total_time += (clock() - t0);
 	return output[0].second;
 }
 
 std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 {
+	clock_t t0 = clock();
 	circuit_value.clear();
 	circuit_value.push_back(std::unordered_map<int, prime_field::field_element >());
 	for(int i = 0; i < C.circuit[0].gate_id.size(); ++i)
@@ -100,7 +103,30 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 			}
 		}
 	}
+	fprintf(stderr, "total evaluation time: %f\n", ((float)clock() - (float)t0) / CLOCKS_PER_SEC);
 	return ret;
+}
+
+void prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, 
+	const prime_field::field_element &a, const prime_field::field_element &b)
+{
+	alpha = a;
+	beta = b;
+	randomness_from_verifier.clear();
+	sumcheck_layer_id = layer_id;
+	length_g = bit_length_g;
+	length_u = bit_length_u;
+	length_v = bit_length_v;
+}
+
+void prover::sumcheck_phase1_init()
+{
+
+}
+
+void prover::sumcheck_phase2_init()
+{
+
 }
 
 void prover::proof_init()
