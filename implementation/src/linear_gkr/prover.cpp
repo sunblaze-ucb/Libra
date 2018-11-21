@@ -108,8 +108,11 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 }
 
 void prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, 
-	const prime_field::field_element &a, const prime_field::field_element &b)
+	const prime_field::field_element &a, const prime_field::field_element &b, const std::vector<prime_field::field_element> &R_0,
+	const std::vector<prime_field::field_element> &R_1)
 {
+	r_0 = R_0;
+	r_1 = R_1;
 	alpha = a;
 	beta = b;
 	randomness_from_verifier.clear();
@@ -118,10 +121,60 @@ void prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int
 	length_u = bit_length_u;
 	length_v = bit_length_v;
 }
-
+void prover::DFS(std::unordered_map<int, linear_poly> &A, int g, int depth, 
+	prime_field::field_element alpha_value, prime_field::field_element beta_value, const int gate_type)
+{
+	if(depth == length_g)
+	{
+		int u, v;
+		if(C.circuit[sumcheck_layer_id].gates[g].first != gate_type) //not a mult gate
+		{
+			return;
+		}
+		u = C.circuit[sumcheck_layer_id].gates[g].second.first;
+		v = C.circuit[sumcheck_layer_id].gates[g].second.second;
+		A[u] = A[u] + circuit_value[sumcheck_layer_id - 1][v] * (alpha_value * alpha + beta_value * beta);
+	}
+	else
+	{
+		g &= ((-1) ^ (1 << (length_g - depth - 1)));
+		DFS(A, g, depth + 1, 
+			alpha_value * (prime_field::field_element(1) - r_0[depth]), beta_value * (prime_field::field_element(1) - r_1[depth]), gate_type);
+		g |= (1 << (length_g - depth - 1));
+		DFS(A, g, depth + 1, alpha_value * r_0[depth], beta_value * r_1[depth], gate_type);
+	}
+}
 void prover::sumcheck_phase1_init()
 {
+	fprintf(stderr, "sumcheck level %d, phase1 init start\n", sumcheck_layer_id);
+	clock_t t0 = clock();
+	//mult init
+	mult_array.clear();
+	V_mult.clear();
+	for(int i = 0; i < C.circuit[sumcheck_layer_id - 1].gate_id.size(); ++i)
+	{
+		int g = C.circuit[sumcheck_layer_id - 1].gate_id[i];
+		mult_array[g] = 
+			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
+		V_mult[C.circuit[sumcheck_layer_id - 1].gate_id[i]] = 
+			circuit_value[sumcheck_layer_id - 1][g];
+	}
+	DFS(mult_array, 0, 0, prime_field::field_element(1), prime_field::field_element(1), 1);
+	//add init
+	add_array.clear();
+	V_add.clear();
 
+	for(int i = 0; i < C.circuit[sumcheck_layer_id - 1].gate_id.size(); ++i)
+	{
+		int g = C.circuit[sumcheck_layer_id - 1].gate_id[i];
+		add_array[g] = 
+			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
+		V_add[C.circuit[sumcheck_layer_id - 1].gate_id[i]] = 
+			circuit_value[sumcheck_layer_id - 1][g];
+	}
+	DFS(add_array, 0, 0, prime_field::field_element(1), prime_field::field_element(1), 0);
+	fprintf(stderr, "sumcheck level %d, phase1 init finished\n", sumcheck_layer_id);
+	total_time += clock() - t0;
 }
 
 void prover::sumcheck_phase2_init()

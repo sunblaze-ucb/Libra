@@ -23,6 +23,7 @@ namespace prime_field
 		mpz_class value;
 		field_element();
 		field_element(const mpz_class&);
+		field_element(const int);
 		field_element add_non_mod(const field_element &b);
 		field_element operator + (const field_element &b) const;
 		field_element operator * (const field_element &b) const;

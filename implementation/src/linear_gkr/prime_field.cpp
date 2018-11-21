@@ -22,6 +22,11 @@ namespace prime_field
 		assert(initialized);
 		value = t;
 	}
+	field_element::field_element(const int x)
+	{
+		assert(initialized);
+		value = mpz_class(x);
+	}
 	field_element field_element::add_non_mod(const field_element &b)
 	{
 		assert(initialized);

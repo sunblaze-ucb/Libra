@@ -25,6 +25,7 @@ public:
 	prime_field::field_element a, b;
 	linear_poly();
 	linear_poly(const prime_field::field_element &, const prime_field::field_element &);
+	linear_poly(const prime_field::field_element &);
 	linear_poly operator + (const linear_poly &) const;
 	quadratic_poly operator * (const linear_poly &) const;
 	prime_field::field_element eval(const prime_field::field_element &) const;

@@ -128,7 +128,7 @@ bool verifier::verify()
 
 	for(int i = 1; i < C.circuit.size(); ++i)
 	{
-		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length);
+		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1);
 		p -> sumcheck_phase1_init();
 		p -> sumcheck_phase2_init();
 		for(int j = 0; j < C.circuit[i].bit_length; ++j)

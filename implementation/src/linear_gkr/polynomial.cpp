@@ -24,6 +24,11 @@ linear_poly::linear_poly(const prime_field::field_element& aa, const prime_field
 	a = aa;
 	b = bb;
 }
+linear_poly::linear_poly(const prime_field::field_element &x)
+{
+	a = prime_field::field_element(0);
+	b = x;
+}
 
 linear_poly linear_poly::operator + (const linear_poly &x) const
 {
