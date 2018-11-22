@@ -209,6 +209,7 @@ void prover::sumcheck_phase1_init()
 
 quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previous_random)
 {
+	clock_t t0 = clock();
 	std::vector<int> nxt_gate_id;
 	for(int i = 0; i < current_sumcheck_gates.size(); ++i)
 	{
@@ -332,6 +333,7 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 	add_array = new_add;
 	V_add = V;
 	current_sumcheck_gates = nxt_gate_id;
+	total_time += clock() - t0;
 	return ret;
 }
 
@@ -439,6 +441,7 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, st
 
 quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previous_random)
 {
+	clock_t t0 = clock();
 	std::vector<int> nxt_gate_id;
 	for(int i = 0; i < current_sumcheck_gates.size(); ++i)
 	{
@@ -562,6 +565,7 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 	add_array = new_add;
 	V_add = V;
 	current_sumcheck_gates = nxt_gate_id;
+	total_time += clock() - t0;
 	return ret;
 }
 std::pair<prime_field::field_element, prime_field::field_element> prover::sumcheck_finalize(prime_field::field_element previous_random)
