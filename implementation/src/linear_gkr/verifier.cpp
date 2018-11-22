@@ -77,16 +77,116 @@ void verifier::read_circuit(const char *path)
 	fclose(circuit_in);
 }
 
-prime_field::field_element add(const layered_circuit &C, int depth, 
-	std::vector<prime_field::field_element> z, std::vector<prime_field::field_element> u, std::vector<prime_field::field_element> v)
+prime_field::field_element verifier::add(int depth, 
+	std::vector<prime_field::field_element> z, std::vector<prime_field::field_element> r_u, std::vector<prime_field::field_element> r_v)
 {
-	return prime_field::field_element(0);
+	//brute force for sanity check
+	//it's slow
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < C.circuit[depth].gate_id.size(); ++i)
+	{
+		int g = C.circuit[depth].gate_id[i];
+		prime_field::field_element cur = prime_field::field_element(1);
+		if(C.circuit[depth].gates[g].first == 0)
+		{
+			int u, v;
+			u = C.circuit[depth].gates[g].second.first;
+			v = C.circuit[depth].gates[g].second.second;
+			for(int j = 0; j < C.circuit[depth].bit_length; ++j)
+			{
+				if((g & 1) == 0)
+				{
+					cur = cur * (prime_field::field_element(1) - z[j]);
+				}
+				else
+				{
+					cur = cur * z[j];
+				}
+				g >>= 1;
+			}
+			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
+			{
+				if((u & 1) == 0)
+				{
+					cur = cur * (prime_field::field_element(1) - r_u[j]);
+				}
+				else
+				{
+					cur = cur * r_u[j];
+				}
+				u >>= 1;
+			}
+			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
+			{
+				if((v & 1) == 0)
+				{
+					cur = cur * (prime_field::field_element(1) - r_v[j]);
+				}
+				else
+				{
+					cur = cur * r_v[j];
+				}
+				v >>= 1;
+			}
+			ret = ret + cur;
+		}
+	}
+	return ret;
 }
-prime_field::field_element mult(const layered_circuit &C, int depth, 
-	std::vector<prime_field::field_element> z, std::vector<prime_field::field_element> u, std::vector<prime_field::field_element> v)
+prime_field::field_element verifier::mult(int depth, 
+	std::vector<prime_field::field_element> z, std::vector<prime_field::field_element> r_u, std::vector<prime_field::field_element> r_v)
 {
-
-	return prime_field::field_element(0);
+	//also brute force
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < C.circuit[depth].gate_id.size(); ++i)
+	{
+		int g = C.circuit[depth].gate_id[i];
+		prime_field::field_element cur = prime_field::field_element(1);
+		if(C.circuit[depth].gates[g].first == 1)
+		{
+			int u, v;
+			u = C.circuit[depth].gates[g].second.first;
+			v = C.circuit[depth].gates[g].second.second;
+			for(int j = 0; j < C.circuit[depth].bit_length; ++j)
+			{
+				if((g & 1) == 0)
+				{
+					cur = cur * (prime_field::field_element(1) - z[j]);
+				}
+				else
+				{
+					cur = cur * z[j];
+				}
+				g >>= 1;
+			}
+			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
+			{
+				if((u & 1) == 0)
+				{
+					cur = cur * (prime_field::field_element(1) - r_u[j]);
+				}
+				else
+				{
+					cur = cur * r_u[j];
+				}
+				u >>= 1;
+			}
+			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
+			{
+				if((v & 1) == 0)
+				{
+					cur = cur * (prime_field::field_element(1) - r_v[j]);
+				}
+				else
+				{
+					cur = cur * r_v[j];
+				}
+				v >>= 1;
+			}
+			ret = ret + cur;
+		}
+	}
+	return ret;
 }
 
 gmp_randstate_t rstate;
@@ -116,11 +216,12 @@ bool verifier::verify()
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-	printf("evaluation result:\n");
+	fprintf(stderr, "evaluation result:\n");
 	for(auto x : result)
 	{
-		printf("%d %s\n", x.first, x.second.to_string(10).c_str());
+		fprintf(stderr, "%d %s\n", x.first, x.second.to_string(10).c_str());
 	}
+	fprintf(stderr, "\n");
 
 	prime_field::field_element alpha, beta;
 	alpha.value = 1;
@@ -151,6 +252,13 @@ bool verifier::verify()
 
 		for(int i = 0; i < r_v.size(); ++i)
 			std::cout << "r_v[" << i << "] = " << r_v[i].to_string(10) << std::endl;
+
+
+		for(int i = 0; i < r_0.size(); ++i)
+			std::cout << "r_0[" << i << "] = " << r_0[i].to_string(10) << std::endl;
+
+		for(int i = 0; i < r_1.size(); ++i)
+			std::cout << "r_1[" << i << "] = " << r_1[i].to_string(10) << std::endl;
 
 
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
@@ -191,17 +299,33 @@ bool verifier::verify()
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;
 
-		auto mult_value = mult(C, i, r_0, r_u, r_v) * alpha + mult(C, i, r_1, r_u, r_v) * beta;
-		auto add_value = add(C, i, r_0, r_u, r_v) * alpha + add(C, i, r_1, r_u, r_v) * beta;
+		std::cout << "v_u = " << v_u.to_string(10) << std::endl;
+		std::cout << "v_v = " << v_v.to_string(10) << std::endl;
+
+		std::cout << "alpha = " << alpha.to_string(10) << std::endl;
+		std::cout << "beta = " << beta.to_string(10) << std::endl;
+
+		auto mult_value = mult(i, r_0, r_u, r_v) * alpha + mult(i, r_1, r_u, r_v) * beta;
+		auto add_value = add(i, r_0, r_u, r_v) * alpha + add(i, r_1, r_u, r_v) * beta;
+		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
+		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
 
 		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v)
 		{
-			fprintf(stderr, "Verification fail, final, circuit %d\n", i);
+			fprintf(stderr, "Verification fail, final, circuit level %d\n", i);
 			return false;
 		}
-		//post sumcheck todo
+		else
+		{
+			fprintf(stderr, "Verification Pass, final, circuit level %d\n", i);
+		}
+		alpha_beta_sum = alpha * v_u + beta * v_v;
+		r_0 = r_u;
+		r_1 = r_v;
+		//todo randomize alpha beta
 	}
 
+	//post sumcheck todo
 
 	return true;
 }

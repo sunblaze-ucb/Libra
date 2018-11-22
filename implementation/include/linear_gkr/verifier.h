@@ -14,6 +14,8 @@ public:
 	void read_circuit(const char *);
 	bool verify();
 	void get_prover(prover*);
+	prime_field::field_element mult(int, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>);
+	prime_field::field_element add(int, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>);
 };
 
 #endif
