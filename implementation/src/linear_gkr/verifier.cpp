@@ -319,6 +319,8 @@ bool verifier::verify()
 		{
 			fprintf(stderr, "Verification Pass, final, circuit level %d\n", i);
 		}
+		alpha = generate_randomness(1)[0];
+		beta = generate_randomness(1)[0];
 		alpha_beta_sum = alpha * v_u + beta * v_v;
 		r_0 = r_u;
 		r_1 = r_v;
