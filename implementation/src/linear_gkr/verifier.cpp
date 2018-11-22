@@ -3,6 +3,7 @@
 #include <utility>
 #include <gmp.h>
 #include <gmpxx.h>
+#include <iostream>
 #include "linear_gkr/random_generator.h"
 
 void verifier::get_prover(prover *pp)
@@ -53,31 +54,39 @@ void verifier::read_circuit(const char *path)
 			max_gate <<= 1;
 			cnt--;
 		}
+		int mx_gate = max_gate;
+		while(mx_gate)
+		{
+			cnt++;
+			mx_gate >>= 1;
+		}
 		if(n == 1)
 		{
 			//add a dummy gate to avoid ill-defined layer.
 			C.circuit[i].gate_id.push_back(max_gate);
 			C.circuit[i].gates[max_gate] = std::make_pair(2, std::make_pair(0, 0));
+			C.circuit[i].bit_length = cnt;
 		}
-		while(max_gate)
+		else
 		{
-			cnt++;
-			max_gate >>= 1;
+			C.circuit[i].bit_length = cnt - 1;
 		}
-		fprintf(stderr, "layer %d, bit_length %d\n", i, cnt);
-		C.circuit[i].bit_length = cnt;
+		fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
 	}
 
 	fclose(circuit_in);
 }
 
-prime_field::field_element add(const layered_circuit &C, int depth, std::vector<prime_field::field_element> z)
+prime_field::field_element add(const layered_circuit &C, int depth, 
+	std::vector<prime_field::field_element> z, std::vector<prime_field::field_element> u, std::vector<prime_field::field_element> v)
 {
-
+	return prime_field::field_element(0);
 }
-prime_field::field_element mult(const layered_circuit &C, int depth, std::vector<prime_field::field_element> z)
+prime_field::field_element mult(const layered_circuit &C, int depth, 
+	std::vector<prime_field::field_element> z, std::vector<prime_field::field_element> u, std::vector<prime_field::field_element> v)
 {
 
+	return prime_field::field_element(0);
 }
 
 gmp_randstate_t rstate;
@@ -137,10 +146,17 @@ bool verifier::verify()
 		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
 		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
 
-		for(int j = 0; j < C.circuit[i].bit_length; ++j)
+		for(int i = 0; i < r_u.size(); ++i)
+			std::cout << "r_u[" << i << "] = " << r_u[i].to_string(10) << std::endl;
+
+		for(int i = 0; i < r_v.size(); ++i)
+			std::cout << "r_v[" << i << "] = " << r_v[i].to_string(10) << std::endl;
+
+
+		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{
 			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random);
-			previous_random = r_0[j];
+			previous_random = r_u[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
 				fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
@@ -152,18 +168,36 @@ bool verifier::verify()
 			}
 			alpha_beta_sum = poly.eval(r_u[j]);
 		}
+		std::cout << "phase1 sum " << alpha_beta_sum.to_string(10) << std::endl;
+		p -> sumcheck_phase2_init(previous_random, r_u);
 		previous_random = prime_field::field_element(0);
-		p -> sumcheck_phase2_init();
-		for(int j = 0; j < C.circuit[i].bit_length; ++j)
+		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{
 			quadratic_poly poly = p -> sumcheck_phase2_update(previous_random);
-			previous_random = r_1[j];
+			previous_random = r_v[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
 				fprintf(stderr, "Verification fail, phase2, circuit %d, current bit %d\n", i, j);
 				return false;
 			}
+			else
+			{
+				fprintf(stderr, "Verification Pass, phase2, circuit %d, current bit %d\n", i, j);
+			}
 			alpha_beta_sum = poly.eval(r_v[j]);
+		}
+		std::cout << "phase2 sum " << alpha_beta_sum.to_string(10) << std::endl;
+		auto final_claims = p -> sumcheck_finalize(previous_random);
+		auto v_u = final_claims.first;
+		auto v_v = final_claims.second;
+
+		auto mult_value = mult(C, i, r_0, r_u, r_v) * alpha + mult(C, i, r_1, r_u, r_v) * beta;
+		auto add_value = add(C, i, r_0, r_u, r_v) * alpha + add(C, i, r_1, r_u, r_v) * beta;
+
+		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v)
+		{
+			fprintf(stderr, "Verification fail, final, circuit %d\n", i);
+			return false;
 		}
 		//post sumcheck todo
 	}
