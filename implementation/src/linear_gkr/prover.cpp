@@ -103,6 +103,10 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 			}
 		}
 	}
+/*
+	//cheating prover test
+	ret[0].second =  prime_field::field_element(111);
+*/
 	fprintf(stderr, "total evaluation time: %f\n", ((float)clock() - (float)t0) / CLOCKS_PER_SEC);
 	return ret;
 }

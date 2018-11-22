@@ -327,12 +327,12 @@ bool verifier::verify()
 			previous_random = r_v[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
-				fprintf(stderr, "Verification fail, phase2, circuit %d, current bit %d\n", i, j);
+				fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d\n", i, j);
 				return false;
 			}
 			else
 			{
-				fprintf(stderr, "Verification Pass, phase2, circuit %d, current bit %d\n", i, j);
+				fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
 			}
 			alpha_beta_sum = poly.eval(r_v[j]);
 		}
@@ -369,7 +369,7 @@ bool verifier::verify()
 		//todo randomize alpha beta
 	}
 
-	//post sumcheck todo
+	//post sumcheck
 	std::vector<std::pair<int, prime_field::field_element> > input;
 	for(int i = 0; i < C.circuit[0].gate_id.size(); ++i)
 	{
