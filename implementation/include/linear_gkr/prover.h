@@ -39,7 +39,7 @@ public:
 	void sumcheck_phase2_init(prime_field::field_element, std::vector<prime_field::field_element>);
 	quadratic_poly sumcheck_phase1_update(prime_field::field_element);
 	quadratic_poly sumcheck_phase2_update(prime_field::field_element);
-	prime_field::field_element V_0(const std::vector<prime_field::field_element> &r_0, 
+	prime_field::field_element V_res(const std::vector<prime_field::field_element> &r_0, 
 								std::vector<std::pair<int, prime_field::field_element> > output);
 	std::pair<prime_field::field_element, prime_field::field_element> sumcheck_finalize(prime_field::field_element);
 };

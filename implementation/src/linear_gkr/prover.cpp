@@ -5,7 +5,7 @@ void prover::get_circuit(const layered_circuit &from_verifier)
 	C = from_verifier;
 }
 
-prime_field::field_element prover::V_0(const std::vector<prime_field::field_element> &r_0, 
+prime_field::field_element prover::V_res(const std::vector<prime_field::field_element> &r_0, 
 								std::vector<std::pair<int, prime_field::field_element> > output)
 {
 	clock_t t0 = clock();
@@ -63,7 +63,7 @@ std::vector<std::pair<int, prime_field::field_element> > prover::evaluate()
 		u = info.second.first;
 		v = info.second.second;
 		assert(ty == 3);
-		circuit_value[0][g] = mpz_class(v);
+		circuit_value[0][g] = mpz_class(u);
 	}
 	std::vector<std::pair<int, prime_field::field_element> > ret;
 	for(int i = 1; i < C.circuit.size(); ++i)

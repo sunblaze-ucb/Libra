@@ -16,6 +16,7 @@ public:
 	void get_prover(prover*);
 	prime_field::field_element mult(int, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>);
 	prime_field::field_element add(int, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>, std::vector<prime_field::field_element>);
+	prime_field::field_element V_in(const std::vector<prime_field::field_element> &, std::vector<std::pair<int, prime_field::field_element> >);
 };
 
 #endif

@@ -210,6 +210,48 @@ std::vector<prime_field::field_element> generate_randomness(unsigned int size)
 	return ret;
 }
 
+prime_field::field_element verifier::V_in(const std::vector<prime_field::field_element> &r_0, 
+								std::vector<std::pair<int, prime_field::field_element> > output)
+{
+	std::vector<std::pair<int, prime_field::field_element> > tmp;
+	for(int i = 0; i < r_0.size(); ++i)
+	{
+		tmp.clear();
+		int last_gate;
+		int cnt = 0;
+		for(int j = 0; j < output.size(); ++j)
+		{
+			prime_field::field_element m = r_0[i];
+			if((output[j].first & 1) == 0)
+			{
+				m = (prime_field::field_element(mpz_class(1)) - m);
+			}
+			if(j == 0)
+			{
+				tmp.push_back(std::make_pair(output[j].first >> 1, output[j].second * m));
+				last_gate = output[j].first >> 1;
+				cnt++;
+			}
+			else
+			{
+				if((output[j].first >> 1) == last_gate)
+				{
+					tmp[cnt - 1] = std::make_pair(last_gate, tmp[cnt - 1].second + output[j].second * m);
+				}
+				else
+				{
+					last_gate = output[j].first >> 1;
+					tmp.push_back(std::make_pair(output[j].first >> 1, output[j].second * m));
+					cnt++;
+				}
+			}
+		}
+		output = tmp;
+	}
+	assert(output.size() == 1);
+	return output[0].second;
+}
+
 bool verifier::verify()
 {
 	gmp_randinit_default(rstate);
@@ -230,7 +272,7 @@ bool verifier::verify()
 	//initial random value
 	std::vector<prime_field::field_element> r_0 = generate_randomness(C.circuit[C.circuit.size() - 1].bit_length), r_1 = generate_randomness(C.circuit[C.circuit.size() - 1].bit_length);
 
-	auto a_0 = p -> V_0(r_0, result);
+	auto a_0 = p -> V_res(r_0, result);
 	a_0 = alpha * a_0;
 	prime_field::field_element a_1 = prime_field::field_element(mpz_class(0)) * beta;
 
@@ -312,12 +354,12 @@ bool verifier::verify()
 
 		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v)
 		{
-			fprintf(stderr, "Verification fail, final, circuit level %d\n", i);
+			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
 		}
 		else
 		{
-			fprintf(stderr, "Verification Pass, final, circuit level %d\n", i);
+			fprintf(stderr, "Verification Pass, semi final, circuit level %d\n", i);
 		}
 		alpha = generate_randomness(1)[0];
 		beta = generate_randomness(1)[0];
@@ -328,6 +370,24 @@ bool verifier::verify()
 	}
 
 	//post sumcheck todo
-
+	std::vector<std::pair<int, prime_field::field_element> > input;
+	for(int i = 0; i < C.circuit[0].gate_id.size(); ++i)
+	{
+		int g = C.circuit[0].gate_id[i];
+		if(C.circuit[0].gates[g].first == 3)
+		{
+			input.push_back(std::make_pair(g, prime_field::field_element(C.circuit[0].gates[g].second.first)));
+		}
+	}
+	auto input_0 = V_in(r_0, input), input_1 = V_in(r_1, input);
+	if(alpha_beta_sum != input_0 * alpha + input_1 * beta)
+	{
+		fprintf(stderr, "Verification fail, final input check fail.\n");
+		return false;
+	}
+	else
+	{
+		fprintf(stderr, "Verification pass\n");
+	}
 	return true;
 }
