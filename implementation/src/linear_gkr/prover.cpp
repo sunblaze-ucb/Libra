@@ -10,7 +10,7 @@ prime_field::field_element prover::V_0(const std::vector<prime_field::field_elem
 {
 	clock_t t0 = clock();
 	std::vector<std::pair<int, prime_field::field_element> > tmp;
-	for(int i = (int)r_0.size() - 1; i >= 0; --i)
+	for(int i = 0; i < r_0.size(); ++i)
 	{
 		tmp.clear();
 		int last_gate;
@@ -137,16 +137,22 @@ void prover::DFS(std::unordered_map<int, linear_poly> &A, int g, int depth,
 	}
 	else
 	{
-		g &= ((-1) ^ (1 << (length_g - depth - 1)));
+		g &= ((-1) ^ (1 << depth));
 		DFS(A, g, depth + 1, 
 			alpha_value * (prime_field::field_element(1) - r_0[depth]), beta_value * (prime_field::field_element(1) - r_1[depth]), gate_type);
-		g |= (1 << (length_g - depth - 1));
+		g |= (1 << depth);
 		DFS(A, g, depth + 1, alpha_value * r_0[depth], beta_value * r_1[depth], gate_type);
 	}
+}
+
+void prover::DFS_add(std::unordered_map<int, linear_poly> &A, int g, int depth, const int gate_type)
+{
+
 }
 void prover::sumcheck_phase1_init()
 {
 	fprintf(stderr, "sumcheck level %d, phase1 init start\n", sumcheck_layer_id);
+	randomness_from_verifier.clear();
 	clock_t t0 = clock();
 	//mult init
 	mult_array.clear();
@@ -156,37 +162,173 @@ void prover::sumcheck_phase1_init()
 		int g = C.circuit[sumcheck_layer_id - 1].gate_id[i];
 		mult_array[g] = 
 			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
-		V_mult[C.circuit[sumcheck_layer_id - 1].gate_id[i]] = 
+		V_mult[g] = 
 			circuit_value[sumcheck_layer_id - 1][g];
 	}
 	DFS(mult_array, 0, 0, prime_field::field_element(1), prime_field::field_element(1), 1);
 	//add init
+	addV_array.clear();
 	add_array.clear();
 	V_add.clear();
 
 	for(int i = 0; i < C.circuit[sumcheck_layer_id - 1].gate_id.size(); ++i)
 	{
 		int g = C.circuit[sumcheck_layer_id - 1].gate_id[i];
+		addV_array[g] = 
+			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
 		add_array[g] = 
 			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
 		V_add[C.circuit[sumcheck_layer_id - 1].gate_id[i]] = 
 			circuit_value[sumcheck_layer_id - 1][g];
 	}
-	DFS(add_array, 0, 0, prime_field::field_element(1), prime_field::field_element(1), 0);
+	DFS(addV_array, 0, 0, prime_field::field_element(1), prime_field::field_element(1), 0);
+	DFS_add(add_array, 0, 0, 0);
+	current_sumcheck_gates = C.circuit[sumcheck_layer_id - 1].gate_id;
 	fprintf(stderr, "sumcheck level %d, phase1 init finished\n", sumcheck_layer_id);
 	total_time += clock() - t0;
 }
 
-quadratic_poly prover::sumcheck_phase1_update()
+quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previous_random)
 {
-	
+	int cnt = 0;
+	std::vector<int> nxt_gate_id;
+	for(int i = 0; i < current_sumcheck_gates.size(); ++i)
+	{
+		int g = current_sumcheck_gates[i];
+		int target_g = (g >> 1);
+		nxt_gate_id.push_back(target_g);
+	}
+	nxt_gate_id.resize(std::distance(nxt_gate_id.begin(), std::unique(nxt_gate_id.begin(), nxt_gate_id.end())));
+	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+	std::unordered_map<int, linear_poly> mult_addV, V, new_add;
+	for(int i = 0; i < nxt_gate_id.size(); ++i)
+	{
+		prime_field::field_element zero_value, one_value;
+		int g = nxt_gate_id[i];
+		int g_zero = g << 1, g_one = g << 1 | 1;
+		if(mult_array.find(g_zero) != mult_array.end())
+		{
+			zero_value = mult_array[g_zero].eval(previous_random);
+		}
+		else
+		{
+			zero_value = prime_field::field_element(0);
+		}
+		if(mult_array.find(g_one) != mult_array.end())
+		{
+			one_value = mult_array[g_one].eval(previous_random);
+		}
+		else
+		{
+			one_value = prime_field::field_element(0);
+		}
+		mult_addV[g] = linear_poly(one_value - zero_value, zero_value);
+
+		if(V_mult.find(g_zero) != V_mult.end())
+		{
+			zero_value = V_mult[g_zero].eval(previous_random);
+		}
+		else
+		{
+			zero_value = prime_field::field_element(0);
+		}
+
+		if(V_mult.find(g_one) != V_mult.end())
+		{
+			one_value = V_mult[g_one].eval(previous_random);
+		}
+		else
+		{
+			one_value = prime_field::field_element(0);
+		}
+
+		V[g] = linear_poly(one_value - zero_value, zero_value);
+		ret = ret + mult_addV[g] * V[g];
+	}
+	//add gate
+
+	mult_array = mult_addV;
+	V_mult = V;
+	mult_addV.clear(), V.clear();
+	new_add.clear();
+	for(int i = 0; i < nxt_gate_id.size(); ++i)
+	{
+		prime_field::field_element zero_value, one_value;
+		int g = nxt_gate_id[i];
+		int g_zero = g << 1, g_one = g << 1 | 1;
+		if(addV_array.find(g_zero) != addV_array.end())
+		{
+			zero_value = addV_array[g_zero].eval(previous_random);
+		}
+		else
+		{
+			zero_value = prime_field::field_element(0);
+		}
+		if(addV_array.find(g_one) != addV_array.end())
+		{
+			one_value = addV_array[g_one].eval(previous_random);
+		}
+		else
+		{
+			one_value = prime_field::field_element(0);
+		}
+		mult_addV[g] = linear_poly(one_value - zero_value, zero_value);
+		if(V_add.find(g_zero) != V_add.end())
+		{
+			zero_value = V_add[g_zero].eval(previous_random);
+		}
+		else
+		{
+			zero_value = prime_field::field_element(0);
+		}
+		if(V_add.find(g_one) != V_add.end())
+		{
+			one_value = V_add[g_one].eval(previous_random);
+		}
+		else
+		{
+			one_value = prime_field::field_element(0);
+		}
+		V[g] = linear_poly(one_value - zero_value, zero_value);
+
+		if(add_array.find(g_zero) != add_array.end())
+		{
+			zero_value = add_array[g_zero].eval(previous_random);
+		}
+		else
+		{
+			zero_value = prime_field::field_element(0);
+		}
+		if(add_array.find(g_one) != add_array.end())
+		{
+			one_value = add_array[g_one].eval(previous_random);
+		}
+		else
+		{
+			one_value = prime_field::field_element(0);
+		}
+		new_add[g] = linear_poly(one_value - zero_value, zero_value);
+		ret = ret + new_add[g] * V[g] + quadratic_poly(0, mult_addV[g].a, mult_addV[g].b);
+	}
+	addV_array = mult_addV;
+	add_array = new_add;
+	V_add = V;
+	current_sumcheck_gates = nxt_gate_id;
+	return ret;
 	//place holder
 	return quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 }
 
 void prover::sumcheck_phase2_init()
 {
+	//todo
+	current_sumcheck_gates = C.circuit[sumcheck_layer_id - 1].gate_id;
+}
 
+quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previous_random)
+{
+	//place holder
+	return quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 }
 
 void prover::proof_init()

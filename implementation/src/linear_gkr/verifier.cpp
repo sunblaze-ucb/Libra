@@ -126,24 +126,46 @@ bool verifier::verify()
 
 	printf("a_0 = %s\n", a_0.to_string(10).c_str());
 
-	for(int i = 1; i < C.circuit.size(); ++i)
+	auto alpha_beta_sum = a_0 + a_1;
+
+	for(int i = (int)C.circuit.size() - 1; i >= 1; --i)
 	{
 		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1);
 		p -> sumcheck_phase1_init();
-		p -> sumcheck_phase2_init();
+		prime_field::field_element previous_random = prime_field::field_element(0);
+		//next level random
+		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
+		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
+
 		for(int j = 0; j < C.circuit[i].bit_length; ++j)
 		{
-			quadratic_poly poly = p -> sumcheck_phase1_update();
-			if(poly.eval(0) + poly.eval(1) != (alpha * a_0 + beta * a_1))
+			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random);
+			previous_random = r_0[j];
+			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
 				fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
 				return false;
 			}
+			else
+			{
+				fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+			}
+			alpha_beta_sum = poly.eval(r_u[j]);
 		}
+		previous_random = prime_field::field_element(0);
+		p -> sumcheck_phase2_init();
 		for(int j = 0; j < C.circuit[i].bit_length; ++j)
 		{
-
+			quadratic_poly poly = p -> sumcheck_phase2_update(previous_random);
+			previous_random = r_1[j];
+			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+			{
+				fprintf(stderr, "Verification fail, phase2, circuit %d, current bit %d\n", i, j);
+				return false;
+			}
+			alpha_beta_sum = poly.eval(r_v[j]);
 		}
+		//post sumcheck todo
 	}
 
 
