@@ -379,6 +379,7 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, st
 	fprintf(stderr, "sumcheck level %d, phase2 init start\n", sumcheck_layer_id);
 	clock_t t0 = clock();
 	v_u = (*V_add.begin()).second.eval(previous_random);
+//	fprintf(stderr, "v_u %s\n", v_u.to_string(10).c_str());
 	randomness_from_verifier.clear();
 	
 	//mult
@@ -437,8 +438,12 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, st
 			addV_array[v] = addV_array[v] + linear_poly((beta_g_r0[g] * beta_u[u] * alpha + beta_g_r1[g] * beta_u[u] * beta) * v_u);
 		}
 	}
-	
-
+//	for(int i = 0; i < (1 << C.circuit[sumcheck_layer_id - 1].bit_length); ++i)
+//	{
+//		fprintf(stderr, "add %s\n", add_array[i].b.to_string(10).c_str());
+//		fprintf(stderr, "addV %s\n", add_array[i].b.to_string(10).c_str());
+//		fprintf(stderr, "V_mult_add %s\n", add_array[i].b.to_string(10).c_str());
+//	}
 	current_sumcheck_gates = C.circuit[sumcheck_layer_id - 1].gate_id;
 	total_time += clock() - t0;
 }

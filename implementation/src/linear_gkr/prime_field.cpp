@@ -16,7 +16,10 @@ namespace prime_field
 		mod = m;
 		initialized = true;
 	}
-	field_element::field_element(){}
+	field_element::field_element()
+	{
+		value = mpz_class(0);
+	}
 	field_element::field_element(const mpz_class &t)
 	{
 		assert(initialized);
@@ -38,7 +41,16 @@ namespace prime_field
 	{
 		assert(initialized);
 		field_element ret;
-		ret.value = (b.value + value) % mod;
+		ret.value = (b.value + value);
+		if(ret.value >= mod)
+			ret.value = ret.value - mod;
+		return ret;
+	}
+	field_element field_element::mul_non_mod(const field_element &b) const
+	{
+		assert(initialized);
+		field_element ret;
+		ret.value = (b.value * value);
 		return ret;
 	}
 	field_element field_element::operator * (const field_element &b) const
@@ -60,14 +72,17 @@ namespace prime_field
 	{
 		assert(initialized);
 		field_element ret;
-		ret.value = (value + mod - b.value) % mod;
+		if(value > b.value)
+			ret.value = value - b.value;
+		else
+			ret.value = value + mod - b.value;
 		return ret;
 	}
 	void field_element::set_value(const mpz_class &x)
 	{
 		value = x;
 	}
-	std::string field_element::to_string(int base = 10)	
+	std::string field_element::to_string(int base = 10)	const
 	{
 		return value.get_str(base);
 	}

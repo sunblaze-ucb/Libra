@@ -193,11 +193,7 @@ gmp_randstate_t rstate;
 
 std::vector<prime_field::field_element> generate_randomness(unsigned int size)
 {
-	int k = 0;
-	while(size)
-	{
-		k++; size >>= 1;
-	}
+	int k = size;
 	std::vector<prime_field::field_element> ret;
 
 	for(int i = 0; i < k; ++i)
@@ -258,12 +254,12 @@ bool verifier::verify()
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-	fprintf(stderr, "evaluation result:\n");
-	for(auto x : result)
-	{
-		fprintf(stderr, "%d %s\n", x.first, x.second.to_string(10).c_str());
-	}
-	fprintf(stderr, "\n");
+//	fprintf(stderr, "evaluation result:\n");
+//	for(auto x : result)
+//	{
+//		fprintf(stderr, "%d %s\n", x.first, x.second.to_string(10).c_str());
+//	}
+//	fprintf(stderr, "\n");
 
 	prime_field::field_element alpha, beta;
 	alpha.value = 1;
@@ -289,18 +285,18 @@ bool verifier::verify()
 		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
 		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
 
-		for(int i = 0; i < r_u.size(); ++i)
-			std::cout << "r_u[" << i << "] = " << r_u[i].to_string(10) << std::endl;
+//		for(int i = 0; i < r_u.size(); ++i)
+//			std::cout << "r_u[" << i << "] = " << r_u[i].to_string(10) << std::endl;
 
-		for(int i = 0; i < r_v.size(); ++i)
-			std::cout << "r_v[" << i << "] = " << r_v[i].to_string(10) << std::endl;
+//		for(int i = 0; i < r_v.size(); ++i)
+//			std::cout << "r_v[" << i << "] = " << r_v[i].to_string(10) << std::endl;
 
 
-		for(int i = 0; i < r_0.size(); ++i)
-			std::cout << "r_0[" << i << "] = " << r_0[i].to_string(10) << std::endl;
+//		for(int i = 0; i < r_0.size(); ++i)
+//			std::cout << "r_0[" << i << "] = " << r_0[i].to_string(10) << std::endl;
 
-		for(int i = 0; i < r_1.size(); ++i)
-			std::cout << "r_1[" << i << "] = " << r_1[i].to_string(10) << std::endl;
+//		for(int i = 0; i < r_1.size(); ++i)
+//			std::cout << "r_1[" << i << "] = " << r_1[i].to_string(10) << std::endl;
 
 
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
@@ -388,6 +384,7 @@ bool verifier::verify()
 	else
 	{
 		fprintf(stderr, "Verification pass\n");
+		fprintf(stderr, "Prove Time %f\n", (float)(p -> total_time) / (float)CLOCKS_PER_SEC);
 	}
 	return true;
 }
