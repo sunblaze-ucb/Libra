@@ -393,5 +393,16 @@ bool verifier::verify()
 		fprintf(stderr, "Verification pass\n");
 		fprintf(stderr, "Prove Time %f\n", (float)(p -> total_time) / (float)CLOCKS_PER_SEC);
 	}
+	p -> delete_self();
+	delete_self();
 	return true;
+}
+
+void verifier::delete_self()
+{
+	for(int i = 0; i < C.total_depth; ++i)
+	{
+		delete[] C.circuit[i].gates;
+	}
+	delete[] C.circuit;
 }

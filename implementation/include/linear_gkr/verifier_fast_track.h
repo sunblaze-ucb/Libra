@@ -15,6 +15,7 @@ public:
 	void read_circuit(const char *);
 	bool verify();
 	void get_prover(prover*);
+	void delete_self();
 	prime_field::field_element mult(int, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*);
 	prime_field::field_element add(int, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*);
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, int, int);

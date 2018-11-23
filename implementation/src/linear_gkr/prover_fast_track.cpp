@@ -95,35 +95,6 @@ void prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int
 	one_minus_r_0 = o_r_0;
 	one_minus_r_1 = o_r_1;
 }
-/*
-void prover::DFS(linear_poly* AddV, linear_poly *Mult, linear_poly *Add, int g, int depth, 
-	prime_field::field_element alpha_value, prime_field::field_element beta_value)
-{
-	if(depth == length_g)
-	{
-		int u, v;
-		u = C.circuit[sumcheck_layer_id].gates[g].u;
-		v = C.circuit[sumcheck_layer_id].gates[g].v;
-		if(C.circuit[sumcheck_layer_id].gates[g].ty == 0) //add gate
-		{
-			AddV[u] = AddV[u] + circuit_value[sumcheck_layer_id - 1][v] * (alpha_value * alpha + beta_value * beta);
-			Add[u] = Add[u] + (alpha_value * alpha + beta_value * beta);
-		}
-		else if(C.circuit[sumcheck_layer_id].gates[g].ty == 1) //mult gate
-		{
-			Mult[u] = Mult[u] + circuit_value[sumcheck_layer_id - 1][v] * (alpha_value * alpha + beta_value * beta);
-		}
-	}
-	else
-	{
-		g &= ((-1) ^ (1 << depth));
-		DFS(AddV, Mult, Add, g, depth + 1, 
-			alpha_value * (one_minus_r_0[depth]), beta_value * (one_minus_r_1[depth]));
-		g |= (1 << depth);
-		DFS(AddV, Mult, Add, g, depth + 1, alpha_value * r_0[depth], beta_value * r_1[depth]);
-	}
-}
-*/
 
 void prover::init_array(int max_bit_length)
 {
@@ -136,7 +107,7 @@ void prover::init_array(int max_bit_length)
 	beta_u = new prime_field::field_element[(1 << max_bit_length)];
 }
 
-prover::~prover()
+void prover::delete_self()
 {
 	delete[] mult_array;
 	delete[] add_array;
@@ -147,6 +118,10 @@ prover::~prover()
 	delete[] beta_u;
 	for(int i = 0; i < C.total_depth; ++i)
 		delete[] circuit_value[i];
+}
+
+prover::~prover()
+{
 }
 
 void prover::sumcheck_phase1_init()

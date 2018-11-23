@@ -28,7 +28,6 @@ public:
 	}
 	~layer()
 	{
-		delete[] gates;
 	}
 };
 
@@ -44,11 +43,7 @@ public:
 	}
 	~layered_circuit()
 	{
-		for(int i = 0; i < total_depth; ++i)
-		{
-			delete[] circuit[i].gates;
-		}
-		delete[] circuit;
+		
 	}
 };
 
