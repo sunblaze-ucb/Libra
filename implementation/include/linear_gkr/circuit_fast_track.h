@@ -17,8 +17,8 @@ public:
 class layer
 {
 public:
-	prime_field::field_element (*add)(std::vector<prime_field::field_element>);
-	prime_field::field_element (*mult)(std::vector<prime_field::field_element>);
+//	prime_field::field_element (*add)(std::vector<prime_field::field_element>);
+//	prime_field::field_element (*mult)(std::vector<prime_field::field_element>);
 	gate *gates;
 	int bit_length;
 	layer()

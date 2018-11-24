@@ -3,7 +3,7 @@
 int main()
 {
 	int d = 3;
-	int w[] = {4, 4, 3};
+	int w[] = {20, 20, 19};
 	printf("%d\n", d);
 	int n = (1 << w[0]);
 	printf("%d ", n);
