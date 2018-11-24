@@ -104,6 +104,7 @@ void prover::init_array(int max_bit_length)
 	addV_array = new linear_poly[(1 << max_bit_length)];
 	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
 	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
+	beta_g_sum = new prime_field::field_element[(1 << max_bit_length)];
 	beta_u = new prime_field::field_element[(1 << max_bit_length)];
 }
 
@@ -116,6 +117,7 @@ void prover::delete_self()
 	delete[] beta_g_r0;
 	delete[] beta_g_r1;
 	delete[] beta_u;
+	delete[] beta_g_sum;
 	for(int i = 0; i < C.total_depth; ++i)
 		delete[] circuit_value[i];
 }
@@ -129,42 +131,61 @@ void prover::sumcheck_phase1_init()
 	fprintf(stderr, "sumcheck level %d, phase1 init start\n", sumcheck_layer_id);
 	clock_t t0 = clock();
 	//mult init
+	clock_t t_init = clock();
 	total_uv = (1 << C.circuit[sumcheck_layer_id - 1].bit_length);
+	prime_field::field_element zero = prime_field::field_element(0);
 	for(int i = 0; i < total_uv; ++i)
 	{
-		int g = i;
-		mult_array[g] = 
-			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
-		V_mult_add[g] = 
-			circuit_value[sumcheck_layer_id - 1][g];
-	}
-	//add init
+		mult_array[i].a = zero;
+		mult_array[i].b = zero;
+		V_mult_add[i] = circuit_value[sumcheck_layer_id - 1][i];
 
-	for(int i = 0; i < total_uv; ++i)
-	{
-		int g = i;
-		addV_array[g] = 
-			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
-		add_array[g] = 
-			linear_poly(prime_field::field_element(0), prime_field::field_element(0));
+		addV_array[i].a = zero;
+		addV_array[i].b = zero;
+		add_array[i].a = zero;
+		add_array[i].b = zero;
 	}
-	
+	fprintf(stderr, "	init time %f\n", ((float)clock() - t_init) / (float)CLOCKS_PER_SEC);
+	clock_t t_beta = clock();
 	beta_g_r0[0] = alpha;
 	beta_g_r1[0] = beta;
 	for(int i = 0; i < length_g; ++i)
 	{
 		for(int j = 0; j < (1 << i); ++j)
 		{
-			beta_g_r0[j | (1 << i)] = beta_g_r0[j] * r_0[i];
-			beta_g_r1[j | (1 << i)] = beta_g_r1[j] * r_1[i];
+			if(i % 4 == 0 || i + 1 == length_g)
+			{
+				beta_g_r0[j | (1 << i)].value = beta_g_r0[j].value * r_0[i].value % prime_field::mod;
+				beta_g_r1[j | (1 << i)].value = beta_g_r1[j].value * r_1[i].value % prime_field::mod;
+			}
+			else
+			{
+				beta_g_r0[j | (1 << i)].value = beta_g_r0[j].value * r_0[i].value;
+				beta_g_r1[j | (1 << i)].value = beta_g_r1[j].value * r_1[i].value;
+			}
 		}
 		for(int j = 0; j < (1 << i); ++j)
 		{
-			beta_g_r0[j] = beta_g_r0[j] * one_minus_r_0[i];
-			beta_g_r1[j] = beta_g_r1[j] * one_minus_r_1[i];
+			if(i % 4 == 0 || i + 1 == length_g)
+			{
+				beta_g_r0[j].value = beta_g_r0[j].value * one_minus_r_0[i].value % prime_field::mod;
+				beta_g_r1[j].value = beta_g_r1[j].value * one_minus_r_1[i].value % prime_field::mod;
+			}
+			else
+			{
+				beta_g_r0[j].value = beta_g_r0[j].value * one_minus_r_0[i].value;
+				beta_g_r1[j].value = beta_g_r1[j].value * one_minus_r_1[i].value;
+			}
 		}
 	}
 
+	for(int i = 0; i < (1 << length_g); ++i)
+	{
+		beta_g_sum[i] = beta_g_r0[i] + beta_g_r1[i];
+	}
+
+	fprintf(stderr, "	beta calc time %f\n", ((float)clock() - t_beta) / (float)CLOCKS_PER_SEC);
+	clock_t t_array = clock();
 	for(int i = 0; i < (1 << length_g); ++i)
 	{
 		int u, v;
@@ -172,14 +193,15 @@ void prover::sumcheck_phase1_init()
 		v = C.circuit[sumcheck_layer_id].gates[i].v;
 		if(C.circuit[sumcheck_layer_id].gates[i].ty == 0) //add gate
 		{
-			addV_array[u] = addV_array[u] + circuit_value[sumcheck_layer_id - 1][v] * (beta_g_r0[i] + beta_g_r1[i]);
-			add_array[u] = add_array[u] + (beta_g_r0[i] + beta_g_r1[i]);
+			addV_array[u].b.value = addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value;
+			add_array[u].b.value = add_array[u].b.value + beta_g_sum[i].value;
 		}
-		else if(C.circuit[sumcheck_layer_id].gates[i].ty == 1) //mult gate
+		if(C.circuit[sumcheck_layer_id].gates[i].ty == 1) //mult gate
 		{
-			mult_array[u] = mult_array[u] + circuit_value[sumcheck_layer_id - 1][v] * (beta_g_r0[i] + beta_g_r1[i]);
+			mult_array[u].b.value = mult_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value;
 		}
 	}
+	fprintf(stderr, "	array calc time %f\n", ((float)clock() - t_array) / (float)CLOCKS_PER_SEC);
 
 	fprintf(stderr, "sumcheck level %d, phase1 init finished\n", sumcheck_layer_id);
 	clock_t time_e = clock() - t0;
@@ -187,52 +209,61 @@ void prover::sumcheck_phase1_init()
 	total_time += time_e;
 }
 
-quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previous_random)
+quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previous_random, int current_bit)
 {
+	fprintf(stderr, "sumcheck level %d, phase1 update start\n", sumcheck_layer_id);
 	clock_t t0 = clock();
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	for(int i = 0; i < (total_uv >> 1); ++i)
 	{
 		prime_field::field_element zero_value, one_value;
-		int g = i;
-		int g_zero = g << 1, g_one = g << 1 | 1;
-		zero_value = mult_array[g_zero].a * previous_random + mult_array[g_zero].b;
-		one_value = mult_array[g_one].a * previous_random + mult_array[g_one].b;
-		mult_array[g] = linear_poly(one_value - zero_value, zero_value);
+		int g_zero = i << 1, g_one = i << 1 | 1;
+		if(current_bit == 0)
+		{
+			mult_array[i].b = mult_array[g_zero].b;
+			mult_array[i].a = mult_array[g_one].b - mult_array[i].b;
+			
+			V_mult_add[i].b = V_mult_add[g_zero].b;
+			V_mult_add[i].a = V_mult_add[g_one].b - V_mult_add[i].b;
 
-		zero_value = V_mult_add[g_zero].a * previous_random + V_mult_add[g_zero].b;
-		one_value = V_mult_add[g_one].a * previous_random + V_mult_add[g_one].b;
-		V_mult_add[g] = linear_poly(one_value - zero_value, zero_value);
+			addV_array[i].b = addV_array[g_zero].b;
+			addV_array[i].a = addV_array[g_one].b - addV_array[i].b;
+			add_array[i].b = add_array[g_zero].b;
+			add_array[i].a = add_array[g_one].b - add_array[i].b;
+		}
+		else
+		{
+			mult_array[i].b = mult_array[g_zero].a * previous_random + mult_array[g_zero].b;
+			mult_array[i].a = mult_array[g_one].a * previous_random + mult_array[g_one].b - mult_array[i].b;
+			
+			V_mult_add[i].b = V_mult_add[g_zero].a * previous_random + V_mult_add[g_zero].b;
+			V_mult_add[i].a = V_mult_add[g_one].a * previous_random + V_mult_add[g_one].b - V_mult_add[i].b;
 
-		ret.a.value = ret.a.value + mult_array[g].a.value * V_mult_add[g].a.value;
-		ret.b.value = ret.b.value + mult_array[g].a.value * V_mult_add[g].b.value + mult_array[g].b.value * V_mult_add[g].a.value;
-		ret.c.value = ret.c.value + mult_array[g].b.value * V_mult_add[g].b.value;
+			addV_array[i].b = addV_array[g_zero].a * previous_random + addV_array[g_zero].b;
+			addV_array[i].a = addV_array[g_one].a * previous_random + addV_array[g_one].b - addV_array[i].b;
+			add_array[i].b = add_array[g_zero].a * previous_random + add_array[g_zero].b;
+			add_array[i].a = add_array[g_one].a * previous_random + add_array[g_one].b - add_array[i].b;
+		}
+		ret.a.value = ret.a.value + (mult_array[i].a.value + add_array[i].a.value) * V_mult_add[i].a.value;
+		ret.b.value = ret.b.value + (mult_array[i].a.value + add_array[i].a.value) * V_mult_add[i].b.value + (mult_array[i].b.value + add_array[i].b.value) * V_mult_add[i].a.value
+								  + addV_array[i].a.value;
+		ret.c.value = ret.c.value + (mult_array[i].b.value + add_array[i].b.value) * V_mult_add[i].b.value
+								  + addV_array[i].b.value;
 	}
 
-	//add gate
-	for(int i = 0; i < (total_uv >> 1); ++i)
-	{
-		prime_field::field_element zero_value, one_value;
-		int g = i;
-		int g_zero = g << 1, g_one = g << 1 | 1;
-		zero_value = addV_array[g_zero].a * previous_random + addV_array[g_zero].b;
-		one_value = addV_array[g_one].a * previous_random + addV_array[g_one].b;
-		addV_array[g] = linear_poly(one_value - zero_value, zero_value);
-		zero_value = add_array[g_zero].a * previous_random + add_array[g_zero].b;
-		one_value = add_array[g_one].a * previous_random + add_array[g_one].b;
-		add_array[g] = linear_poly(one_value - zero_value, zero_value);
-		ret.a.value = ret.a.value + add_array[g].a.value * V_mult_add[g].a.value;
-		ret.b.value = ret.b.value + add_array[g].a.value * V_mult_add[g].b.value + add_array[g].b.value * V_mult_add[g].a.value;
-		ret.c.value = ret.c.value + add_array[g].b.value * V_mult_add[g].b.value;
-
-		ret.c.value = ret.c.value + addV_array[g].b.value;
-		ret.b.value = ret.b.value + addV_array[g].a.value;
-	}
 	total_uv >>= 1;
 	ret.a.value = ret.a.value % prime_field::mod;
 	ret.b.value = ret.b.value % prime_field::mod;
 	ret.c.value = ret.c.value % prime_field::mod;
+
+	if(ret.a.value < prime_field::field_element(0).value)
+		ret.a.value = ret.a.value + prime_field::mod;
+	if(ret.b.value < prime_field::field_element(0).value)
+		ret.b.value = ret.b.value + prime_field::mod;
+	if(ret.c.value < prime_field::field_element(0).value)
+		ret.c.value = ret.c.value + prime_field::mod;
 	clock_t time_e = clock() - t0;
+	fprintf(stderr, "sumcheck level %d, phase1 update finished\n", sumcheck_layer_id);
 	fprintf(stderr, "time %f\n", (float)time_e / (float)CLOCKS_PER_SEC);
 	total_time += time_e;
 	return ret;
@@ -260,39 +291,32 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 	
 	total_uv = (1 << C.circuit[sumcheck_layer_id - 1].bit_length);
 	int total_g = (1 << C.circuit[sumcheck_layer_id].bit_length);
-
+	prime_field::field_element zero = prime_field::field_element(0);
 	for(int i = 0; i < total_uv; ++i)
 	{
-		int v = i;
-		mult_array[v] = linear_poly(prime_field::field_element(0), prime_field::field_element(0));
-		add_array[v] = linear_poly(prime_field::field_element(0), prime_field::field_element(0));
-		addV_array[v] = linear_poly(prime_field::field_element(0), prime_field::field_element(0));
-		V_mult_add[v] = circuit_value[sumcheck_layer_id - 1][v];
+		mult_array[i].a = zero;
+		mult_array[i].b = zero;
+		add_array[i].a = zero;
+		add_array[i].b = zero;
+		addV_array[i].a = zero;
+		addV_array[i].b = zero;
+		V_mult_add[i] = circuit_value[sumcheck_layer_id - 1][i];
 	}
 
 	for(int i = 0; i < total_g; ++i)
 	{
-		int g = i;
-		int ty = C.circuit[sumcheck_layer_id].gates[g].ty;
-		int u = C.circuit[sumcheck_layer_id].gates[g].u;
-		int v = C.circuit[sumcheck_layer_id].gates[g].v;
+		int ty = C.circuit[sumcheck_layer_id].gates[i].ty;
+		int u = C.circuit[sumcheck_layer_id].gates[i].u;
+		int v = C.circuit[sumcheck_layer_id].gates[i].v;
 		if(ty == 1) //mult gate
 		{
-			mult_array[v].b.value = mult_array[v].b.value + (beta_g_r0[g].value * beta_u[u].value + beta_g_r1[g].value * beta_u[u].value) * v_u.value;
+			mult_array[v].b.value = mult_array[v].b.value + (beta_g_r0[i].value + beta_g_r1[i].value) * beta_u[u].value * v_u.value;
 		}
 		if(ty == 0) //add gate
 		{
-			add_array[v].b.value = add_array[v].b.value + beta_g_r0[g].value * beta_u[u].value + beta_g_r1[g].value * beta_u[u].value;
+			add_array[v].b.value = add_array[v].b.value + (beta_g_r0[i].value + beta_g_r1[i].value) * beta_u[u].value;
 			addV_array[v].b.value = add_array[v].b.value * v_u.value + addV_array[v].b.value;
 		}
-	}
-
-	for(int i = 0; i < total_uv; ++i)
-	{
-		int v = i;
-		mult_array[v].b.value = mult_array[v].b.value % prime_field::mod;
-		add_array[v].b.value = add_array[v].b.value % prime_field::mod;
-		addV_array[v].b.value = addV_array[v].b.value % prime_field::mod;
 	}
 
 //	for(int i = 0; i < total_uv; ++i)
@@ -302,59 +326,67 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 //		fprintf(stderr, "V_mult_add %s\n", add_array[i].b.to_string(10).c_str());
 //	}
 	clock_t time_e = clock() - t0;
+	fprintf(stderr, "sumcheck level %d, phase2 init finished\n", sumcheck_layer_id);
 	fprintf(stderr, "time %f\n", (float)time_e / (float)CLOCKS_PER_SEC);
 	total_time += time_e;
 }
 
-quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previous_random)
+quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previous_random, int current_bit)
 {
+	fprintf(stderr, "sumcheck level %d, phase2 update start\n", sumcheck_layer_id);
 	clock_t t0 = clock();
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	for(int i = 0; i < (total_uv >> 1); ++i)
 	{
-		prime_field::field_element zero_value, one_value;
-		int g = i;
-		int g_zero = g << 1, g_one = g << 1 | 1;
-		zero_value = mult_array[g_zero].a * previous_random + mult_array[g_zero].b;
-		one_value = mult_array[g_one].a * previous_random + mult_array[g_one].b;
-		mult_array[g] = linear_poly(one_value - zero_value, zero_value);
-		
-		zero_value = V_mult_add[g_zero].a * previous_random + V_mult_add[g_zero].b;
-		one_value = V_mult_add[g_one].a * previous_random + V_mult_add[g_one].b;
-		V_mult_add[g] = linear_poly(one_value - zero_value, zero_value);
-		
-		ret.a.value = ret.a.value + mult_array[g].a.value * V_mult_add[g].a.value;
-		ret.b.value = ret.b.value + mult_array[g].a.value * V_mult_add[g].b.value + 
-									mult_array[g].b.value * V_mult_add[g].a.value;
-		ret.c.value = ret.c.value + mult_array[g].b.value * V_mult_add[g].b.value;
+		int g_zero = i << 1, g_one = i << 1 | 1;
+		if(current_bit == 0)
+		{
+			mult_array[i].b = mult_array[g_zero].b;
+			mult_array[i].a = mult_array[g_one].b - mult_array[i].b;
+			
+			V_mult_add[i].b = V_mult_add[g_zero].b;
+			V_mult_add[i].a = V_mult_add[g_one].b - V_mult_add[i].b;
+
+			addV_array[i].b = addV_array[g_zero].b;
+			addV_array[i].a = addV_array[g_one].b - addV_array[i].b;
+
+			add_array[i].b = add_array[g_zero].b;
+			add_array[i].a = add_array[g_one].b - add_array[i].b;
+		}
+		else
+		{
+			mult_array[i].b = mult_array[g_zero].a * previous_random + mult_array[g_zero].b;
+			mult_array[i].a = mult_array[g_one].a * previous_random + mult_array[g_one].b - mult_array[i].b;
+			
+			V_mult_add[i].b = V_mult_add[g_zero].a * previous_random + V_mult_add[g_zero].b;
+			V_mult_add[i].a = V_mult_add[g_one].a * previous_random + V_mult_add[g_one].b - V_mult_add[i].b;
+
+			addV_array[i].b = addV_array[g_zero].a * previous_random + addV_array[g_zero].b;
+			addV_array[i].a = addV_array[g_one].a * previous_random + addV_array[g_one].b - addV_array[i].b;
+
+			add_array[i].b = add_array[g_zero].a * previous_random + add_array[g_zero].b;
+			add_array[i].a = add_array[g_one].a * previous_random + add_array[g_one].b - add_array[i].b;
+		}
+		ret.a.value = ret.a.value + (mult_array[i].a.value + add_array[i].a.value) * V_mult_add[i].a.value;
+		ret.b.value = ret.b.value + (mult_array[i].a.value + add_array[i].a.value) * V_mult_add[i].b.value
+								  +	(mult_array[i].b.value + add_array[i].b.value) * V_mult_add[i].a.value
+								  + addV_array[i].a.value;
+		ret.c.value = ret.c.value + (mult_array[i].b.value + add_array[i].b.value) * V_mult_add[i].b.value
+								  + addV_array[i].b.value;
 	}
-	//add gate
 
-	for(int i = 0; i < (total_uv >> 1); ++i)
-	{
-		prime_field::field_element zero_value, one_value;
-		int g = i;
-		int g_zero = g << 1, g_one = g << 1 | 1;
-		zero_value = addV_array[g_zero].a * previous_random + addV_array[g_zero].b;
-		one_value = addV_array[g_one].a * previous_random + addV_array[g_one].b;
-		addV_array[g] = linear_poly(one_value - zero_value, zero_value);
-
-		zero_value = add_array[g_zero].a * previous_random + add_array[g_zero].b;
-		one_value = add_array[g_one].a * previous_random + add_array[g_one].b;
-		add_array[g] = linear_poly(one_value - zero_value, zero_value);
-
-		ret.a.value = ret.a.value + add_array[g].a.value * V_mult_add[g].a.value;
-		ret.b.value = ret.b.value + add_array[g].a.value * V_mult_add[g].b.value + 
-									add_array[g].b.value * V_mult_add[g].a.value;
-		ret.c.value = ret.c.value + add_array[g].b.value * V_mult_add[g].b.value;
-		ret.b.value = ret.b.value + addV_array[g].a.value;
-		ret.c.value = ret.c.value + addV_array[g].b.value;
-	}
 	total_uv >>= 1;
 	ret.a.value = ret.a.value % prime_field::mod;
 	ret.b.value = ret.b.value % prime_field::mod;
 	ret.c.value = ret.c.value % prime_field::mod;
+	if(ret.a.value < prime_field::field_element(0).value)
+		ret.a.value = ret.a.value + prime_field::mod;
+	if(ret.b.value < prime_field::field_element(0).value)
+		ret.b.value = ret.b.value + prime_field::mod;
+	if(ret.c.value < prime_field::field_element(0).value)
+		ret.c.value = ret.c.value + prime_field::mod;
 	clock_t time_e = clock() - t0;
+	fprintf(stderr, "sumcheck level %d, phase2 update finished\n", sumcheck_layer_id);
 	fprintf(stderr, "time %f\n", (float)time_e / (float)CLOCKS_PER_SEC);
 	total_time += time_e;
 	return ret;

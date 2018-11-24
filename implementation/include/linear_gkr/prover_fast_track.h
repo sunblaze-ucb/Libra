@@ -24,6 +24,7 @@ public:
 	linear_poly *mult_array, *addV_array, *add_array;
 	linear_poly *V_mult_add;
 	prime_field::field_element *beta_g_r0, *beta_g_r1, *beta_u;
+	prime_field::field_element *beta_g_sum;
 	clock_t total_time;
 	void init_array(int);
 	void get_circuit(const layered_circuit &from_verifier);
@@ -33,8 +34,8 @@ public:
 		const prime_field::field_element &, const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, prime_field::field_element*);
 	void sumcheck_phase1_init();
 	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
-	quadratic_poly sumcheck_phase1_update(prime_field::field_element);
-	quadratic_poly sumcheck_phase2_update(prime_field::field_element);
+	quadratic_poly sumcheck_phase1_update(prime_field::field_element, int);
+	quadratic_poly sumcheck_phase2_update(prime_field::field_element, int);
 	prime_field::field_element V_res(const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, int, int);
 	std::pair<prime_field::field_element, prime_field::field_element> sumcheck_finalize(prime_field::field_element);
 	void delete_self();

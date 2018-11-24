@@ -285,8 +285,7 @@ bool verifier::verify()
 		}
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{
-			fprintf(stderr, "sumcheck level %d, bit %d, start\n", i, j);
-			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random);
+			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
 			previous_random = r_u[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
@@ -304,7 +303,7 @@ bool verifier::verify()
 		previous_random = prime_field::field_element(0);
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{
-			quadratic_poly poly = p -> sumcheck_phase2_update(previous_random);
+			quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
 			previous_random = r_v[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
