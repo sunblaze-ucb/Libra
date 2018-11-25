@@ -1,5 +1,6 @@
 .DS_store
 main
+test_circuit.txt
 *.plist
 
 ##sublime project configuration
