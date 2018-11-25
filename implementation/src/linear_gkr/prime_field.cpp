@@ -2,40 +2,27 @@
 
 namespace prime_field
 {
-	mpz_class mod;
+	int512_t mod;
 	bool initialized = false;
+	independent_bits_engine<mt19937, 256, cpp_int> gen;
 	void init(std::string s, int base)
 	{
 		assert(!initialized);
+		assert(base == 10);
 		initialized = true;
-		mod.set_str(s, base);
+		mod = int512_t(s);
 	}
-	void init(mpz_class m)
+	void init_random()
 	{
-		assert(!initialized);
-		mod = m;
-		initialized = true;
 	}
 	field_element::field_element()
 	{
-		value = mpz_class(0);
-	}
-	field_element::field_element(const mpz_class &t)
-	{
-		assert(initialized);
-		value = t;
+		value = 0;
 	}
 	field_element::field_element(const int x)
 	{
 		assert(initialized);
-		value = mpz_class(x);
-	}
-	field_element field_element::add_non_mod(const field_element &b)
-	{
-		assert(initialized);
-		field_element ret;
-		ret.value = value + b.value;
-		return ret;
+		value = x;
 	}
 	field_element field_element::operator + (const field_element &b) const
 	{
@@ -62,11 +49,9 @@ namespace prime_field
 	}
 	field_element field_element::operator / (const field_element &b) const
 	{
-		assert(initialized);
-		field_element ret, inv;
-		mpz_invert(inv.value.get_mpz_t(), b.value.get_mpz_t(), mod.get_mpz_t());
-		ret.value = (value * inv.value) % mod;
-		return ret;
+		//todo
+		assert(false);
+		//return ret;
 	}
 	field_element field_element::operator - (const field_element &b) const
 	{
@@ -78,13 +63,11 @@ namespace prime_field
 			ret.value = value + mod - b.value;
 		return ret;
 	}
-	void field_element::set_value(const mpz_class &x)
+	field_element random()
 	{
-		value = x;
-	}
-	std::string field_element::to_string(int base = 10)	const
-	{
-		return value.get_str(base);
+		field_element ret;
+		ret.value = int512_t(gen());
+		return ret;
 	}
 	bool field_element::operator != (const field_element &b) const
 	{

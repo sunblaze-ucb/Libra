@@ -21,10 +21,13 @@ public:
 	const prime_field::field_element *r_0, *r_1;
 	prime_field::field_element *one_minus_r_0, *one_minus_r_1;
 
-	linear_poly *mult_array, *addV_array, *add_array;
+	linear_poly *addV_array;
 	linear_poly *V_mult_add;
-	prime_field::field_element *beta_g_r0, *beta_g_r1, *beta_u;
+	prime_field::field_element *beta_u;
+	prime_field::field_element *beta_g_r0_fhalf, *beta_g_r0_shalf, *beta_g_r1_fhalf, *beta_g_r1_shalf, *beta_u_fhalf, *beta_u_shalf;
 	prime_field::field_element *beta_g_sum;
+	linear_poly *add_mult_sum;
+	int *addV_array_counter, *add_mult_sum_counter;
 	clock_t total_time;
 	void init_array(int);
 	void get_circuit(const layered_circuit &from_verifier);

@@ -2,17 +2,21 @@
 #ifndef __prime_field
 #define __prime_field
 
-#include <gmp.h>
-#include <gmpxx.h>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/random.hpp>
 #include <cassert>
 #include <string>
 
+using namespace boost::multiprecision;
+using namespace boost::random;
+
 namespace prime_field
 {
-	extern mpz_class mod;
+	extern int512_t mod;
 	extern bool initialized;
+	extern independent_bits_engine<mt19937, 256, cpp_int> gen;
 	void init(std::string, int);
-	void init(mpz_class);
+	void init_random();
 	/*
 	This defines a prime field
 	*/
@@ -20,19 +24,17 @@ namespace prime_field
 	{
 	private:
 	public:
-		mpz_class value;
+		int512_t value;
+
 		field_element();
-		field_element(const mpz_class&);
 		field_element(const int);
-		field_element add_non_mod(const field_element &b);
 		field_element operator + (const field_element &b) const;
 		field_element operator * (const field_element &b) const;
 		field_element operator / (const field_element &b) const;
 		field_element operator - (const field_element &b) const;
 		field_element mul_non_mod(const field_element &b) const;
 		bool operator != (const field_element &b) const;
-		void set_value(const mpz_class &);
-		std::string to_string(int) const;
 	};
+	field_element random();
 }
 #endif

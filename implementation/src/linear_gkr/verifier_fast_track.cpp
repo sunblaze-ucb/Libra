@@ -77,124 +77,87 @@ void verifier::read_circuit(const char *path)
 			max_bit_length = C.circuit[i].bit_length;
 	}
 	p -> init_array(max_bit_length);
+
+	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
+	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
+	beta_v = new prime_field::field_element[(1 << max_bit_length)];
+	beta_u = new prime_field::field_element[(1 << max_bit_length)];
 	fclose(circuit_in);
 }
 
-prime_field::field_element verifier::add(int depth, 
-	const prime_field::field_element* z, const prime_field::field_element* r_u, const prime_field::field_element* r_v, const prime_field::field_element* one_minus_z, const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
+prime_field::field_element verifier::add(int depth)
 {
 	//brute force for sanity check
 	//it's slow
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
-		int g = i;
-		prime_field::field_element cur = prime_field::field_element(1);
-		if(C.circuit[depth].gates[g].ty == 0)
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 0)
 		{
-			int u, v;
-			u = C.circuit[depth].gates[g].u;
-			v = C.circuit[depth].gates[g].v;
-			for(int j = 0; j < C.circuit[depth].bit_length; ++j)
-			{
-				if((g & 1) == 0)
-				{
-					cur.value = cur.value * one_minus_z[j].value;
-				}
-				else
-				{
-					cur.value = cur.value * z[j].value;
-				}
-				g >>= 1;
-			}
-			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
-			{
-				if((u & 1) == 0)
-				{
-					cur.value = cur.value * one_minus_r_u[j].value;
-				}
-				else
-				{
-					cur.value = cur.value * r_u[j].value;
-				}
-				u >>= 1;
-			}
-			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
-			{
-				if((v & 1) == 0)
-				{
-					cur.value = cur.value * one_minus_r_v[j].value;
-				}
-				else
-				{
-					cur.value = cur.value * r_v[j].value;
-				}
-				v >>= 1;
-			}
-			ret.value = ret.value + cur.value;
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
 	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
 	return ret;
 }
-prime_field::field_element verifier::mult(int depth, 
-	const prime_field::field_element* z, const prime_field::field_element* r_u, const prime_field::field_element* r_v, const prime_field::field_element* one_minus_z, const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
+prime_field::field_element verifier::mult(int depth)
 {
-	//also brute force
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
-		int g = i;
-		prime_field::field_element cur = prime_field::field_element(1);
-		if(C.circuit[depth].gates[g].ty == 1)
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 1)
 		{
-			int u, v;
-			u = C.circuit[depth].gates[g].u;
-			v = C.circuit[depth].gates[g].v;
-			for(int j = 0; j < C.circuit[depth].bit_length; ++j)
-			{
-				if((g & 1) == 0)
-				{
-					cur.value = cur.value * one_minus_z[j].value;
-				}
-				else
-				{
-					cur.value = cur.value * z[j].value;
-				}
-				g >>= 1;
-			}
-			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
-			{
-				if((u & 1) == 0)
-				{
-					cur.value = cur.value * one_minus_r_u[j].value;
-				}
-				else
-				{
-					cur.value = cur.value * r_u[j].value;
-				}
-				u >>= 1;
-			}
-			for(int j = 0; j < C.circuit[depth - 1].bit_length; ++j)
-			{
-				if((v & 1) == 0)
-				{
-					cur.value = cur.value * one_minus_r_v[j].value;
-				}
-				else
-				{
-					cur.value = cur.value * r_v[j].value;
-				}
-				v >>= 1;
-			}
-			ret.value = ret.value + cur.value;
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
 	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
 	return ret;
 }
 
-gmp_randstate_t rstate;
+void verifier::beta_init(int depth, prime_field::field_element alpha, prime_field::field_element beta,
+	const prime_field::field_element* r_0, const prime_field::field_element* r_1, 
+	const prime_field::field_element* r_u, const prime_field::field_element* r_v, 
+	const prime_field::field_element* one_minus_r_0, const prime_field::field_element* one_minus_r_1, 
+	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
+{
+	beta_g_r0[0] = alpha;
+	beta_g_r1[0] = beta;
+	for(int i = 0; i < C.circuit[depth].bit_length; ++i)
+	{
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_g_r0[j | (1 << i)].value = beta_g_r0[j].value * r_0[i].value % prime_field::mod;
+			beta_g_r1[j | (1 << i)].value = beta_g_r1[j].value * r_1[i].value % prime_field::mod;
+		}
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_g_r0[j].value = beta_g_r0[j].value * one_minus_r_0[i].value % prime_field::mod;
+			beta_g_r1[j].value = beta_g_r1[j].value * one_minus_r_1[i].value % prime_field::mod;
+		}
+	}
+	beta_u[0] = prime_field::field_element(1);
+	beta_v[0] = prime_field::field_element(1);
+	for(int i = 0; i < C.circuit[depth - 1].bit_length; ++i)
+	{
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_u[j | (1 << i)] = beta_u[j] * r_u[i];
+			beta_v[j | (1 << i)] = beta_v[j] * r_v[i];
+		}
+			
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_u[j] = beta_u[j] * one_minus_r_u[i];
+			beta_v[j] = beta_v[j] * one_minus_r_v[i];
+		}
+	}
+}
 
 prime_field::field_element* generate_randomness(unsigned int size)
 {
@@ -204,10 +167,8 @@ prime_field::field_element* generate_randomness(unsigned int size)
 
 	for(int i = 0; i < k; ++i)
 	{
-		mpz_t random_element;
-		mpz_init(random_element);
-		mpz_urandomm(random_element, rstate, prime_field::mod.get_mpz_t());
-		ret[i] = prime_field::field_element(mpz_class(random_element));
+		ret[i] = prime_field::random();
+		ret[i].value = ret[i].value % prime_field::mod;
 	}
 	return ret;
 }
@@ -224,15 +185,19 @@ prime_field::field_element verifier::V_in(const prime_field::field_element* r_0,
 		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
 			output[j] = output[j << 1] * (one_minus_r_0[i]) + output[j << 1 | 1] * (r_0[i]);
+		output_size >>= 1;
 	}
 	auto ret = output[0];
+	ret.value = ret.value % prime_field::mod;
 	delete[] output;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
 	return ret;
 }
 
 bool verifier::verify()
 {
-	gmp_randinit_default(rstate);
+	prime_field::init_random();
 	p -> proof_init();
 
 	auto result = p -> evaluate();
@@ -261,8 +226,6 @@ bool verifier::verify()
 	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, result, C.circuit[C.total_depth - 1].bit_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
 	a_0 = alpha * a_0;
 	prime_field::field_element a_1 = prime_field::field_element(0); //* beta
-
-	printf("a_0 = %s\n", a_0.to_string(10).c_str());
 
 	prime_field::field_element alpha_beta_sum = a_0; //+ a_1
 
@@ -326,11 +289,9 @@ bool verifier::verify()
 
 //		std::cout << "alpha = " << alpha.to_string(10) << std::endl;
 //		std::cout << "beta = " << beta.to_string(10) << std::endl;
-
-		auto mult_value = mult(i, r_0, r_u, r_v, one_minus_r_0, one_minus_r_u, one_minus_r_v) * alpha + 
-						mult(i, r_1, r_u, r_v, one_minus_r_1, one_minus_r_u, one_minus_r_v) * beta;
-		auto add_value = add(i, r_0, r_u, r_v, one_minus_r_0, one_minus_r_u, one_minus_r_v) * alpha + 
-						add(i, r_1, r_u, r_v, one_minus_r_1, one_minus_r_u, one_minus_r_v) * beta;
+		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
+		auto mult_value = mult(i);
+		auto add_value = add(i);
 //		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
 //		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
 
@@ -399,6 +360,10 @@ bool verifier::verify()
 
 void verifier::delete_self()
 {
+	delete[] beta_g_r0;
+	delete[] beta_g_r1;
+	delete[] beta_u;
+	delete[] beta_v;
 	for(int i = 0; i < C.total_depth; ++i)
 	{
 		delete[] C.circuit[i].gates;
