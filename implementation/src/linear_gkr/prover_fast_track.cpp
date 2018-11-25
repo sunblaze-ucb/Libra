@@ -467,3 +467,4 @@ void prover::proof_init()
 {
 	//todo
 }
+

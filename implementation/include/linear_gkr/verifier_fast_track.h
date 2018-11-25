@@ -3,7 +3,7 @@
 #define __verifier
 
 #include "linear_gkr/circuit_fast_track.h"
-#include "linear_gkr/prover_fast_track.h"
+#include "linear_gkr/prover_fast_para_track.h"
 #include "linear_gkr/polynomial.h"
 #include <utility>
 
