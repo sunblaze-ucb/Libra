@@ -200,7 +200,6 @@ bool verifier::verify()
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-	fprintf(stderr, "evaluation result:\n");
 //	for(int i = 0; i < (1 << C.circuit[C.total_depth - 1].bit_length); ++i)
 //	{
 //		fprintf(stderr, "%d %s\n", i, result[i].to_string(10).c_str());
@@ -222,7 +221,15 @@ bool verifier::verify()
 		one_minus_r_0[i] = prime_field::field_element(1) - r_0[i];
 		one_minus_r_1[i] = prime_field::field_element(1) - r_1[i];
 	}
+	
+	std::chrono::high_resolution_clock::time_point t_a = std::chrono::high_resolution_clock::now();
+	std::cerr << "Calc V_output(r)" << std::endl;
 	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, result, C.circuit[C.total_depth - 1].bit_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
+	std::chrono::high_resolution_clock::time_point t_b = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> ts = std::chrono::duration_cast<std::chrono::duration<double>>(t_b - t_a);
+	std::cerr << "	Time: " << ts.count() << std::endl;
+	
 	a_0 = alpha * a_0;
 	prime_field::field_element a_1 = prime_field::field_element(0); //* beta
 
@@ -231,6 +238,8 @@ bool verifier::verify()
 
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{
+		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+		std::cerr << "Bound u start" << std::endl;
 		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		p -> sumcheck_phase1_init();
 		prime_field::field_element previous_random = prime_field::field_element(0);
@@ -257,11 +266,19 @@ bool verifier::verify()
 			}
 			else
 			{
-				fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+			//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
 			}
 			alpha_beta_sum = poly.eval(r_u[j]);
 		}
-//		std::cout << "phase1 sum " << alpha_beta_sum.to_string(10) << std::endl;
+		
+		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+		std::cerr << "	Time: " << time_span.count() << std::endl;
+		
+		std::cerr << "Bound v start" << std::endl;
+		t0 = std::chrono::high_resolution_clock::now();
+		
 		p -> sumcheck_phase2_init(previous_random, r_u, one_minus_r_u);
 		previous_random = prime_field::field_element(0);
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
@@ -275,11 +292,15 @@ bool verifier::verify()
 			}
 			else
 			{
-				fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
+			//	fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
 			}
 			alpha_beta_sum = poly.eval(r_v[j]);
 		}
-//		std::cout << "phase2 sum " << alpha_beta_sum.to_string(10) << std::endl;
+		
+		t1 = std::chrono::high_resolution_clock::now();
+		time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+		std::cerr << "	Time: " << time_span.count() << std::endl;	
+		
 		auto final_claims = p -> sumcheck_finalize(previous_random);
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;

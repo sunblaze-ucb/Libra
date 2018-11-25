@@ -1,25 +1,29 @@
 #include <cstdio>
 
-int main()
+int main(int argc, char **argv)
 {
-	int d = 3;
-	int w[] = {20, 20, 19};
+	int d, w;
+	sscanf(argv[1], "%d", &d);
+	sscanf(argv[2], "%d", &w);
 	printf("%d\n", d);
-	int n = (1 << w[0]);
+	int n = (1 << w);
 	printf("%d ", n);
 	for(int j = 0; j < n; ++j)
 	{
 		printf("%d %d %d %d ", 3, j, j + 1, 0);
 	}
 	printf("\n");
-	n = (1 << w[1]);
-	printf("%d ", n);
-	for(int j = 0; j < n; ++j)
+	for(int k = 1; k < d - 1; ++k)
 	{
-		printf("%d %d %d %d ", 0, j, j, j);
+		n = (1 << w);
+		printf("%d ", n);
+		for(int j = 0; j < n; ++j)
+		{
+			printf("%d %d %d %d ", 0, j, j, j);
+		}
+		printf("\n");
 	}
-	printf("\n");
-	n = (1 << w[2]);
+	n = (1 << (w - 1));
 	printf("%d ", n);
 	for(int j = 0; j < n; ++j)
 	{

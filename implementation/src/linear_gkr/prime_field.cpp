@@ -7,7 +7,6 @@ namespace prime_field
 	independent_bits_engine<mt19937, 256, cpp_int> gen;
 	void init(std::string s, int base)
 	{
-		assert(!initialized);
 		assert(base == 10);
 		initialized = true;
 		mod = int512_t(s);
@@ -21,12 +20,10 @@ namespace prime_field
 	}
 	field_element::field_element(const int x)
 	{
-		assert(initialized);
 		value = x;
 	}
 	field_element field_element::operator + (const field_element &b) const
 	{
-		assert(initialized);
 		field_element ret;
 		ret.value = (b.value + value);
 		if(ret.value >= mod)
@@ -35,14 +32,12 @@ namespace prime_field
 	}
 	field_element field_element::mul_non_mod(const field_element &b) const
 	{
-		assert(initialized);
 		field_element ret;
 		ret.value = (b.value * value);
 		return ret;
 	}
 	field_element field_element::operator * (const field_element &b) const
 	{
-		assert(initialized);
 		field_element ret;
 		ret.value = (b.value * value) % mod;
 		return ret;
@@ -55,7 +50,6 @@ namespace prime_field
 	}
 	field_element field_element::operator - (const field_element &b) const
 	{
-		assert(initialized);
 		field_element ret;
 		if(value > b.value)
 			ret.value = value - b.value;

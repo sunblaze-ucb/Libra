@@ -53,7 +53,6 @@ prime_field::field_element prover::V_res(const prime_field::field_element* one_m
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	total_time += time_span.count();
-	std::cerr << "total V_res calc time: " << time_span.count() << " seconds." << std::endl;
 	return res;
 }
 
@@ -71,6 +70,7 @@ prime_field::field_element* prover::evaluate()
 		assert(ty == 3);
 		circuit_value[0][g] = prime_field::field_element(u);
 	}
+	assert(C.total_depth < 1000000);
 	for(int i = 1; i < C.total_depth; ++i)
 	{
 		circuit_value[i] = new prime_field::field_element[(1 << C.circuit[i].bit_length)];
@@ -234,7 +234,6 @@ void phase1_init_func(prover* p, int id)
 
 void prover::sumcheck_phase1_init()
 {
-	fprintf(stderr, "sumcheck level %d, phase1 init start\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 
 	beta_g_r0_fhalf[0] = alpha;
@@ -275,13 +274,11 @@ void prover::sumcheck_phase1_init()
 	for(int i = 0; i < 16; ++i)
 		threads[i].join();
 
-	fprintf(stderr, "sumcheck level %d, phase1 init finished\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	double tmp = time_span.count();
 	total_time += time_span.count();
-	std::cerr << "total phase1 init time: " << time_span.count() << " seconds." << std::endl;
 }
 
 void phase1_update_func(prover *p, int id, int total_uv, int current_bit, prime_field::field_element previous_random)
@@ -351,7 +348,7 @@ void phase1_update_func(prover *p, int id, int total_uv, int current_bit, prime_
 
 quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previous_random, int current_bit)
 {
-	fprintf(stderr, "sumcheck level %d, phase1 update start\n", sumcheck_layer_id);
+//	fprintf(stderr, "sumcheck level %d, phase1 update start\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	std::thread threads[16];
@@ -367,13 +364,13 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 	std::swap(nV_mult_add, V_mult_add);
 	
 	total_uv >>= 1;
-	fprintf(stderr, "sumcheck level %d, phase1 update finished\n", sumcheck_layer_id);
+//	fprintf(stderr, "sumcheck level %d, phase1 update finished\n", sumcheck_layer_id);
 
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	total_time += time_span.count();
-	std::cerr << "total phase1 update " << current_bit << " time: " << time_span.count() << " seconds" << std::endl;
+//	std::cerr << "total phase1 update " << current_bit << " time: " << time_span.count() << " seconds" << std::endl;
 	return ret;
 }
 
@@ -480,7 +477,6 @@ void phase2_init_func(prover* p, int id)
 
 void prover::sumcheck_phase2_init(prime_field::field_element previous_random, const prime_field::field_element* r_u, const prime_field::field_element* one_minus_r_u)
 {
-	fprintf(stderr, "sumcheck level %d, phase2 init start\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	v_u = V_mult_add[0].eval(previous_random);
 //	fprintf(stderr, "v_u %s\n", v_u.to_string(10).c_str());
@@ -515,12 +511,10 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 	for(int i = 0; i < 16; ++i)
 		threads[i].join();
 	
-	fprintf(stderr, "sumcheck level %d, phase2 init finished\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	total_time += time_span.count();
-	std::cerr << "total phase2 init time: " << time_span.count() << " seconds" << std::endl;
 }
 
 void phase2_update_func(prover *p, int id, int total_uv, int current_bit, prime_field::field_element previous_random)
@@ -588,7 +582,7 @@ void phase2_update_func(prover *p, int id, int total_uv, int current_bit, prime_
 
 quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previous_random, int current_bit)
 {
-	fprintf(stderr, "sumcheck level %d, phase2 update start\n", sumcheck_layer_id);
+//	fprintf(stderr, "sumcheck level %d, phase2 update start\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	
@@ -608,13 +602,13 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 	std::swap(nV_mult_add, V_mult_add);
 	
 	total_uv >>= 1;
-	fprintf(stderr, "sumcheck level %d, phase2 update finished\n", sumcheck_layer_id);
+//	fprintf(stderr, "sumcheck level %d, phase2 update finished\n", sumcheck_layer_id);
 	
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	total_time += time_span.count();
-	std::cerr << "total phase2 update " << current_bit << " time: " << time_span.count() << " seconds" << std::endl;
+//	std::cerr << "total phase2 update " << current_bit << " time: " << time_span.count() << " seconds" << std::endl;
 	
 	return ret;
 }

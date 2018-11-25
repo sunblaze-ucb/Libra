@@ -16,7 +16,7 @@ public:
 	quadratic_poly rets[100];
 	int total_uv;
 	layered_circuit C;
-	prime_field::field_element* circuit_value[100];
+	prime_field::field_element* circuit_value[1000000];
 
 	int sumcheck_layer_id, length_g, length_u, length_v;
 	prime_field::field_element alpha, beta;

@@ -4,17 +4,16 @@
 #include "linear_gkr/circuit_fast_track.h"
 #include "linear_gkr/prime_field.h"
 #include "linear_gkr/polynomial.h"
-#include <ctime>
 #include <cstring>
 #include <utility>
-
+#include <chrono>
 class prover
 {
 public:
 	prime_field::field_element v_u, v_v;
 	int total_uv;
 	layered_circuit C;
-	prime_field::field_element* circuit_value[100];
+	prime_field::field_element* circuit_value[1000000];
 
 	int sumcheck_layer_id, length_g, length_u, length_v;
 	prime_field::field_element alpha, beta;
@@ -28,7 +27,7 @@ public:
 	prime_field::field_element *beta_g_sum;
 	linear_poly *add_mult_sum;
 	int *addV_array_counter, *add_mult_sum_counter;
-	clock_t total_time;
+	double total_time;
 	void init_array(int);
 	void get_circuit(const layered_circuit &from_verifier);
 	prime_field::field_element* evaluate();
