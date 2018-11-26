@@ -214,12 +214,16 @@ void phase1_init_func(prover* p, int id)
 		p -> beta_g_sum[i].value = (p -> beta_g_r0_fhalf[i & mask_fhalf].value * p -> beta_g_r0_shalf[i >> first_half].value 
 							 + p -> beta_g_r1_fhalf[i & mask_fhalf].value * p -> beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
 	}
+	
+	/*
 
 	for(int i = st; i < ed; ++i)
 	{
 		int u, v;
 		u = p -> C.circuit[p -> sumcheck_layer_id].gates[i].u;
 		v = p -> C.circuit[p -> sumcheck_layer_id].gates[i].v;
+		//race condition bug here
+		//plan a change next day
 		if(p -> C.circuit[p -> sumcheck_layer_id].gates[i].ty == 0) //add gate
 		{
 			p -> addV_array[u].b.value = (p -> addV_array[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[i].value) % prime_field::mod;
@@ -228,6 +232,32 @@ void phase1_init_func(prover* p, int id)
 		if(p -> C.circuit[p -> sumcheck_layer_id].gates[i].ty == 1) //mult gate
 		{
 			p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[i].value) % prime_field::mod;
+		}
+	}
+	*/
+	
+	bs = (total_uv) / 16;
+	if(bs == 0)
+		bs = 1;
+	st = id * bs, ed = (id + 1) * bs;
+	for(int i = st; i < ed; ++i)
+	{
+		int sz = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i].size();
+		for(int j = 0; j < sz; ++j)
+		{
+			int u = i;
+			int g = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].second.first;
+			int v = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].second.second;
+			int ty = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].first;
+			if(ty == 0)
+			{
+				p -> addV_array[u].b.value = (p -> addV_array[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[g].value) % prime_field::mod;
+				p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> beta_g_sum[g].value) % prime_field::mod;
+			}
+			if(ty == 1)
+			{
+				p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[g].value) % prime_field::mod;
+			}
 		}
 	}
 }
@@ -418,6 +448,7 @@ void phase2_init_func(prover* p, int id)
 		p -> V_mult_add[i] = p -> circuit_value[p -> sumcheck_layer_id - 1][i];
 	}
 	
+	/*
 	bs = total_g / 16;
 	if(bs == 0)
 		bs = 1;
@@ -459,12 +490,55 @@ void phase2_init_func(prover* p, int id)
 			}
 		}
 	}
-	
+	*/
 	bs = total_uv / 16;
+	if(bs == 0)
+		bs = 1;
 	st = id * bs;
 	ed = (id + 1) * bs;
 	if(ed > total_uv)
 		ed = total_uv;
+	
+	for(int i = st; i < ed; ++i)
+	{
+		int sz = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i].size();
+		for(int j = 0; j < sz; ++j)
+		{
+			int ty = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].first;
+			int g = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].second.first;
+			int u = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].second.second;
+			int v = i;
+			if(ty == 1) //mult gate
+			{
+				p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value + (p -> beta_g_sum[g].value * p -> beta_u[u].value % prime_field::mod * p -> v_u.value) % prime_field::mod;
+				p -> add_mult_sum_counter[v]++;
+				if(p -> add_mult_sum_counter[v] > 30)
+				{
+					p -> add_mult_sum_counter[v] = 0;
+					p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value % prime_field::mod;
+				}
+			}
+			if(ty == 0) //add gate
+			{
+				p -> add_mult_sum[v].b.value = (p -> add_mult_sum[v].b.value + p -> beta_g_sum[g].value * p -> beta_u[u].value);
+				p -> addV_array[v].b.value = ((p -> beta_g_sum[g].value * p -> beta_u[u].value % prime_field::mod) * p -> v_u.value + p -> addV_array[v].b.value);
+
+				p -> add_mult_sum_counter[v]++;
+				if(p -> add_mult_sum_counter[v] > 30)
+				{
+					p -> add_mult_sum_counter[v] = 0;
+					p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value % prime_field::mod;
+				}
+
+				p -> addV_array_counter[v]++;
+				if(p -> addV_array_counter[v] > 30)
+				{
+					p -> addV_array_counter[v] = 0;
+					p -> addV_array[v].b.value = p -> addV_array[v].b.value % prime_field::mod;
+				}
+			}
+		}
+	}
 	
 	for(int i = st; i < ed; ++i)
 	{

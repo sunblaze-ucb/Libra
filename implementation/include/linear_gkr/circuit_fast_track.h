@@ -2,6 +2,8 @@
 #define __circuit
 #include <utility>
 #include "linear_gkr/prime_field.h"
+#include <unordered_map>
+#include <vector>
 
 class gate
 {
@@ -21,6 +23,8 @@ public:
 //	prime_field::field_element (*mult)(std::vector<prime_field::field_element>);
 	gate *gates;
 	int bit_length;
+	std::unordered_map<int, std::vector<std::pair<int, std::pair<int, int> > > > u_gates;
+	std::unordered_map<int, std::vector<std::pair<int, std::pair<int, int> > > > v_gates;
 	layer()
 	{
 		gates = NULL;

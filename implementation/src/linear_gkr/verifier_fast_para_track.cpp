@@ -42,6 +42,8 @@ void verifier::read_circuit(const char *path)
 			}
 			previous_g = g;
 			C.circuit[i].gates[g] = gate(ty, u, v);
+			C.circuit[i].u_gates[u].push_back(std::make_pair(ty, std::make_pair(g, v)));
+			C.circuit[i].v_gates[v].push_back(std::make_pair(ty, std::make_pair(g, u)));
 		}
 		max_gate = previous_g;
 		int cnt = 0;
@@ -66,6 +68,8 @@ void verifier::read_circuit(const char *path)
 		{
 			//add a dummy gate to avoid ill-defined layer.
 			C.circuit[i].gates[max_gate] = gate(2, 0, 0);
+			C.circuit[i].u_gates[0].push_back(std::make_pair(2, std::make_pair(max_gate, 0)));
+			C.circuit[i].v_gates[0].push_back(std::make_pair(2, std::make_pair(max_gate, 0)));
 			C.circuit[i].bit_length = cnt;
 		}
 		else
