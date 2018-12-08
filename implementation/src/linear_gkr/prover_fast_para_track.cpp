@@ -1,4 +1,6 @@
 #include "linear_gkr/prover_fast_para_track.h"
+#include <iostream>
+#define NUM_THREADS 4
 
 void prover::get_circuit(const layered_circuit &from_verifier)
 {
@@ -7,7 +9,7 @@ void prover::get_circuit(const layered_circuit &from_verifier)
 
 void V_res_func(int i, int id, prime_field::field_element *output, prime_field::field_element *noutput, int upper_bound, const prime_field::field_element* one_minus_r_0, const prime_field::field_element *r_0)
 {
-	int bs = upper_bound / 16;
+	int bs = upper_bound / NUM_THREADS;
 	int st = id * bs, ed = (id + 1) * bs;
 	for(int j = st; j < ed; ++j)
 	{
@@ -25,12 +27,12 @@ prime_field::field_element prover::V_res(const prime_field::field_element* one_m
 		output[i] = output_raw[i];
 	for(int i = 0; i < r_0_size; ++i)
 	{
-		if((output_size >> 1) >= 16)
+		if((output_size >> 1) >= NUM_THREADS)
 		{
-			std::thread threads[16];
-			for(int j = 0; j < 16; ++j)
+			std::thread threads[NUM_THREADS];
+			for(int j = 0; j < NUM_THREADS; ++j)
 				threads[j] = std::thread(V_res_func, i, j, output, noutput, output_size >> 1, one_minus_r_0, r_0);
-			for(int j = 0; j < 16; ++j)
+			for(int j = 0; j < NUM_THREADS; ++j)
 				threads[j].join();
 		}
 		else
@@ -186,7 +188,7 @@ void phase1_init_func(prover* p, int id)
 	prime_field::field_element zero = prime_field::field_element(0);
 	int layer_id = p -> sumcheck_layer_id;
 	
-	int bs = (total_uv) / 16;
+	int bs = (total_uv) / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	int st = id * bs, ed = (id + 1) * bs;
@@ -203,7 +205,7 @@ void phase1_init_func(prover* p, int id)
 	}
 
 	int mask_fhalf = (1 << first_half) - 1;
-	bs = (1 << p -> length_g) / 16;
+	bs = (1 << p -> length_g) / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	st = bs * id, ed = bs * (id + 1);
@@ -236,7 +238,7 @@ void phase1_init_func(prover* p, int id)
 	}
 	*/
 	
-	bs = (total_uv) / 16;
+	bs = (total_uv) / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	st = id * bs, ed = (id + 1) * bs;
@@ -297,11 +299,11 @@ void prover::sumcheck_phase1_init()
 		}
 	}
 
-	std::thread threads[16];
+	std::thread threads[NUM_THREADS];
 
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i] = std::thread(phase1_init_func, this, i);
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i].join();
 
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
@@ -313,7 +315,7 @@ void prover::sumcheck_phase1_init()
 
 void phase1_update_func(prover *p, int id, int total_uv, int current_bit, prime_field::field_element previous_random)
 {
-	int bs = (total_uv >> 1) / 16;
+	int bs = (total_uv >> 1) / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	int st = id * bs;
@@ -353,7 +355,7 @@ void phase1_update_func(prover *p, int id, int total_uv, int current_bit, prime_
 			p -> nadd_mult_sum[i].a.value = (p -> add_mult_sum[g_one].a.value * previous_random.value + p -> add_mult_sum[g_one].b.value - p -> nadd_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(i % 4 == 0 || i + 1 == (total_uv >> 1))
 		{
 			p -> rets[id].a.value = (p -> rets[id].a.value + p -> nadd_mult_sum[i].a.value * p -> nV_mult_add[i].a.value) % prime_field::mod;
 			p -> rets[id].b.value = (p -> rets[id].b.value + p -> nadd_mult_sum[i].a.value * p -> nV_mult_add[i].b.value + p -> nadd_mult_sum[i].b.value * p -> nV_mult_add[i].a.value
@@ -381,12 +383,12 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 //	fprintf(stderr, "sumcheck level %d, phase1 update start\n", sumcheck_layer_id);
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
-	std::thread threads[16];
-	for(int i = 0; i < 16; ++i)
+	std::thread threads[NUM_THREADS];
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i] = std::thread(phase1_update_func, this, i, total_uv, current_bit, previous_random);
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i].join();
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		ret = ret + rets[i];
 	
 	std::swap(naddV_array, addV_array);
@@ -411,7 +413,7 @@ void phase2_init_func(prover* p, int id)
 	
 	int bs, st, ed;
 	
-	bs = (1 << p -> length_u) / 16;
+	bs = (1 << p -> length_u) / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	st = id * bs;
@@ -429,7 +431,7 @@ void phase2_init_func(prover* p, int id)
 	int total_g = (1 << p -> C.circuit[p -> sumcheck_layer_id].bit_length);
 	prime_field::field_element zero = prime_field::field_element(0);
 	
-	bs = total_uv / 16;
+	bs = total_uv / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	st = id * bs, ed = (id + 1) * bs;
@@ -491,7 +493,7 @@ void phase2_init_func(prover* p, int id)
 		}
 	}
 	*/
-	bs = total_uv / 16;
+	bs = total_uv / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	st = id * bs;
@@ -578,11 +580,11 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 	}
 	
 	total_uv = (1 << C.circuit[sumcheck_layer_id - 1].bit_length);
-	std::thread threads[16];
-	for(int i = 0; i < 16; ++i)
+	std::thread threads[NUM_THREADS];
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i] = std::thread(phase2_init_func, this, i);
 	
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i].join();
 	
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
@@ -593,7 +595,7 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 
 void phase2_update_func(prover *p, int id, int total_uv, int current_bit, prime_field::field_element previous_random)
 {
-	int bs = (total_uv >> 1) / 16;
+	int bs = (total_uv >> 1) / NUM_THREADS;
 	if(bs == 0)
 		bs = 1;
 	int st = bs * id;
@@ -660,15 +662,15 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	
-	std::thread threads[16];
-	for(int i = 0; i < 16; ++i)
+	std::thread threads[NUM_THREADS];
+	for(int i = 0; i < NUM_THREADS; ++i)
 		rets[i] = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i] = std::thread(phase2_update_func, this, i, total_uv, current_bit, previous_random);
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		threads[i].join();
 	
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < NUM_THREADS; ++i)
 		ret = ret + rets[i];
 		
 	std::swap(naddV_array, addV_array);

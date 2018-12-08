@@ -1,8 +1,6 @@
 #include "linear_gkr/verifier_fast_para_track.h"
 #include <string>
 #include <utility>
-#include <gmp.h>
-#include <gmpxx.h>
 #include <iostream>
 #include "linear_gkr/random_generator.h"
 
