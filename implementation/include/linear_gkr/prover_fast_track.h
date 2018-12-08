@@ -7,6 +7,7 @@
 #include <cstring>
 #include <utility>
 #include <chrono>
+#include <iostream>
 class prover
 {
 public:

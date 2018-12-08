@@ -2,8 +2,6 @@
 #define __polynomial
 
 #include <vector>
-#include "gmp.h"
-#include "gmpxx.h"
 #include "linear_gkr/prime_field.h"
 
 
