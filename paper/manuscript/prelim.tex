@@ -39,11 +39,14 @@ Using this protocol, even a polynomial bounded verifier can verify the statement
 \end{protocol}
 
 \begin{definition}[\textbf{Multi-linear Extension}]
-	Let $V:\{0, 1\}^l \rightarrow \mathbb{F}$ be a function. A \textit{multi-linear extension} is the unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ defined as:
-	$$\tilde{V}(x_1, x_2, ..., x_{l})\overset{def}{=}\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
+	Let $V:\{0, 1\}^l \rightarrow \mathbb{F}$ be a function. The \textit{multi-linear extension} of $V$ is the unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ such that $\tilde{V}(x_1, x_2, ..., x_{l}) = V(x_1, x_2, ..., x_{l})$ for all $x_1, x_2, ..., x_{l}\in\{0,1\}^l$.
+	
+	
+	$\tilde{V}$ can be expressed as:
+	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
 	where $b_i$ is $i$-th bit of b.
 
-	It's easy to see that $\tilde{V}(x_1, x_2, ..., x_{l}) = V(x_1, x_2, ..., x_{l})$ on boolean hypercube.
+	
 \end{definition}
 
 \input{CMT}
