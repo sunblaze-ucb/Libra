@@ -6,7 +6,31 @@ In this section, we present our improvements on the GKR protocol~\cite{GKR} to m
 
 \subsection{Linear Time Sumcheck in GKR}
 
-We start with the sumcheck protocol to reduce a claim on layer $i$ to two claims on layer $i+1$, as defined in Definition~\ref{def::multilinear}. As shown in~\cite{CMT}, in the sumcheck protocol, the parts corresponding to $\tilde{V}_{i+1}(u)$ (and $\tilde{V}_{i+1}(v)$) can be computed in linear time by the prover using dynamic programming. In particular, the prover initializes an array of size $2^{s_{i+1}}$ storing all evaluations of $\tilde{V}_{i+1}$ on the boolean hypercube (i.e., $\tilde{V}_{i+1}(b) = V_{i+1}(b) \forall b\in\{0,1\}^{s_{i+1}}$). In every round of the sumcheck protocol, the parts corresponding to $\tilde{V}_{i+1}(u)$ can be computed in linear time to the size of the array, and the array is updated to half of the size based on the random number chosen by the verifier in this round. In this way, the total complexity is $O(2^{s_{i+1}})+ O(2^{s_{i+1}-1}) + O(2^{s_{i+1}-2}) + \ldots = O(2^{s_{i+1}})$. We give the full protocol in Figure~\ref{dynamic}.
+
+\begin{figure}[ht!]
+	\begin{algorithm}[H]
+		\caption{$\tV_{i+1}(u)$ in sumcheck}\label{alg::dynamic}
+		\begin{algorithmic}[1]
+			\Procedure{{\sf Init}}{$\tV_{i+1}(u)$}
+			\For{$b\in\binary^{s_{i+1}}$}
+			\State $\textbf{V}[b] = \tV_{i+1}(b)$
+			\EndFor
+			\EndProcedure
+			\Procedure{\sf Update}{$\textbf{V},R_u$} \Comment{This is an interactive protocol with the verifier.}
+			\For{$j = 1, \ldots, s_{i+1}$} \Comment{$s$ rounds of the sumcheck protocol.}
+				\For{$b\in\binary^{s_{i+1}-j}$}
+					\For{$t\in\{0,1,2\}$} \Comment{As the degree of the polynomial is 2, we evaluate on 3 points.}
+					\State\label{alg::dynamic::compute} Compute $v_{j,b} = \textbf{V}[b]\cdot(1-t)+\textbf{V}[b+2^{s_{i+1}-j}]\cdot t$
+					\EndFor
+				\EndFor
+				\State\label{alg::dynamic::update} $\textbf{V}[b]=\textbf{V}[b]\cdot(1-r_j)+\textbf{V}[b+2^{s_{i+1}-j}]\cdot r_j$ \Comment{$r_j$ is the $j$-th random number in $R_u$, received from the verifier in this round.}
+			\EndFor
+			\EndProcedure
+		\end{algorithmic}
+	\end{algorithm}
+\end{figure}
+
+We start with the sumcheck protocol to reduce a claim on layer $i$ to two claims on layer $i+1$, as defined in Definition~\ref{def::multilinear}. As shown in~\cite{CMT}, in the sumcheck protocol, the parts corresponding to $\tV_{i+1}(u)$ (and $\tV_{i+1}(v)$) can be computed in linear time by the prover using dynamic programming. The full protocol is given in Algorithm~\ref{alg::dynamic}. In particular, the prover initializes an array $\textbf{V}$ of size $2^{s_{i+1}}$ storing all evaluations of $\tV_{i+1}$ on the boolean hypercube (i.e., $\tV_{i+1}(b) = V_{i+1}(b)$, $\forall b\in\{0,1\}^{s_{i+1}}$). In every round of the sumcheck protocol, the parts corresponding to $\tV_{i+1}(u)$ ($v_{j,b}$ in step~\ref{alg::dynamic::compute} of the algorithm) can be computed in linear time to the size of the array. Each $v_{j,b}$ is going to be multiplied with other parts such as $\tilde{add}_{i+1}$ and $\tilde{mult}_{i+1}$. The array is then updated to half of the size based on the random number chosen by the verifier in this round, as in step~\ref{alg::dynamic::update}. In this way, the total complexity is $O(2^{s_{i+1}})+ O(2^{s_{i+1}-1}) + O(2^{s_{i+1}-2}) + \ldots = O(2^{s_{i+1}})$. 
 
 Unfortunately, this technique cannot be applied on $\tilde{add}_{i+1}$ and $\tilde{mult}_{i+1}$, as the size of their boolean hypercube is $2^{2s_{i+1}}$, and naively applying the same technique would incur quadratic prover time $O(2^{2s_{i+1}}) = O(S_{i+1}^2)$. This is the main reason why piror work~\cite{CMT,...} take a different approach, resulting in $O(S_{i+1}\log S_{i+1})$ prover time.
 
@@ -18,33 +42,80 @@ Our protocol divides the sumcheck into two phases: the first $s_{i+1}$ rounds bo
 
 For simplicity, we first focus on 
 \begin{equation}\label{eq:sum_mult}
-H = \sum_{u, v \in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,u,v)\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v)
+H = \sum_{u, v \in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,u,v)\tV_{i+1}(u)\tV_{i+1}(v)
 \end{equation}
 The term with $\tilde{add}_{i+1}$ can be computed in a similar way. 
 
 During the first $s_{i+1}$ rounds, as $v$ does not change (always being summed on the boolean hypercube), we can write Equation~\ref{eq:sum_mult} as 
 \[
-H = \sum_{u\in\{0,1\}^{s_{i+1}}}h(u)\tilde{V}_{i+1}(u),
+H = \sum_{u\in\{0,1\}^{s_{i+1}}}\tilde{h}(u)\tV_{i+1}(u),
 \]
-where $h(u) = \sum_{v\in\{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,u,v)\tilde{V}_{i+1}(v)$. Note here that $h(u)$ contains only $s_{i+1}$ variables and if we can initialize an array of $h(b)$ for $b\in\{0,1\}^{s_{i+1}}$ efficiently, we can use the dynamic programming technique in Figure~\ref{dynamic} to generate all the messages in this phase of the sumcheck protocol in linear time. 
+where $\tilde{h}(u) = \sum_{v\in\{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,u,v)\tV_{i+1}(v)$. Note here that $h(u)$ contains only $s_{i+1}$ variables and if we can initialize an array of $\tilde{h}(b)$ for $b\in\{0,1\}^{s_{i+1}}$ efficiently, we can use the dynamic programming technique in Algorithm~\ref{alg::dynamic} to generate all the messages in this phase of the sumcheck protocol in linear time. 
 
-The way to initialize the array \textbf{H} is as following: we first compute an array \textbf{Z} where $\textbf{Z}[a] = \prod_{i=0}^{s_i} ((1-z_i)(1-a_i)+z_ia_i)$. This can be computed in $O(2^{s_i})$ as shown in Figure~\ref{expand}. For each gate in layer $i$ labeled as $a$, let $b$ be the label of its left input, and $c$ be the label of its right input, if it is a multiplication gate, we simply add $\textbf{Z}[a]\cdot \tilde{V}_{i+1}(c)$ to $\textbf{H}[b]$. We then use the dynamic programming in Figure~\ref{dynamic} to generate the messages and update both $h(u)$ and $\tilde{V}_{i+1}(u)$. In this way, the prover runs in $O(2^{s_i}+2^{s_{i+1}})$ in phase one. The full protocol is presented in Figure~\ref{phase1}.
+The way to initialize the array \textbf{H} is as following: we first compute an array \textbf{Z} where $\textbf{Z}[a] = \prod_{i=1}^{s_i} ((1-z_i)(1-a_i)+z_ia_i)$ for $a\in\binary^{s_{i}}$. This can be computed in $O(2^{s_i})$ as shown in Algorithm~\ref{alg::phase1}. For each gate in layer $i$ labeled as $a$, let $b$ be the label of its left input, and $c$ be the label of its right input, if it is a multiplication gate, we simply add $\textbf{Z}[a]\cdot \tV_{i+1}(c)$ to $\textbf{H}[b]$. We then use the dynamic programming in Algorithm~\ref{alg::dynamic} to generate the messages and update both $\tilde{h}(u)$ and $\tV_{i+1}(u)$. In this way, the prover runs in $O(2^{s_i}+2^{s_{i+1}})$ in phase one. The full protocol is presented in Algorithm~\ref{alg::phase1}.
+
+\begin{figure}[ht!]
+	\begin{algorithm}[H]
+		\caption{Phase 1 in sumcheck}\label{alg::phase1}
+		\begin{algorithmic}[1]
+			\Procedure{{\sf Precompute}}{$z$}
+			\State Set $\textbf{Z}[0] = 1$
+			\For{$j=0,\ldots,s_i-1$}
+				\For{$a\in\binary^j$}
+				\State $\textbf{Z}[a,0] = \textbf{Z}[a]\cdot(1-z_{j+1})$
+				\State $\textbf{Z}[a,1] = \textbf{Z}[a]\cdot z_{j+1}$
+				\EndFor
+			\EndFor
+			\EndProcedure
+			\Procedure{{\sf Init\_PhaseOne}}{$\textbf{Z}, \tV_{i+1}(v)$}
+			\State Initialize $\textbf{H}[b] = 0$ for $b\in\binary^{s_{i+1}}$
+			\For{$a\in\binary^{s_i}$}
+			\State Find left input gate $b$ and right input gate $c$ for gate $a$. 
+			\State\label{alg::phase1::init} $\textbf{H}[b] = \textbf{H}[b]+ \textbf{Z}[a]\cdot\tV_{i+1}(c)$
+			\EndFor
+			\EndProcedure
+			\Procedure{{\sf Prove\_PhaseOne}}{$\textbf{Z}, \tV_{i+1}(v)$}
+			\State Run $\mathsf{Update}(\textbf{H},R_u)$ and $\mathsf{Update}(\textbf{V},R_u)$ simultaneously. At step~\ref{alg::dynamic::compute}, compute $\sum_{b\in\binary^{s_{i+1}-j}}h_{j,b}\cdot v_{j,b}$ for $t\in\{0,1,2\}$, which is the message to send to the verifier in $j$-th round of the sumcheck protocol.
+			\EndProcedure
+		\end{algorithmic}
+	\end{algorithm}
+\end{figure}
 
 \subsubsection{Phase two}
 
 At this point, all variables in $u$ have been bounded to random numbers $R_u$. In the second phase, the equation to sum on becomes 
 \[
-\sum_{v\in\{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,R_u,v)\tilde{V}_{i+1}(R_u)\tilde{V}_{i+1}(v)
+\sum_{v\in\{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(z,R_u,v)\tV_{i+1}(R_u)\tV_{i+1}(v)
 \]
-Note here that $\tilde{V}_{i+1}(R_u)$ is merely a single value which we already computed in phase one at the end of the dynamic programming for $\tilde{V}_{i+1}(u)$. It remains to initialize an array for $\tilde{mult}_{i+1}(z,R_u,b)$ for $b\in\{0,1\}^{s_{i+1}}$. The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^{s_{i+1}} ((1-R_{u,i})(1-b_i)+R_{u,i}b_i)$. The for each gate $a$ in layer $i$ with gate $b$ as left input and $c$ as right input from layer $i+1$, if it is a multiplication gate, we simply add $\textbf{Z}[a]\cdot\textbf{U}[b]$ to $\textbf{V}[c]$. Then we use the algorithm in Figure~\ref{dynamic} to run the sumcheck in this phase in linear time. The protocol is presented in Figure~\ref{phase2}.
+Note here that $\tV_{i+1}(R_u)$ is merely a single value which we already computed in phase one at the end of the dynamic programming for $\tV_{i+1}(u)$. It remains to initialize an array for $\tilde{mult}_{i+1}(z,R_u,b)$ for $b\in\{0,1\}^{s_{i+1}}$. The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^{s_{i+1}} ((1-R_{u,i})(1-b_i)+R_{u,i}b_i)$ using procedure $\mathsf{Precompute}(R_u)$ in Algorithm~\ref{alg::phase1}. The for each gate $a$ in layer $i$ with gate $b$ as left input and $c$ as right input from layer $i+1$, if it is a multiplication gate, we simply add $\textbf{Z}[a]\cdot\textbf{U}[b]$ to $\textbf{V}[c]$. Then we use the algorithm in Algorithm~\ref{alg::dynamic} to run the sumcheck in this phase in linear time. The protocol is presented in Algorithm~\ref{alg::phase2}.
+
+
+\begin{figure}[ht!]
+	\begin{algorithm}[H]
+		\caption{Phase 2 in sumcheck}\label{alg::phase2}
+		\begin{algorithmic}[1]
+			\Procedure{{\sf Init\_PhaseTwo}}{$R_u$}
+			\State Set $\textbf{U} = \mathsf{Precompute}(R_u)$
+			\State Initialize $\textbf{Mult}[c] = 0$ for $c\in\binary^{s_{i+1}}$
+			\For{$a\in\binary^{s_i}$}
+			\State Find left input gate $b$ and right input gate $c$ for gate $a$. 
+			\State\label{alg::phase2::init} $\textbf{Mult}[c] = \textbf{Mult}[c]+ \textbf{Z}[a]\cdot\textbf{U}[b]$
+			\EndFor
+			\EndProcedure
+			\Procedure{{\sf Prove\_PhaseTwo}}{$\textbf{Z}, \tV_{i+1}(v)$}
+			\State Run $\mathsf{Update}(\textbf{Mult},R_v)$ and $\mathsf{Update}(\textbf{V},R_v)$ simultaneously. At step~\ref{alg::dynamic::compute}, compute $\sum_{b\in\binary^{s_{i+1}-j}}mult_{j,b}\cdot v_{j,b}$ for $t\in\{0,1,2\}$, which is the message to send to the verifier in $(j+s_{i+1})$-th round of the sumcheck protocol.
+			\EndProcedure
+		\end{algorithmic}
+	\end{algorithm}
+\end{figure}
 
 \smallskip\noindent\textbf{Computing $\tilde{add}_{i+1}$.} The term with $\tilde{add}_{i+1}$ in Definition~\ref{def::multilinear} can be viewed as: 
-\[\sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v)) =
+\[\sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)(\tV_{i+1}(u)+\tV_{i+1}(v)) =
 \]
 \[
- \sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)\tilde{V}_{i+1}(u)+\sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)\tilde{V}_{i+1}(v)
+ \sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)\tV_{i+1}(u)+\sum_{u,v\in\{0,1\}^{s_{i+1}}}\tilde{add}_{i+1}(z,u,v)\tV_{i+1}(v)
 \]
-The first sum can be computed using the same protocol in Figure~\ref{phase1,phase2} without $\tilde{V}_{i+1}(v)$, and the second sum can be computed without $\tilde{V}_{i+1}(u)$. The complexity for both cases remains linear. Due to linearity of the sumcheck equation, during the whole sumcheck protocol in Definition~\ref{def::multilinear}, every message sent by the prover can be computed as the sum of the messages from the three individual sums, one for $\tilde{mult}_{i+1}$ and two for $\tilde{add}_{i+1}$. 
+The first sum can be computed using the same protocol in Algorithms~\ref{alg::phase1} and~\ref{alg::phase2} without $\tV_{i+1}(v)$, and the second sum can be computed without $\tV_{i+1}(u)$. The complexity for both cases remains linear. Due to linearity of the sumcheck equation, during the whole sumcheck protocol in Definition~\ref{def::multilinear}, every message sent by the prover can be computed as the sum of the messages from the three individual sums, one for $\tilde{mult}_{i+1}$ and two for $\tilde{add}_{i+1}$. 
 
 \ignore{
 \subsubsection{Linear Prover Time Sumcheck}
@@ -53,13 +124,13 @@ We will follow the CMT protocol, and improve the performance of sumcheck and the
 \paragraph{Review the sumcheck}
 In this subsection, we focus on answering the sumcheck queries. In the first round, the verifier asks the prover to give a univariate function: 
 
-$$f_{i, 1}(x_1)=\sum_{u_{k} \in \{0, 1\}, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i}(g, \{x_1, u_{2},..., u_{s_{i+1}}\}, v)(\tilde{V}_{i+1}(x_1, u_{2},..., u_{|u|})\tilde{V}_{i+1}(v)),$$
+$$f_{i, 1}(x_1)=\sum_{u_{k} \in \{0, 1\}, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i}(g, \{x_1, u_{2},..., u_{s_{i+1}}\}, v)(\tV_{i+1}(x_1, u_{2},..., u_{|u|})\tV_{i+1}(v)),$$
 where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{x_1, u_{2},..., u_{s_{i+1}}\}$ is the representation of $u$.
 
 In the $k$-th round where $2\le k\le s_{i+1}$, the verifier asks the prover to give a univariate function:
 \begin{align*}
 f_{i,k}(x_k)=\sum_{u_k \in \{0, 1\}, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i}(g, \{r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}}\}, v)\times\\
-(\tilde{V}_{i+1}(r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}})\tilde{V}_{i+1}(v))
+(\tV_{i+1}(r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}})\tV_{i+1}(v))
 \end{align*}
 where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}}\}$ is the representation of $u$.
 
@@ -67,9 +138,9 @@ where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{r_1,r_2,...,r_{k-1},x_k
 In the first round, we calculate two arraies to help speed up calculation, where each array element is a pair $(a, b)$ representing a linear function $ax+b$.
 
 The first array is $mult_1^1$, where $mult_1^1[p]$ is a pair $(a, b)$ representing a linear function as follows:
-$${mult}_1^1[p]\overset{def}{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{x_1, p\}, v)\tilde{V}_{i+1}(v),$$
+$${mult}_1^1[p]\overset{def}{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{x_1, p\}, v)\tV_{i+1}(v),$$
 here $p$ is a $s_{i+1}-1$ bits binary number. $\{x_1, p\}$ is the representation of $u$. Similarly we define our second array ${V}_1^1[p]$ as follows:
-$$V_1^1[p]\overset{def}{=}\tilde{V}_i(\{x_1, p\})$$
+$$V_1^1[p]\overset{def}{=}\tV_i(\{x_1, p\})$$
 
 We will treat both arrays as a linear function or a pair of field elements interchangeably, for example ${mult}_1^1[p](x)$ means we treat it as a linear function, and ${mult}_1^1[p].a, {mult}_1^1[p].b$ means we treat it as a pair.
 
@@ -78,8 +149,8 @@ Similarly we define arrays that used in $k$-th round as follows:
 
 	The definition for $k=1$ is the statement above, for $k\ge 2$
 	\begin{enumerate}
-		\item ${mult}_k^1[p]\overset{def}{=}\sum_{v\in \{0, 1\}^{s_{i+1}}}\tilde{mult}_i(g, \{r_1, ..., r_{k-1}, x_k, p\}, v)\tilde{V}_{i+1}(v)$
-		\item ${V}_k^1[p]\overset{def}{=}\tilde{V}_i(\{r_1, ..., r_{k-1}, x_k, p\})$
+		\item ${mult}_k^1[p]\overset{def}{=}\sum_{v\in \{0, 1\}^{s_{i+1}}}\tilde{mult}_i(g, \{r_1, ..., r_{k-1}, x_k, p\}, v)\tV_{i+1}(v)$
+		\item ${V}_k^1[p]\overset{def}{=}\tV_i(\{r_1, ..., r_{k-1}, x_k, p\})$
 		\item Where $p$ is a $s_{i+1}-k$ bits binary number and $\{r_1, ..., r_{k-1}, x_k, p\}$ is the representation of $u$.
 	\end{enumerate}
 \end{definition}
@@ -87,14 +158,14 @@ Similarly we define arrays that used in $k$-th round as follows:
 \paragraph{Initialize Arrays}
 We will try to initialize ${mult}_1^1, {V}_1^1$. And we will calculate next arrays using these arrays.
 
-For ${V}_1^1$, we can scan through the circuit and get all values of $\tilde{V}_{i+1}(u)$ when $u \in \{0, 1\}^{s_{i+1}}$, and we have the following equations:
+For ${V}_1^1$, we can scan through the circuit and get all values of $\tV_{i+1}(u)$ when $u \in \{0, 1\}^{s_{i+1}}$, and we have the following equations:
 \begin{align*}
-{V}_1^1[p](0)=\tilde{V}_{i+1}(0||p)\\
-{V}_1^1[p](1)=\tilde{V}_{i+1}(1||p)
+{V}_1^1[p](0)=\tV_{i+1}(0||p)\\
+{V}_1^1[p](1)=\tV_{i+1}(1||p)
 \end{align*}
 We can solve for ${V}_1^1[p]$ easily.
 
-For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivil to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumberate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tilde{V}_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
+For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivil to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tV_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumberate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tV_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
 \begin{figure}[p]
 \begin{algorithm}[H]
 \label{alg::premult}
@@ -106,8 +177,8 @@ For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivil to calc
 	\parState{In this function, we will recurse on the bits of $g$}
 	\If {$depth=s_{i}$} \Comment{We have enumerate enough bits}
 		\State Let $u', v'$ is input gates to $g'$
-		\State Find $\tilde{V}_{i+1}(v')$ in circuit.
-		\State $A[u'] = A[u'] + \tilde{V}_{i+1}(v')\times Value$
+		\State Find $\tV_{i+1}(v')$ in circuit.
+		\State $A[u'] = A[u'] + \tV_{i+1}(v')\times Value$
 	\Else
 		\State set $g'[depth]=0$
 		\State Call {\sf DFS}($A$, $g'$, $depth+1$, $Value\times(1-g[depth])$)
@@ -117,7 +188,7 @@ For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivil to calc
 \EndProcedure
 \Procedure{{\sf InitializeMult}}{}
 	\State Let array ${mult}_1^1$ be filled with zeros.
-	\parState{Since calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tilde{V}_{i+1}(v)$ for every binary $u$ is enough to initialize array ${mult}_1^1$, we will call a subroutine to initialize every binary $u$, and store the result into array $A$.}
+	\parState{Since calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tV_{i+1}(v)$ for every binary $u$ is enough to initialize array ${mult}_1^1$, we will call a subroutine to initialize every binary $u$, and store the result into array $A$.}
 	\State Initialize array $A$ with zeros.
 	\State let $g'$ be a vector of $s_{i+1}$ bits.
 	\State Call {\sf DFS}($A$, $g'$, $0$, $1$)
@@ -177,13 +248,13 @@ We define two arrays ${mult}_k^2, {V}_k^2$ analogue to ${mult}_k^1, {V}_k^1$.
 \begin{definition}[Linear Function Array Part Two]
 	For $k=1$, we define 
 	\begin{enumerate}
-		\item ${mult}_1^2[p] = \tilde{mult}_i(g, u, \{x_1, p\})\tilde{V}_{i+1}(u)$
-		\item ${V}_1^2[p] = \tilde{V}_{i+1}(\{x_1, p\})$
+		\item ${mult}_1^2[p] = \tilde{mult}_i(g, u, \{x_1, p\})\tV_{i+1}(u)$
+		\item ${V}_1^2[p] = \tV_{i+1}(\{x_1, p\})$
 	\end{enumerate}
 	For $k\ge 2$, we define
 	\begin{enumerate}
-		\item ${mult}_k^2[p]\overset{def}{=}\tilde{mult}_i(g, u, \{r_1, ..., r_{k-1}, x_k, p\})\tilde{V}_{i+1}(u)$
-		\item ${V}_k^2[p]\overset{def}{=}\tilde{V}_i(\{r_1, ..., r_{k-1}, x_k, p\})$
+		\item ${mult}_k^2[p]\overset{def}{=}\tilde{mult}_i(g, u, \{r_1, ..., r_{k-1}, x_k, p\})\tV_{i+1}(u)$
+		\item ${V}_k^2[p]\overset{def}{=}\tV_i(\{r_1, ..., r_{k-1}, x_k, p\})$
 		\item Where $p$ is a $s_{i+1}-k$ bits binary number and $\{r_1, ..., r_{k-1}, x_k, p\}$ is the representation of $v$.
 	\end{enumerate}
 \end{definition}
@@ -215,11 +286,11 @@ As we discussed in Part One, we only need to calculate all the values of ${mult}
 	\State Let $BetaMult, BetaV$ be a array with length $2^{s_{i}}, 2^{s_{i+1}}$ respectively
 	\State Call {\sf PreprocessBeta}($BetaMult$, $BetaV$)
 	\State Let $MultBinaryU$ be a array with $2^{s_{i+1}}$ field elements, initially set to $0$.
-	\parState{The array $MultBinaryU[v'] \overset{def}{=}\tilde{mult}_i(g, u, v')\tilde{V}_{i+1}(u)$}, we will show that how to compute this array in this For loop.
+	\parState{The array $MultBinaryU[v'] \overset{def}{=}\tilde{mult}_i(g, u, v')\tV_{i+1}(u)$}, we will show that how to compute this array in this For loop.
 	\For{Each $v' \in \{0, 1\}^{s_{i+1}}$}
 		\For{Each $(g', u')$ that is connected to $v'$ in the circuit}
-			\State $MultBinaryU[v'] += BetaMult[g'] \times BetaV[u'] \times \tilde{V}_{i+1}[u]$
-			\parState{Since $u$ is a constant, $\tilde{V}_{i+1}[u]$ is a constant all the time as well, we can obtain the value from the result of Part One (It equals to $V_{s_{i+1}-1}^1[0](r_{s_{i+1}})$ by the definition of $V_{k}^1$).}
+			\State $MultBinaryU[v'] += BetaMult[g'] \times BetaV[u'] \times \tV_{i+1}[u]$
+			\parState{Since $u$ is a constant, $\tV_{i+1}[u]$ is a constant all the time as well, we can obtain the value from the result of Part One (It equals to $V_{s_{i+1}-1}^1[0](r_{s_{i+1}})$ by the definition of $V_{k}^1$).}
 		\EndFor
 	\EndFor
 
@@ -227,9 +298,9 @@ As we discussed in Part One, we only need to calculate all the values of ${mult}
 		\parState{By solving the linear equations , we can get the following statements}
 		\State $Mult_1^2[p].b = MultBinaryU[0||p]$
 		\State $Mult_1^2[p].a = MultBinaryU[1||p]-MultBinaryU[0||p]$
-		\parState{$\tilde{V}_{s_{i+1}}[v']$ is the value directly from the circuit, we assume it's preprocessed into a array.}
-		\State $V_1^2[p].b = \tilde{V}_{s_{i+1}}[0||p]$
-		\State $V_1^2[p].a = \tilde{V}_{s_{i+1}}[1||p]-\tilde{V}_{s_{i+1}}[0||p]$
+		\parState{$\tV_{s_{i+1}}[v']$ is the value directly from the circuit, we assume it's preprocessed into a array.}
+		\State $V_1^2[p].b = \tV_{s_{i+1}}[0||p]$
+		\State $V_1^2[p].a = \tV_{s_{i+1}}[1||p]-\tV_{s_{i+1}}[0||p]$
 	\EndFor
 \EndProcedure
 \end{algorithmic}
@@ -264,9 +335,9 @@ If $mult_k^2, V_k^2$ are generated correctly, the answer to the query is correct
 
 $V_1^2$ is correct since it's equal to the circuit value. $mult_1^2$ is correct if and only if $MultBinaryU$ is generated correctly. $\forall g'$, $BetaMult[g']$ is correct because we calculated it bit by bit according to definition in $DFS$ part. And so does $BetaV[u']$. By definition 
 \begin{align*}
-MultBinaryU[v']&\overset{def}{=}\tilde{mult}_{i}(g, u, v')\tilde{V}_{i+1}(u)
-\\&=\sum_{v=v', (g', u', v) \in G_{i, mult}}\tilde{\beta}_{s_{i}}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')\tilde{V}_{i+1}(u)
-\\&=\sum_{v=v', (g', u', v) \in G_{i, mult}}\tilde{\beta}_{s_{i}}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{V}_{i+1}(u)
+MultBinaryU[v']&\overset{def}{=}\tilde{mult}_{i}(g, u, v')\tV_{i+1}(u)
+\\&=\sum_{v=v', (g', u', v) \in G_{i, mult}}\tilde{\beta}_{s_{i}}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')\tV_{i+1}(u)
+\\&=\sum_{v=v', (g', u', v) \in G_{i, mult}}\tilde{\beta}_{s_{i}}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tV_{i+1}(u)
 \end{align*}
 
 Since $BetaMult[g'], BetaV[u']$ are correct, we have $MultBinaryU$ is correct. Thus $mult_1^2$ is correct.
@@ -277,38 +348,41 @@ To prove $mult_k^2, V_k^2$ is correct ($k \ge 2$). We assume $mult_{k-1}^2, V_{k
 
 \subsection{Combining Two Points}
 
-As described in Section~\ref{sec::gkr}, the prover and the verifier need to combine the two claims about $\tilde{V}_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
+As described in Section~\ref{sec::gkr}, the prover and the verifier need to combine the two claims about $\tV_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
 
 \subsubsection{Random linear combination}
-It is quite straight forward to modify our protocol for this approach. As presented in Section~\ref{sec::gkr}, at the end of the sumcheck protocol, the verifier receives $\tilde{V}_{i+1}(R_u)$ and $\tilde{V}_{i+1}(R_v)$. \yupeng{Can remove the next sentence if we have it in the prelim. Change to $z_1,z_2$ for better understanding.} He locally computes $\tilde{add}_{i+1}(z,R_u,R_v)$ and $\tilde{mult}_{i+1}(z,R_u,R_v)$ to check that they are consistent with the last message of the sumcheck (i.e., $f_z(R_u,R_v) = \tilde{add}_{i+1}(z,R_u,R_v)(\tilde{V}_{i+1}(R_u)+\tilde{V}_{i+1}(R_v))+\tilde{mult}_{i+1}(z,R_u,R_v)\tilde{V}_{i+1}(R_u)\tilde{V}_{i+1}(R_v)$). The verifier then selects $\alpha,\beta$ randomly and runs sumcheck protocol on a different function with the prover for the next layer:
+It is quite straight forward to modify our protocol for this approach. As presented in Section~\ref{sec::gkr}, at the end of the sumcheck protocol, the verifier receives $\tV_{i+1}(R_u)$ and $\tV_{i+1}(R_v)$. \yupeng{Can remove the next sentence if we have it in the prelim. Change to $z_1,z_2$ for better understanding.} He locally computes $\tilde{add}_{i+1}(z,R_u,R_v)$ and $\tilde{mult}_{i+1}(z,R_u,R_v)$ to check that they are consistent with the last message of the sumcheck (i.e., $f_z(R_u,R_v) = \tilde{add}_{i+1}(z,R_u,R_v)(\tV_{i+1}(R_u)+\tV_{i+1}(R_v))+\tilde{mult}_{i+1}(z,R_u,R_v)\tV_{i+1}(R_u)\tV_{i+1}(R_v)$). The verifier then selects $\alpha,\beta$ randomly and runs sumcheck protocol on a different function with the prover for the next layer:
 \[
-\alpha\tilde{V}_{i+1}(R_u)+\beta\tilde{V}_{i+1}(R_v) = \sum_{u,v\in\{0,1\}}^{s_{i+2}}((\alpha\tilde{add}_{i+2}(R_u,u,v)+\beta\tilde{add}_{i+2}(R_v,u,v))(\tilde{V}_{i+2}(u)+\tilde{V}_{i+2}(v))
+\alpha\tV_{i+1}(R_u)+\beta\tV_{i+1}(R_v) = \sum_{u,v\in\{0,1\}}^{s_{i+2}}((\alpha\tilde{add}_{i+2}(R_u,u,v)+\beta\tilde{add}_{i+2}(R_v,u,v))(\tV_{i+2}(u)+\tV_{i+2}(v))
 \]
-\[+(\alpha\tilde{mult}_{i+2}(R_u,u,v)+\beta\tilde{mult}_{i+2}(R_v,u,v))(\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)))
+\[+(\alpha\tilde{mult}_{i+2}(R_u,u,v)+\beta\tilde{mult}_{i+2}(R_v,u,v))(\tV_{i+2}(u)\tV_{i+2}(v)))
 \]
-Therefore, when dealing with $\tilde{add}$ and $\tilde{mult}$ in our protocols, we initialize two arrays $\textbf{Z}_1$ with $R_u$ and $\textbf{Z}_2$ with $R_v$ in step ?? of Figure~\ref{phase1}, and multiply $\textbf{Z}_1$ with $\alpha$ and $\textbf{Z}_2$ with $\beta$ when using them in step?? of Figure~\ref{phase1} and step?? of Figure~\ref{phase2}. The prover still runs in linear time and this modification incurs a small overhead in practice in our implementation.
+Therefore, when dealing with $\tilde{add}$ and $\tilde{mult}$ in our protocols, we initialize two arrays $\textbf{Z}_1$ with $R_u$ and $\textbf{Z}_2$ with $R_v$ in $\mathsf{Precompute}$ of Algorithm~\ref{alg::phase1}, and multiply $\textbf{Z}_1$ with $\alpha$ and $\textbf{Z}_2$ with $\beta$ when using them in step\ref{alg::phase1::init} of Figure~\ref{alg::phase1} and step\ref{alg::phase2::init} of Figure~\ref{alg::phase2}. The prover still runs in linear time and this modification incurs a small overhead in practice in our implementation.
 
 \subsubsection{Condensing to one point}
 
 Though we already have a linear prover using the approach above, the technique to condense two points to one point proposed in the original GKR protocol~\cite{GKR} may still be interesting in some scenarios (e.g., it requires only one query to the multi-linear extension of the input, which may be more efficient in some schemes). In this section, we show an algorithm to reduce the complexity of this protocol to linear.
 
-In original CMT protocol, after the final round of sumcheck, we have two claimed value about the next layer, $\tilde{V}_{i+1}(u), \tilde{V}_{i+1}(v)$ where $u, v$ are random vector from sumcheck. We can setup a line $\gamma(x)$ where $\gamma(0) = u, \gamma(1)=v$. The prover need to provide $\tilde{V}_{i+1}(\gamma(x))$ to verifier, and the verifier can chooses next random point.
+Recall that in the original GKR protocol, after the final round of sumcheck, the verifier receives two claims about the next layer, $\tV_{i+1}(R_u), \tV_{i+1}(R_v)$. He then defines a line $\gamma(x): \mathbb{F}\rightarrow\mathbb{F}^{s_{i+1}}$ such that $\gamma(0) = R_u, \gamma(1)=R_v$. The prover needs to provide $\tV_{i+1}(\gamma(x))$, a degree $s_{i+1}$ univariate polynomial, to the verifier. If the prover computes $\tV_{i+1}(\gamma(x))$ naively, which was done in all prior papers, it would incur $O(s_{i+1}2^{s_{i+1}})$ complexity, as it is equivalent to evaluating $\tV_{i+1}()$ at $s_{i+1}+1$ points. 
 
-Unfortunately, if the prover naively compute $\tilde{V}_{i+1}(\gamma(x))$, it would incur $O(2^{s_{i+1}}s_{i+1})$ complexity. To optimize the computing, we need to look at the structure of the summation. 
+\yupeng{TODO}
+
+\ignore{
+To optimize the computing, we need to look at the structure of the summation. 
 
 \begin{align*}
-\tilde{V}_{i+1}(\gamma(x))&=\sum_{u, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i+1}(\gamma(x), u, v)\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)\\
-&=\sum_{u, v\in \{0, 1\}^{s_{i+1}}}\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)
+\tV_{i+1}(\gamma(x))&=\sum_{u, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i+1}(\gamma(x), u, v)\tV_{i+2}(u)\tV_{i+2}(v)\\
+&=\sum_{u, v\in \{0, 1\}^{s_{i+1}}}\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tV_{i+2}(u)\tV_{i+2}(v)
 \end{align*}
 
-The interesting thing is that, $\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tilde{V}_{i+2}(u)\tilde{V}_{i+2}(v)$ is non-zero if and only if $u=u', v=v'$. Thus we can optimize the summation to :
+The interesting thing is that, $\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tV_{i+2}(u)\tV_{i+2}(v)$ is non-zero if and only if $u=u', v=v'$. Thus we can optimize the summation to :
 
-$$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{V}_{i+2}(u')\tilde{V}_{i+2}(v').$$ Now we present a efficient algorithm \ref{alg::comb} to calculate this summation.
+$$\tV_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tV_{i+2}(u')\tV_{i+2}(v').$$ Now we present a efficient algorithm \ref{alg::comb} to calculate this summation.
 
 \begin{figure}[p]
 \begin{algorithm}[H]
 \label{alg::comb}
-\caption{Calculate $\tilde{V}_{i+1}(\gamma(x))$}
+\caption{Calculate $\tV_{i+1}(\gamma(x))$}
 \begin{algorithmic}[1]
 \parState{We define a polynomial type here to represent a polynomial. The cost of mutiplying two polynomials with degree $d_1, d_2$ is $d_1\times d_2$, and the cost of evaluating a polynomial with degree $d$ is $d+1$.}
 \Procedure{{\sf DFS}}{$g$, $G$, $depth$, $maxDepth$}
@@ -327,7 +401,7 @@ $$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_
 \Procedure{{\sf Combine}}{$\gamma$}
 \parState{Here $\gamma$ is a pair array with length $s_{i+1}$, a pair $(a, b)$ can be treated as a pair or a linear function $ax+b$, we will use both notation interchangely.}
 \State Let $G[g]$ be a array with $2^{s_{i+1}}$ elements
-\State $G[g]\overset{def}{=}\sum_{g'=g, (g', u', v')\in G_{i+1, mult}}\tilde{V}_{i+1}(u')\tilde{V}_{i+1}(v')$.
+\State $G[g]\overset{def}{=}\sum_{g'=g, (g', u', v')\in G_{i+1, mult}}\tV_{i+1}(u')\tV_{i+1}(v')$.
 \State $G[g]$ can be computed by a single scan through the circuit. We assume it's initialized apporiately.
 \State The answer is $\sum_{g \in \{0, 1\}^{s_{i+1}}}G[g]\times \tilde{\beta}_{s_{i+1}}(\gamma(x), g)$, we will show that how to compute this answer in linear time.
 
@@ -336,3 +410,4 @@ $$\tilde{V}_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_
 \end{algorithmic}
 \end{algorithm}
 \end{figure}
+}
