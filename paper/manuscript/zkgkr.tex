@@ -65,14 +65,14 @@ That means the $b$ and $h_i(x_i)$ are inditinguishable for any verifier. We coul
 
 \subsection{Zero knowledge GKR}
 
-After replacing the sumcheck protocol in GRK with the zero-knowledge version described above, it still leaks some additional information. Specifically, as shown in equation \ref{prot::sumcheck}, at the end of the sumcheck protocol in each layer of the circuit, the prover sends $\tilde{V}_{i+1}(R_u)$ and $\tilde{V}_{i+1}(R_v)$ to the verifier, which are two evaluations of the polynomial $\tV$ defined by the values in the circuit. 
+After replacing the sumcheck protocol in GRK with the zero-knowledge version described above, it still leaks some additional information. Specifically, as shown in equation \ref{def::multilinear}, at the end of the sumcheck protocol in each layer of the circuit, the prover sends $\tilde{V}_{i+1}(R_u)$ and $\tilde{V}_{i+1}(R_v)$ to the verifier, which are two evaluations of the polynomial $\tV_{i+1}$ defined by the values in the $(i+1)$-th layer of the circuit. 
 
 To prevent this leakage, Chiesa et al.\cite{zksumcheck} proposed a method to replace the multi-linear extension of $V$ with a special low degree extension, such that learning $\tilde{V}_{i+1}(R_u)$ and $\tilde{V}_{i+1}(R_v)$ does not leak any information about $V$. In particular, they define a low degree extension of $V_i$ as 
 
 \[
 \dot{V}_{i}(z) \overset{def}{=} \tV_i(z)+Z_i(z)\sum\limits_{c \in \{0, 1\}^k}R_i(z, c),
 \]
-where $Z(z) = \prod_{i=1}^l z_i(1-z_i)$ and it is easy to see that $Z(z)$ is zero for all $z\in\{0, 1\}^{s_i}$. $R_i(z,c)$ is a random low-degree polynomial and $k$ is the security parameter. 
+where $Z(z) = \prod_{i=1}^l z_i(1-z_i)$, i.e., $Z(z)=0$ for all $z\in\{0, 1\}^{s_i}$. $R_i(z,c)$ is a random low-degree polynomial and $k$ is the security parameter. 
 
 With this low degree extension, the sumcheck protocol in GKR can be written as
 
@@ -82,12 +82,12 @@ With this low degree extension, the sumcheck protocol in GKR can be written as
 \end{align*}
 
 \begin{align*}
-=\sum_{u, v\in \{0,1\}^{s_{i+1}},c \in \{0, 1\}^k}(I(0,c) \cdot \tilde{mult}(z, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))&+\tilde{add}(z,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
+=\sum_{u, v\in \{0,1\}^{s_{i+1}},c \in \{0, 1\}^k}(I(\vec{0},c) \cdot \tilde{mult}(z, u, v)(\dot{V}_{i+1}(u)\dot{V}_{i+1}(v))&+\tilde{add}(z,u,v)(\dot{V}_{i+1}(u)+\dot{V}_{i+1}(v))\\
 &+ I((u, v), \vec{0})Z_i(z)R_i(z, c))
 \end{align*}
 where $I(x,y)$ is an identity polynomial: $I(x,y) = 0$ iff $x=y$. By running the zero-knowledge version of this sumcheck protocol, at the end, the verifier would receive $\dot{V}_{i+1}(R_u)$ and $\dot{V}_{i+1}(R_v)$. They no longer leak information about $V_{i+1}$, as it is masked by $Z_{i+1}(z)\sum\limits_{c \in \{0, 1\}^k}R_{i+1}(z, c)$ for $z=R_u$ and $z=R_v$.
 
-Unfortunately, similar to the zero-knowledge sumcheck, the masking polynomail $R$ is very large. Opening $R$ at a random point is also very expensive: it takes exponential time in~\cite{zksumcheck} using either PCP oracles or VPD, as $R$ has $s_i+2s_{i+1}+k$ variables.
+Unfortunately, similar to the zero-knowledge sumcheck, the masking polynomail $R$ is very large in~\cite{zksumcheck}. Opening $R$ at a random point is also very expensive: it takes exponential time in~\cite{zksumcheck} using either PCP oracles or VPD, as $R$ has $s_i+2s_{i+1}+k$ variables.
 
 In this paper, we show that we can set $R$ to be a small polynomial to achieve zero-knowledge. In particular, $R$ has only two variables with variable degree 2. This is because in the $(i-1)$-th sumcheck the verifier receives two evaluations of $V_i$ masked by $\sum_{c}R_i(R_u,c)$ and $\sum_{c}R_i(R_u,c)$, and in the $i$-th sumcheck, the verifier opens it at $\alpha R_i(R_u,R_c)+\beta R_i(R_v,R_c)$. It suffices to make these three evaluations linearly independent, given the blackbox of zero-knowledge polynomial evaluation of $R_i$. We present the protocol in detail below.
 
@@ -169,7 +169,7 @@ Other things are also distinguishable for the verifier $\mathcal{V^*}$ because o
 \noindent
 \textbf{Complexity}. Consider the time complexity of zero knowledge GKR protocol. We would like to focus on the prover time. Since we have analyzed the prover time in our linear GKR protocol, we only need to think about the overhead complexity while maintaining zero knowledge for GKR protocol. For every layer of the circuit $C$, the prover samples $R_i(X, Y)$, runs the zeor knowledge sumcheck protocol for at most $3s_i$ variables with individual degree at most $2$ and run the zero knowledge oracle(ZK VPD) for $R(X, Y)$ on $2$ random points. The total complexity is $\mathcal{O}(s_i)$ since the size of $R_i(X, Y)$ is only constant. Suppose the depth of the circuit $C$ is $d$ and the maximum number of gates in one layer is $S$. The total complexity is $\mathcal{O}(d \log S)$. In addition, at the end of the protocol, the prover needs to run the zero knowledge oracle(ZK VPD) for $\dot{V}_d$ on $2$ random points. It needs $\mathcal{O}(S)$. So the total complexity is $\mathcal{O}(S \times d)$, which is linear of the circuit size and it is optimal as the prover must evaluate the circuit $C$. 
 
-\subsection{Zero knowledge VPD}
+\subsection{Zero knowledge VPD}\label{sec::zkvpd}
 In this section, we explain how to exemplify the oracles using the zero knowledge VPD protocol. In the preliminary, we have defined the general zero knowledge VPD. We could use it as an oracle to verify any polynomial evaluations. However, at the end of our zero knowledge GKR protocol, for the input layer, the verifier needs to verify $\tilde{V}_d(r) + Z(r)\sum\limits_{c \in \{0, 1\}}R_d(r_1, c)$ and $\tilde{V}_d(s) + Z(s)\sum\limits_{c \in \{0, 1\}}R_d(s_1, c)$, which are not multi-linear polynomials. Here we show that we only need to add several extra terms in the public key of the original zero-knowledge VPD for multi-linear polynomials proposed in~\cite{zkvpd}. The overhead for commit, prove and verification are also minimal.
 
 \medskip\noindent\textbf{Protocol.}
@@ -191,7 +191,7 @@ Let $\mathbb{F}$ be a prime-order finite field, $l$ be a variable parameter, and
 
 Notice the verifier could verify the value of $\tilde{V}_d(r) + Z(r)R_d(r_1)$ and $\tilde{V}_d(s) + Z(s)R_d(s_1)$ using this protocol and it is still zero knowledge since the general ZK VPD protocol is zero knowledge. 
 
-For the masking polynomials $G(x)$ and $R_i(x,y)$ in each layer, we use the original zero-knowledge VPD. As the masking polynomials are small, it is not hard to see that the public parameters used in those zk-VPDs are subsets of the public key presented above. The commitment time, prover time, proof size and verification time of each instance is $O(s_i)$, logarithmic on the number of gates in each layer. 
+For the masking polynomials $G(x)$ and $R_i(x,y)$ in each layer, we use the original zero-knowledge VPD. As the masking polynomials are small, it is not hard to see that the public parameters used in those zk-VPDs are subsets of the public key presented above. The commitment time, prover time, proof size and verification time of each instance are all $O(s_i)$, logarithmic on the number of gates in each layer. 
 
 
 
