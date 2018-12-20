@@ -203,6 +203,7 @@ void phase1_init_func(prover* p, int id)
 		p -> add_mult_sum[i].a = zero;
 		p -> add_mult_sum[i].b = zero;
 	}
+	
 
 	int mask_fhalf = (1 << first_half) - 1;
 	bs = (1 << p -> length_g) / NUM_THREADS;
@@ -244,21 +245,24 @@ void phase1_init_func(prover* p, int id)
 	st = id * bs, ed = (id + 1) * bs;
 	for(int i = st; i < ed; ++i)
 	{
-		int sz = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i].size();
-		for(int j = 0; j < sz; ++j)
+		if(p -> C.circuit[p -> sumcheck_layer_id].u_gates.find(i) != p -> C.circuit[p -> sumcheck_layer_id].u_gates.end())
 		{
-			int u = i;
-			int g = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].second.first;
-			int v = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].second.second;
-			int ty = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].first;
-			if(ty == 0)
+			int sz = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i].size();
+			for(int j = 0; j < sz; ++j)
 			{
-				p -> addV_array[u].b.value = (p -> addV_array[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[g].value) % prime_field::mod;
-				p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> beta_g_sum[g].value) % prime_field::mod;
-			}
-			if(ty == 1)
-			{
-				p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[g].value) % prime_field::mod;
+				int u = i;
+				int g = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].second.first;
+				int v = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].second.second;
+				int ty = p -> C.circuit[p -> sumcheck_layer_id].u_gates[i][j].first;
+				if(ty == 0)
+				{
+					p -> addV_array[u].b.value = (p -> addV_array[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[g].value) % prime_field::mod;
+					p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> beta_g_sum[g].value) % prime_field::mod;
+				}
+				if(ty == 1)
+				{
+					p -> add_mult_sum[u].b.value = (p -> add_mult_sum[u].b.value + p -> circuit_value[p -> sumcheck_layer_id - 1][v].value * p -> beta_g_sum[g].value) % prime_field::mod;
+				}
 			}
 		}
 	}
@@ -503,40 +507,43 @@ void phase2_init_func(prover* p, int id)
 	
 	for(int i = st; i < ed; ++i)
 	{
-		int sz = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i].size();
-		for(int j = 0; j < sz; ++j)
+		if(p -> C.circuit[p -> sumcheck_layer_id].v_gates.find(i) != p -> C.circuit[p -> sumcheck_layer_id].v_gates.end())
 		{
-			int ty = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].first;
-			int g = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].second.first;
-			int u = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].second.second;
-			int v = i;
-			if(ty == 1) //mult gate
+			int sz = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i].size();
+			for(int j = 0; j < sz; ++j)
 			{
-				p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value + (p -> beta_g_sum[g].value * p -> beta_u[u].value % prime_field::mod * p -> v_u.value) % prime_field::mod;
-				p -> add_mult_sum_counter[v]++;
-				if(p -> add_mult_sum_counter[v] > 30)
+				int ty = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].first;
+				int g = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].second.first;
+				int u = p -> C.circuit[p -> sumcheck_layer_id].v_gates[i][j].second.second;
+				int v = i;
+				if(ty == 1) //mult gate
 				{
-					p -> add_mult_sum_counter[v] = 0;
-					p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value % prime_field::mod;
+					p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value + (p -> beta_g_sum[g].value * p -> beta_u[u].value % prime_field::mod * p -> v_u.value) % prime_field::mod;
+					p -> add_mult_sum_counter[v]++;
+					if(p -> add_mult_sum_counter[v] > 30)
+					{
+						p -> add_mult_sum_counter[v] = 0;
+						p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value % prime_field::mod;
+					}
 				}
-			}
-			if(ty == 0) //add gate
-			{
-				p -> add_mult_sum[v].b.value = (p -> add_mult_sum[v].b.value + p -> beta_g_sum[g].value * p -> beta_u[u].value);
-				p -> addV_array[v].b.value = ((p -> beta_g_sum[g].value * p -> beta_u[u].value % prime_field::mod) * p -> v_u.value + p -> addV_array[v].b.value);
-
-				p -> add_mult_sum_counter[v]++;
-				if(p -> add_mult_sum_counter[v] > 30)
+				if(ty == 0) //add gate
 				{
-					p -> add_mult_sum_counter[v] = 0;
-					p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value % prime_field::mod;
-				}
+					p -> add_mult_sum[v].b.value = (p -> add_mult_sum[v].b.value + p -> beta_g_sum[g].value * p -> beta_u[u].value);
+					p -> addV_array[v].b.value = ((p -> beta_g_sum[g].value * p -> beta_u[u].value % prime_field::mod) * p -> v_u.value + p -> addV_array[v].b.value);
 
-				p -> addV_array_counter[v]++;
-				if(p -> addV_array_counter[v] > 30)
-				{
-					p -> addV_array_counter[v] = 0;
-					p -> addV_array[v].b.value = p -> addV_array[v].b.value % prime_field::mod;
+					p -> add_mult_sum_counter[v]++;
+					if(p -> add_mult_sum_counter[v] > 30)
+					{
+						p -> add_mult_sum_counter[v] = 0;
+						p -> add_mult_sum[v].b.value = p -> add_mult_sum[v].b.value % prime_field::mod;
+					}
+
+					p -> addV_array_counter[v]++;
+					if(p -> addV_array_counter[v] > 30)
+					{
+						p -> addV_array_counter[v] = 0;
+						p -> addV_array[v].b.value = p -> addV_array[v].b.value % prime_field::mod;
+					}
 				}
 			}
 		}

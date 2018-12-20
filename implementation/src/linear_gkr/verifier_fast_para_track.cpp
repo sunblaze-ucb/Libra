@@ -18,7 +18,7 @@ void verifier::read_circuit(const char *path)
 
 	fscanf(circuit_in, "%d", &d);
 	int n;
-	C.circuit = new layer[d];
+	C.circuit = new layer[d + 10];
 	C.total_depth = d;
 	max_bit_length = -1;
 	for(int i = 0; i < d; ++i)
