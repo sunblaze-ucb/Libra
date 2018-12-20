@@ -1,4 +1,4 @@
-CC=g++-8
+CC=g++
 CFLAGS=
 CDBG_FLAGS=-g
 INCLUDE=include
