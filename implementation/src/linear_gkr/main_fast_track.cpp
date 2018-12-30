@@ -7,7 +7,7 @@
 verifier v;
 prover p;
 
-int main()
+int main(int argc, char** argv)
 {
 	prime_field::init("16798108731015832284940804142231733909759579603404752749028378864165570215949", 10);
 	p.total_time = 0;

@@ -451,10 +451,21 @@ namespace prime_field
 	field_element field_element::operator - (const field_element &b) const
 	{
 		field_element ret;
-		if(value > b.value)
+		if(value >= b.value)
 			ret.value = value - b.value;
 		else
 			ret.value = value + mod - b.value;
+		return ret;
+	}
+	char* field_element::to_string()
+	{
+		static char ret[512];
+		for(int i = 0; i < 128; ++i)
+			ret[i] = ((value.lo >> i) & 1) + '0';
+		for(int i = 0; i < 128; ++i)
+			ret[i + 128] = ((value.mid >> i) & 1) + '0';
+		for(int i = 0; i < 256; ++i)
+			ret[i + 256] = ((value.hi.bit_at(i)) & 1) + '0';
 		return ret;
 	}
 	field_element random()

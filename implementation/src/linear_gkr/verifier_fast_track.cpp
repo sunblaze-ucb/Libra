@@ -267,6 +267,10 @@ bool verifier::verify()
 			//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
 			}
 			alpha_beta_sum = poly.eval(r_u[j]);
+			fprintf(stderr, "r_u[%d] = %s\n", j, r_u[j].to_string());
+			fprintf(stderr, "alpha_beta_sum = %s\n", alpha_beta_sum.to_string());
+			fprintf(stderr, "0_val = %s\n", poly.eval(prime_field::field_element(0)).to_string());
+			fprintf(stderr, "1_val = %s\n", poly.eval(prime_field::field_element(1)).to_string());
 		}
 		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
