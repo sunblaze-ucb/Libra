@@ -1,4 +1,4 @@
-#include "linear_gkr/verifier_fast_track.h"
+#include "traditional_gkr/verifier_traditional.h"
 #include <string>
 #include <utility>
 #include <iostream>

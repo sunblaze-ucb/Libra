@@ -14,7 +14,7 @@ public:
 	prime_field::field_element v_u, v_v;
 	int total_uv;
 	layered_circuit C;
-	prime_field::field_element* circuit_value[1000000];
+	prime_field::field_element* circuit_value[1000];
 
 	int sumcheck_layer_id, length_g, length_u, length_v;
 	prime_field::field_element alpha, beta;

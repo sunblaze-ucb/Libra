@@ -25,6 +25,7 @@ public:
 	prime_field::field_element mult(int);
 	prime_field::field_element add(int);
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, int, int);
+	void read_circuit_from_string(char*);
 };
 
 #endif

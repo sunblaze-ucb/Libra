@@ -126,10 +126,8 @@ void prover::init_array(int max_bit_length)
 
 void prover::delete_self()
 {
-//	delete[] addV_linear;
 	delete[] add_linear;
 	delete[] mult_linear;
-//	delete[] multV_linear;
 	delete[] V_mult_add;
 	delete[] beta_u;
 	delete[] beta_g_sum;
@@ -227,7 +225,7 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 	if(current_bit - 1 >= 0)
 	{
 		int previous_bit = current_bit - 1;
-		for(int i = 0; i < (total_uv); ++i)
+		for(int i = 0; i < (total_uv >> current_bit); ++i)
 		{
 			V_mult_add[i] = V_mult_add[i << 1] * (prime_field::field_element(1) - previous_random)
 						  + V_mult_add[i << 1 | 1] * previous_random;
@@ -284,7 +282,7 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 				else
 				{
 					mult_linear[target_linear].b = mult_linear[target_linear].b + beta_g_sum[i] * V_mult_add[u >> current_bit] * circuit_value[sumcheck_layer_id - 1][v];
-					mult_linear[target_linear].a = mult_linear[target_linear].b + (beta_g_sum[i] + beta_g_sum[i]) * circuit_value[sumcheck_layer_id - 1][v] * (V_mult_add[u >> current_bit] + V_mult_add[u >> current_bit] - V_mult_add[(u >> current_bit) ^ 1]);
+					mult_linear[target_linear].a = mult_linear[target_linear].a + (beta_g_sum[i] + beta_g_sum[i]) * circuit_value[sumcheck_layer_id - 1][v] * (V_mult_add[u >> current_bit] + V_mult_add[u >> current_bit] - V_mult_add[(u >> current_bit) ^ 1]);
 				}
 				break;
 			}
@@ -362,7 +360,7 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 	if(current_bit - 1 >= 0)
 	{
 		int previous_bit = current_bit - 1;
-		for(int i = 0; i < (total_uv); ++i)
+		for(int i = 0; i < (total_uv >> current_bit); ++i)
 		{
 			V_mult_add[i] = V_mult_add[i << 1] * (prime_field::field_element(1) - previous_random)
 						  + V_mult_add[i << 1 | 1] * previous_random;
@@ -418,7 +416,7 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 				else
 				{
 					mult_linear[target_linear].b = mult_linear[target_linear].b + beta_g_sum[i] * V_mult_add[v >> current_bit] * v_u;
-					mult_linear[target_linear].a = mult_linear[target_linear].b + (beta_g_sum[i] + beta_g_sum[i]) * v_u * (V_mult_add[v >> current_bit] + V_mult_add[v >> current_bit] - V_mult_add[(v >> current_bit) ^ 1]);
+					mult_linear[target_linear].a = mult_linear[target_linear].a + (beta_g_sum[i] + beta_g_sum[i]) * v_u * (V_mult_add[v >> current_bit] + V_mult_add[v >> current_bit] - V_mult_add[(v >> current_bit) ^ 1]);
 				}
 				break;
 			}

@@ -18,5 +18,8 @@ linear_gkr_prof:
 linear_gkr_opt_parallel: src/linear_gkr/main_fast_para_track.cpp
 	$(CC) $(CFLAGS) -g -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier_fast_para_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_para_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_para_track.cpp -o bin/main -lpthread
 
-cmt_opt: src/traditional_gkr/ClogC.cpp
-	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier_fast_track.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/ClogC.cpp -o bin/main_clogc $(OPT)
+clogc_opt: src/traditional_gkr/ClogC.cpp
+	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/ClogC.cpp -o bin/main_clogc $(OPT)
+bclogc_opt: src/traditional_gkr/bclogc.cpp
+	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bclogc.cpp -o bin/main_bclogc $(OPT)
+

@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "linear_gkr/prime_field.h"
-#include "linear_gkr/verifier_fast_track.h"
+#include "traditional_gkr/verifier_traditional.h"
 #include "traditional_gkr/prover_clogc.h"
 
 
