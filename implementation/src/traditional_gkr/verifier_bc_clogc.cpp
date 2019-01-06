@@ -1,4 +1,4 @@
-#include "linear_gkr/verifier_fast_track.h"
+#include "traditional_gkr/verifier_traditional.h"
 #include <string>
 #include <utility>
 #include <iostream>
@@ -8,82 +8,13 @@ void verifier::get_prover(prover *pp)
 {
 	p = pp;
 }
-
-void verifier::read_circuit(const char *path)
+void verifier::set_blocks(int num_blocks, int binary_bn)
 {
-	int d;
-	static char str[300];
-	FILE *circuit_in;
-	circuit_in = fopen(path, "r");
-
-	fscanf(circuit_in, "%d", &d);
-	int n;
-	C.circuit = new layer[d];
-	C.total_depth = d;
-	int max_bit_length = -1;
-	for(int i = 0; i < d; ++i)
-	{
-		fscanf(circuit_in, "%d", &n);
-		if(n == 1)
-			C.circuit[i].gates = new gate[2];
-		else
-			C.circuit[i].gates = new gate[n];
-		int max_gate = -1;
-		int previous_g = -1;
-		for(int j = 0; j < n; ++j)
-		{
-			int ty, g, u, v;
-			fscanf(circuit_in, "%d%d%d%d", &ty, &g, &u, &v);
-			if(g != previous_g + 1)
-			{
-				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
-			}
-			previous_g = g;
-			C.circuit[i].gates[g] = gate(ty, u, v);
-		}
-		max_gate = previous_g;
-		int cnt = 0;
-		while(max_gate)
-		{
-			cnt++;
-			max_gate >>= 1;
-		}
-		max_gate = 1;
-		while(cnt)
-		{
-			max_gate <<= 1;
-			cnt--;
-		}
-		int mx_gate = max_gate;
-		while(mx_gate)
-		{
-			cnt++;
-			mx_gate >>= 1;
-		}
-		if(n == 1)
-		{
-			//add a dummy gate to avoid ill-defined layer.
-			C.circuit[i].gates[max_gate] = gate(2, 0, 0);
-			C.circuit[i].bit_length = cnt;
-		}
-		else
-		{
-			C.circuit[i].bit_length = cnt - 1;
-		}
-		fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
-		if(C.circuit[i].bit_length > max_bit_length)
-			max_bit_length = C.circuit[i].bit_length;
-	}
-	p -> init_array(max_bit_length);
-
-	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
-	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
-	beta_v = new prime_field::field_element[(1 << max_bit_length)];
-	beta_u = new prime_field::field_element[(1 << max_bit_length)];
-	fclose(circuit_in);
+	C.blocks = new layered_circuit[num_blocks];
+	C.total_blocks = num_blocks;
+	C.total_blocks_binary_length = binary_bn;
 }
-
-void verifier::read_circuit_from_string(char* file)
+void verifier::read_circuit_from_string(char* file, int block_id)
 {
 	int d;
 	static char str[300];
@@ -91,17 +22,17 @@ void verifier::read_circuit_from_string(char* file)
 	sscanf(file, "%d%n", &d, &offset);
 	file += offset;
 	int n;
-	C.circuit = new layer[d];
-	C.total_depth = d;
+	C.blocks[block_id].circuit = new layer[d];
+	C.blocks[block_id].total_depth = d;
 	int max_bit_length = -1;
 	for(int i = 0; i < d; ++i)
 	{
 		sscanf(file, "%d%n", &n, &offset);
 		file += offset;
 		if(n == 1)
-			C.circuit[i].gates = new gate[2];
+			C.blocks[block_id].circuit[i].gates = new gate[2];
 		else
-			C.circuit[i].gates = new gate[n];
+			C.blocks[block_id].circuit[i].gates = new gate[n];
 		int max_gate = -1;
 		int previous_g = -1;
 		for(int j = 0; j < n; ++j)
@@ -114,7 +45,7 @@ void verifier::read_circuit_from_string(char* file)
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
 			}
 			previous_g = g;
-			C.circuit[i].gates[g] = gate(ty, u, v);
+			C.blocks[block_id].circuit[i].gates[g] = gate(ty, u, v);
 		}
 		max_gate = previous_g;
 		int cnt = 0;
@@ -138,16 +69,16 @@ void verifier::read_circuit_from_string(char* file)
 		if(n == 1)
 		{
 			//add a dummy gate to avoid ill-defined layer.
-			C.circuit[i].gates[max_gate] = gate(2, 0, 0);
-			C.circuit[i].bit_length = cnt;
+			C.blocks[block_id].circuit[i].gates[max_gate] = gate(2, 0, 0);
+			C.blocks[block_id].circuit[i].bit_length = cnt;
 		}
 		else
 		{
-			C.circuit[i].bit_length = cnt - 1;
+			C.blocks[block_id].circuit[i].bit_length = cnt - 1;
 		}
-		fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
+		fprintf(stderr, "layer %d, bit_length %d\n", i, C.blocks[block_id].circuit[i].bit_length);
 		if(C.circuit[i].bit_length > max_bit_length)
-			max_bit_length = C.circuit[i].bit_length;
+			max_bit_length = C.blocks[block_id].circuit[i].bit_length;
 	}
 	p -> init_array(max_bit_length);
 
@@ -160,12 +91,11 @@ void verifier::read_circuit_from_string(char* file)
 prime_field::field_element verifier::add(int depth)
 {
 	//brute force for sanity check
-	//it's slow
 	prime_field::field_element ret = prime_field::field_element(0);
-	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	for(int i = 0; i < (1 << C.blocks[0].circuit[depth].bit_length); ++i)
 	{
-		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
-		if(C.circuit[depth].gates[i].ty == 0)
+		int g = i, u = C.blocks[0].circuit[depth].gates[i].u, v = C.blocks[0].circuit[depth].gates[i].v;
+		if(C.blocks[0].circuit[depth].gates[i].ty == 0)
 		{
 			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
@@ -178,10 +108,10 @@ prime_field::field_element verifier::add(int depth)
 prime_field::field_element verifier::mult(int depth)
 {
 	prime_field::field_element ret = prime_field::field_element(0);
-	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	for(int i = 0; i < (1 << C.blocks[0].circuit[depth].bit_length); ++i)
 	{
-		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
-		if(C.circuit[depth].gates[i].ty == 1)
+		int g = i, u = C.blocks[0].circuit[depth].gates[i].u, v = C.blocks[0].circuit[depth].gates[i].v;
+		if(C.blocks[0].circuit[depth].gates[i].ty == 1)
 		{
 			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
@@ -200,7 +130,7 @@ void verifier::beta_init(int depth, prime_field::field_element alpha, prime_fiel
 {
 	beta_g_r0[0] = alpha;
 	beta_g_r1[0] = beta;
-	for(int i = 0; i < C.circuit[depth].bit_length; ++i)
+	for(int i = 0; i < C.blocks[0].circuit[depth].bit_length; ++i)
 	{
 		for(int j = 0; j < (1 << i); ++j)
 		{
@@ -215,7 +145,7 @@ void verifier::beta_init(int depth, prime_field::field_element alpha, prime_fiel
 	}
 	beta_u[0] = prime_field::field_element(1);
 	beta_v[0] = prime_field::field_element(1);
-	for(int i = 0; i < C.circuit[depth - 1].bit_length; ++i)
+	for(int i = 0; i < C.blocks[0].circuit[depth - 1].bit_length; ++i)
 	{
 		for(int j = 0; j < (1 << i); ++j)
 		{
@@ -245,19 +175,28 @@ prime_field::field_element* generate_randomness(unsigned int size)
 	return ret;
 }
 
-prime_field::field_element verifier::V_in(const prime_field::field_element* r_0, const prime_field::field_element* one_minus_r_0,
-								prime_field::field_element* output_raw, int r_0_size, int output_size)
+prime_field::field_element verifier::V_in(const prime_field::field_element* r_b, const prime_field::field_element* one_minus_r_b,
+										  const prime_field::field_element* r_g, const prime_field::field_element* one_minus_r_g,
+								prime_field::field_element* output_raw, int r_b_size, int r_g_size,int output_size)
 {
 	prime_field::field_element* output = new prime_field::field_element[output_size];
+	//output are arranged in blocks
 	for(int i = 0; i < output_size; ++i)
 		output[i] = output_raw[i];
-	for(int i = 0; i < r_0_size; ++i)
+	for(int i = 0; i < r_g_size; ++i)
 	{
 		int last_gate;
 		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
-			output[j] = output[j << 1] * (one_minus_r_0[i]) + output[j << 1 | 1] * (r_0[i]);
+			output[j] = output[j << 1] * (one_minus_r_g[i]) + output[j << 1 | 1] * (r_g[i]);
 		output_size >>= 1;
+	}
+	for(int i = 0; i < r_b_size; ++i)
+	{
+		int last_gate;
+		int cnt = 0;
+		for(int j = 0; j < (output_size >> 1); ++j)
+			output[j] = output[j << 1] * one_minus_r_b[i] * output[j << 1 | 1] * r_b[i];
 	}
 	auto ret = output[0];
 	ret.value = ret.value % prime_field::mod;
@@ -284,21 +223,29 @@ bool verifier::verify()
 	beta.value = 0;
 	random_oracle oracle;
 	//initial random value
-	prime_field::field_element *r_0 = generate_randomness(C.circuit[C.total_depth - 1].bit_length), *r_1 = generate_randomness(C.circuit[C.total_depth - 1].bit_length);
-	prime_field::field_element *one_minus_r_0, *one_minus_r_1;
-	one_minus_r_0 = new prime_field::field_element[C.circuit[C.total_depth - 1].bit_length];
-	one_minus_r_1 = new prime_field::field_element[C.circuit[C.total_depth - 1].bit_length];
+	prime_field::field_element *r_0 = generate_randomness(C.blocks[0].circuit[C.total_depth - 1].bit_length), 
+							   *r_1 = generate_randomness(C.blocks[0].circuit[C.total_depth - 1].bit_length);
+	prime_field::field_element *r_b_0 = generate_randomness(C.total_blocks_binary_length);
+	prime_field::field_element *one_minus_r_0, *one_minus_r_1, *one_minus_r_b_0;
+	one_minus_r_0 = new prime_field::field_element[C.blocks[0].circuit[C.total_depth - 1].bit_length];
+	one_minus_r_1 = new prime_field::field_element[C.blocks[0].circuit[C.total_depth - 1].bit_length];
+	one_minus_r_b_0 = new prime_field::field_element[C.total_blocks_binary_length];
+	one_minus_r_b_1 = new prime_field::field_element[C.total_blocks_binary_length];
 
-	for(int i = 0; i < (C.circuit[C.total_depth - 1].bit_length); ++i)
+	for(int i = 0; i < (C.blocks[0].circuit[C.total_depth - 1].bit_length); ++i)
 	{
 		one_minus_r_0[i] = prime_field::field_element(1) - r_0[i];
 		one_minus_r_1[i] = prime_field::field_element(1) - r_1[i];
 	}
+	for(int i = 0; i < C.total_blocks_binary_length; ++i)
+	{
+		one_minus_r_b_0[i] = prime_field::field_element(1) - r_b_0[i];
+	}
 	
 	std::chrono::high_resolution_clock::time_point t_a = std::chrono::high_resolution_clock::now();
 	std::cerr << "Calc V_output(r)" << std::endl;
-	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, result, C.circuit[C.total_depth - 1].bit_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
-	
+	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, one_minus_r_b_0, r_b_0, result, C.blocks[0].circuit[C.total_depth - 1].bit_length, C.total_blocks_binary_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
+	delete[] result;
 	std::chrono::high_resolution_clock::time_point t_b = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> ts = std::chrono::duration_cast<std::chrono::duration<double>>(t_b - t_a);
@@ -311,13 +258,37 @@ bool verifier::verify()
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
-		std::cerr << "Bound u start" << std::endl;
-		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
-		p -> sumcheck_phase1_init();
+		p -> sumcheck_init(i, C.total_blocks_binary_length, C.blocks[0].circuit[i].bit_length, C.blocks[0].circuit[i - 1].bit_length, C.blocks[0].circuit[i - 1].bit_length, alpha, beta, r_b_0 r_0, r_1, one_minus_r_b_0, one_minus_r_0, one_minus_r_1);
+		std::cerr << "Bound blk index start" << std::endl;
 		prime_field::field_element previous_random = prime_field::field_element(0);
+		auto r_b = generate_randomness(C.total_blocks_binary_length);
+		prime_field::field_element *one_minus_r_b;
+		one_minus_r_b = new prime_field::field_element[C.total_blocks_binary_length];
+		for(int j = 0; j < C.total_blocks_binary_length; ++j)
+			one_minus_r_b[j] = prime_field::field_element(1) - r_b[j];
+
+		p -> sumcheck_phase0_init();
+		for(int j = 0; j < C.total_blocks_binary_length; ++j)
+		{
+			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
+			previous_random = r_b[j];
+			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+			{
+				fprintf(stderr, "Verification fail, phase0, circuit %d, current bit %d\n", i, j);
+				return false;
+			}
+			else
+			{
+
+			}
+			alpha_beta_sum = poly.eval(r_b[j]);
+		}
+
+		std::cerr << "Bound u start" << std::endl;
+		p -> sumcheck_phase1_init();
 		//next level random
-		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
-		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
+		auto r_u = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
+		auto r_v = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
 		one_minus_r_u = new prime_field::field_element[C.circuit[i - 1].bit_length];
 		one_minus_r_v = new prime_field::field_element[C.circuit[i - 1].bit_length];
@@ -407,12 +378,16 @@ bool verifier::verify()
 
 		delete[] r_0;
 		delete[] r_1;
+		delete[] r_b_0;
+		delete[] one_minus_r_b_0;
 		delete[] one_minus_r_0;
 		delete[] one_minus_r_1;
 		r_0 = r_u;
 		r_1 = r_v;
+		r_b_0 = r_b;
 		one_minus_r_0 = one_minus_r_u;
 		one_minus_r_1 = one_minus_r_v;
+		one_minus_r_b_0 = one_minus_r_b;
 		std::cerr << "Prove Time " << p -> total_time << std::endl;
 	}
 
@@ -459,9 +434,13 @@ void verifier::delete_self()
 	delete[] beta_g_r1;
 	delete[] beta_u;
 	delete[] beta_v;
-	for(int i = 0; i < C.total_depth; ++i)
+	for(int b = 0; b < C.total_blocks; ++b)
 	{
-		delete[] C.circuit[i].gates;
+		for(int i = 0; i < C.blocks[b].total_depth; ++i)
+		{
+			delete[] C.blocks[b].circuit[i].gates;
+		}
+		delete[] C.blocks[b].circuit;
 	}
-	delete[] C.circuit;
+	delete[] C.blocks;
 }

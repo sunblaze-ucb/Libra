@@ -1,23 +1,33 @@
 #include "traditional_gkr/prover_clogc.h"
 #include <cstring>
-void prover::get_circuit(const layered_circuit &from_verifier)
+void prover::get_circuit(const blocked_circuit &from_verifier)
 {
 	C = from_verifier;
 }
 
-prime_field::field_element prover::V_res(const prime_field::field_element* one_minus_r_0, const prime_field::field_element* r_0, const prime_field::field_element* output_raw, int r_0_size, int output_size)
+prime_field::field_element prover::V_res(const prime_field::field_element* one_minus_r_0, const prime_field::field_element* r_0, 
+	const prime_field::field_element* one_minus_r_b, const prime_field::field_element* r_b, const prime_field::field_element* output_raw, int r_0_size, int r_b_size, int output_size)
 {
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	prime_field::field_element *output;
 	output = new prime_field::field_element[output_size];
 	for(int i = 0; i < output_size; ++i)
 		output[i] = output_raw[i];
+	for(int i = 0; i < r_b_size; ++i)
+	{
+		for(int j = 0; j < (output_size >> 1); ++j)
+		{
+			output[j].value = (output[j << 1].value * one_minus_r_b[i].value + output[j << 1 | 1].value * r_b.value) % prime_field::mod;
+		}
+		output_size >>= 1;
+	}
 	for(int i = 0; i < r_0_size; ++i)
 	{
 		for(int j = 0; j < (output_size >> 1); ++j)
 		{
 			output[j].value = (output[j << 1].value * one_minus_r_0[i].value + output[j << 1 | 1].value * r_0[i].value) % prime_field::mod;
 		}
+		output_size >>= 1;
 	}
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -34,47 +44,53 @@ prime_field::field_element prover::V_res(const prime_field::field_element* one_m
 prime_field::field_element* prover::evaluate()
 {
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
-	circuit_value[0] = new prime_field::field_element[(1 << C.circuit[0].bit_length)];
-	for(int i = 0; i < (1 << C.circuit[0].bit_length); ++i)
+	circuit_value = new prime_field::field_element**[C.total_blocks];
+	for(int i = 0; i < C.total_blocks; ++i)
+		circuit_value[i] = new prime_field::field_element*[C.blocks[0].total_depth];
+	for(int blk = 0; blk < C.total_blocks; ++blk)
 	{
-		int g, u, v, ty;
-		g = i;
-		u = C.circuit[0].gates[g].u;
-		v = C.circuit[0].gates[g].v;
-		ty = C.circuit[0].gates[g].ty;
-		assert(ty == 3);
-		circuit_value[0][g] = prime_field::field_element(u);
-	}
-	assert(C.total_depth < 1000000);
-	for(int i = 1; i < C.total_depth; ++i)
-	{
-		circuit_value[i] = new prime_field::field_element[(1 << C.circuit[i].bit_length)];
-		for(int j = 0; j < (1 << C.circuit[i].bit_length); ++j)
+		circuit_value[blk][0] = new prime_field::field_element[(1 << C.blocks[blk].circuit[0].bit_length)];
+		for(int i = 0; i < (1 << C.blocks[blk].circuit[0].bit_length); ++i)
 		{
 			int g, u, v, ty;
-			g = j;
-			ty = C.circuit[i].gates[g].ty;
-			u = C.circuit[i].gates[g].u;
-			v = C.circuit[i].gates[g].v;
-			if(ty == 0)
+			g = i;
+			u = C.blocks[blk].circuit[0].gates[g].u;
+			v = C.blocks[blk].circuit[0].gates[g].v;
+			ty = C.blocks[blk].circuit[0].gates[g].ty;
+			assert(ty == 3);
+			circuit_value[blk][0][g] = prime_field::field_element(u);
+		}
+		assert(C.total_depth < 1000000);
+		for(int i = 1; i < C.blocks[blk].total_depth; ++i)
+		{
+			circuit_value[blk][i] = new prime_field::field_element[(1 << C.blocks[blk].circuit[i].bit_length)];
+			for(int j = 0; j < (1 << C.blocks[blk].circuit[i].bit_length); ++j)
 			{
-				circuit_value[i][g] = circuit_value[i - 1][u] + circuit_value[i - 1][v];
-			}
-			else if(ty == 1)
-			{
-				circuit_value[i][g] = circuit_value[i - 1][u] * circuit_value[i - 1][v];
-			}
-			else if(ty == 2)
-			{
-				circuit_value[i][g] = prime_field::field_element(0);
-			}
-			else if(ty == 3)
-			{
-				circuit_value[i][g] = prime_field::field_element(u);
-			}
-			else
-			{
-				assert(false);
+				int g, u, v, ty;
+				g = j;
+				ty = C.blocks[blk].circuit[i].gates[g].ty;
+				u = C.blocks[blk].circuit[i].gates[g].u;
+				v = C.blocks[blk].circuit[i].gates[g].v;
+				if(ty == 0)
+				{
+					circuit_value[blk][i][g] = circuit_value[blk][i - 1][u] + circuit_value[blk][i - 1][v];
+				}
+				else if(ty == 1)
+				{
+					circuit_value[blk][i][g] = circuit_value[blk][i - 1][u] * circuit_value[blk][i - 1][v];
+				}
+				else if(ty == 2)
+				{
+					circuit_value[blk][i][g] = prime_field::field_element(0);
+				}
+				else if(ty == 3)
+				{
+					circuit_value[blk][i][g] = prime_field::field_element(u);
+				}
+				else
+				{
+					assert(false);
+				}
 			}
 		}
 	}
@@ -86,16 +102,25 @@ prime_field::field_element* prover::evaluate()
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	std::cerr << "total evaluation time: " << time_span.count() << " seconds." << std::endl;
-	return circuit_value[C.total_depth - 1];
+	prime_field::field_element *result;
+	result = new prime_field::field_element[C.total_blocks * (1 << C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length)];
+	int bs = (1 << C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
+	for(int i = 0; i < C.total_blocks; ++i)
+		for(int j = 0; j < bs; ++j)
+			result[i * bs + j] = circuit[blk][C.blocks[0].total_depth - 1][j];
+	return result;
 }
 
-void prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, 
+void prover::sumcheck_init(int layer_id, int block_bn, int bit_length_g, int bit_length_u, int bit_length_v, 
 	const prime_field::field_element &a, const prime_field::field_element &b, 
+	const prime_field::field_element* R_B_0,
 	const prime_field::field_element* R_0, const prime_field::field_element* R_1,
+	prime_field::field_element* o_r_b_0,
 	prime_field::field_element* o_r_0, prime_field::field_element *o_r_1)
 {
 	r_0 = R_0;
 	r_1 = R_1;
+	r_b_0 = R_B_0;
 	alpha = a;
 	beta = b;
 	sumcheck_layer_id = layer_id;
@@ -104,6 +129,8 @@ void prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int
 	length_v = bit_length_v;
 	one_minus_r_0 = o_r_0;
 	one_minus_r_1 = o_r_1;
+	one_minus_r_b_0 = o_r_b_0;
+	block_binary_length = block_bn;
 }
 
 void prover::init_array(int max_bit_length)

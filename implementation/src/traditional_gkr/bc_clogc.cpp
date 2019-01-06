@@ -1,12 +1,12 @@
 #include <cstdio>
-#include "traditional_gkr/verifier_traditional.h"
-#include "traditional_gkr/prover_clogc.h"
+#include "traditional_gkr/verifier_bc_clogc.h"
+#include "traditional_gkr/prover_bc_clogc.h"
 #include "linear_gkr/prime_field.h"
 
-verifier* v;
-prover* p;
+verifier v;
+prover p;
 
-int num_blocks;
+int num_blocks, binary_nb;
 
 char** inputs;
 char** input_ptr;
@@ -15,18 +15,14 @@ void run_verifications()
 {
 	bool final_result = true;
 	double total_time = 0;
-	p = new prover[num_blocks];
-	v = new verifier[num_blocks];
+	v.set_blocks(num_blocks, binary_nb);
+	v.get_prover(&p);
+	p.total_time = 0;
 	for(int i = 0; i < num_blocks; ++i)
 	{
-		p[i].total_time = 0;
-		v[i].get_prover(&p[i]);
-		v[i].read_circuit_from_string(inputs[i]);
-		p[i].get_circuit(v[i].C);
-		bool result = v[i].verify();
-		final_result &= result;
-		total_time += p[i].total_time;
+		v.read_circuit_from_string(inputs[i], i);
 	}
+	p.get_circuit(v.C);
 	if(final_result)
 	{
 		printf("Verification Pass, total time %f\n", (float)total_time);
@@ -74,6 +70,7 @@ void redistribute_circuit(const char *path)
 		int p_bs = block_size, p_bn = block_number;
 		fscanf(meta, "%d%d%d%d%d", &block_size, &block_number, &binary_bs, &binary_bn, &str_length);
 		num_blocks = block_number;
+		binary_nb = binary_bn;
 		assert(block_number == (1 << binary_bn));
 		assert(block_size == (1 << binary_bs));
 		assert(n == block_number * block_size);

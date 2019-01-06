@@ -4,22 +4,25 @@ CDBG_FLAGS=-g
 INCLUDE=include
 OPT=-O3
 
-linear_gkr: src/linear_gkr/main_fast_track.cpp
+linear_gkr_debug: src/linear_gkr/main_fast_track.cpp
 	$(CC) $(CFLAGS) $(CDBG_FLAGS) -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier_fast_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_track.cpp -o bin/main -lgmp -lgmpxx
-linear_gkr_opt: src/linear_gkr/main_fast_track.cpp
+linear_gkr: src/linear_gkr/main_fast_track.cpp
 	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier_fast_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_track.cpp -o bin/main $(OPT)
 linear_gkr_slow_track: src/linear_gkr/main_slow_track.cpp
 	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_slow_track.cpp -o bin/main_slow -O2 -lgmp -lgmpxx
 clean:
 	rm bin/main
+	
 linear_gkr_prof:
 	$(CC) $(CFLAGS) $(CDBG_FLAGS) -I $(INCLUDE) -std=c++11 -pg src/linear_gkr/verifier_fast_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_track.cpp -o bin/main -lgmp -lgmpxx
 	
-linear_gkr_opt_parallel: src/linear_gkr/main_fast_para_track.cpp
-	$(CC) $(CFLAGS) -g -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier_fast_para_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_para_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_para_track.cpp -o bin/main -lpthread
+linear_gkr_parallel: src/linear_gkr/main_fast_para_track.cpp
+	$(CC) $(CFLAGS) $(CDBG_FLAGS) -I $(INCLUDE) -std=c++11 src/linear_gkr/verifier_fast_para_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_para_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_para_track.cpp -o bin/main -lpthread $(OPT)
 
-clogc_opt: src/traditional_gkr/ClogC.cpp
+clogc: src/traditional_gkr/ClogC.cpp
 	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/ClogC.cpp -o bin/main_clogc $(OPT)
-bclogc_opt: src/traditional_gkr/bclogc.cpp
+bclogc: src/traditional_gkr/bclogc.cpp
 	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bclogc.cpp -o bin/main_bclogc $(OPT)
 
+bc_clogc:
+	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_bc_clogc.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_bc_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bc_clogc.cpp -o bin/main_bc_clogc $(OPT)

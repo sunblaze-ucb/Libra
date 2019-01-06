@@ -43,6 +43,7 @@ prime_field::field_element prover::V_res(const prime_field::field_element* one_m
 			}
 		}
 		std::swap(output, noutput);
+		output_size >>= 1;
 	}
 	
 	prime_field::field_element res = output[0];

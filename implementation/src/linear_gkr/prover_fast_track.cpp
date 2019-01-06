@@ -18,6 +18,7 @@ prime_field::field_element prover::V_res(const prime_field::field_element* one_m
 		{
 			output[j].value = (output[j << 1].value * one_minus_r_0[i].value + output[j << 1 | 1].value * r_0[i].value) % prime_field::mod;
 		}
+		output_size >>= 1;
 	}
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 

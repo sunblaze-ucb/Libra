@@ -51,4 +51,17 @@ public:
 	}
 };
 
+class blocked_circuit
+{
+public:
+	layered_circuit* blocks;
+	int total_blocks;
+	int total_blocks_binary_length;
+	blocked_circuit()
+	{
+		blocks = NULL;
+		total_blocks = 0;
+	}
+}
+
 #endif
