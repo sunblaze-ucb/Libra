@@ -1,16 +1,29 @@
 %!TEX root = fastZKP.tex
 
-\subsection{CMT Protocol}
-\label{subsec::CMT}
-\subsubsection{Notation}
-We define the polynomial for each layer as follows:
-\begin{definition} [Polynomial for the circuit]
-	$$V_i(g)=\sum_{u, v \in \{0,1\}^{s_{i+1}}}(add_{i+1}(g,u,v)(V_{i+1}(u)+V_{i+1}(v))+mult_{i+1}(g,u,v)(V_{i+1}(u)V_{i+1}(v)))$$
-	where the gates are numbered by the binary label, $2^{s_i}$ is the number of gates in $i$-th layer, and $V_i(g)$ means the output of gate $g$ of $i$-th layer.
-\end{definition}
+\subsection{GKR Protocol}\label{subsec::GKR}
 
-We futher define the multi-linear extension of this polynomial. Note $G_{i,add}$ denote all add gate triples in $i$-th layer and so does $G_{i,mult}$
 
+Using the sumcheck protocol as a building block, Goldwasser et al.~\cite{GKR} showed an interactive proof protocol (referred as the \emph{GKR protocol} in this paper) for \textit{layered arithmetic circuits}. 
+
+\smallskip\noindent\textbf{High Level Ideas.} Let $C$ be a layered arithmetic circuit with depth $d$ over a finite field $\mathbb{F}$. Each gate in $i$-th layer takes inputs from two gates in $i+1$-th layer; layer $0$ is the output layer and layer $d$ is the input layer. The protocol proceeds layer by layer. Upon receiving the claimed output from the prover, in the first round, the verifier and the prover run the sumcheck protocol to reduce the claim about the output to a claim about the values of the wire in the layer above. In the $i$-th round, both parties reduces a claim about layer $i-1$ to a claim about layer $i$ through the sumcheck protocol. Finally, the protocol terminates with a claim about the input layer $d$, which can be checked directly by the verifier, or given as an oracle access. If the check passes, the verifier accepts the claimed output. 
+
+\subsubsection{Notations}
+
+Before describing the GKR protocol, we introduce some additional notations. We denote the number of gates in the $i$-th layer as $S_i$ and let $s_i = \ceil{\log S_i}$. (For simplicity, we assume $S_i$ is a power of 2, and we can pad the layer with dummy gates otherwise.) We then define a function $V_i:\binary^{s_i}\rightarrow\mathbb{F}$ that takes a binary string $b\in\binary^{s_i}$ and returns the output of gate $b$ in layer $i$, and $b$ is called the gate label. With this definition, $V_0$ corresponds to the output of the circuit, and $V_d$ corresponds to the input layer. Finally, we define two additional functions $add_i, mult_i: \binary^{s_{i-1}+2s_i}\rightarrow\binary$, referred as \emph{wiring predicates} in the literature. $add_i$ ($mult_i$) takes one gate label $z\in\binary^{s_{i-1}}$ in layer $i-1$ and two gate labels $x,y\in\binary^{s_i}$ in layer $i$, and outputs 1 if and only if gate $z$ is an addition (multiplication) gate that takes the output of gate $x,y$ as input. With these definitions, $V_i$ can be written as follows:
+\begin{equation}
+	V_i(z)=\sum_{x, y \in\binary^{s_{i+1}}}(add_{i+1}(z,x,y)(V_{i+1}(x)+V_{i+1}(y))+mult_{i+1}(z,x,y)(V_{i+1}(x)V_{i+1}(y)))
+\end{equation}
+for all $z\in\binary^{s_i}$. 
+
+
+
+
+
+
+
+
+
+\ignore{
 \yupeng{try to remove $\beta$.}
 
 \begin{definition}[Multilinear extension of identity fucntion]
@@ -53,20 +66,34 @@ $$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_
 	where $\tilde{mult}$ and $\tilde{add}$ are multilinear extension of $mult$ and $add$.
 \end{definition}
 
-\subsubsection{High Level Ideas}
-CMT Protocol (Cormode et al.)\cite{CMT} is based on the work of Goldwasser et al. \cite{GKR}, gives us a efficient implementation of interactive proof. In this section, we will introduce the original CMT protocol here.
+}
 
-Assume $C$ is a \textit{layered arithmetic circuit} with depth $d$ over a finite field $\mathbb{F}$. The gates in $i$-th layer takes input from $i+1$-th layer and outputs to $i-1$-th layer; layer $0$ is the output layer, and layer $d$ is the input layer. 
 
-%The protocol proceeds layer by layer. The prover starts by sending the output value to the verifier. Then the protocol starts from the output layer. In $i$-th round both party runs the sum check protocol on the previous prover's claim, for the first round, they run check sumcheck to check the output. The sumcheck will eventually reduce the claim into the evalution to one specific random point. Each point of current layer $f_{i,z}(R_g,R_u,R_v)$, corresponds to two points of next layer $V_{i+1}(R_u), V_{i+1}(R_v)$. A simple idea is to recursively check these two points. However the number of threads will grow exponentially, which would result in a very inefficient protocol.
-
-%Instead of directly check two points, we can combine these two points into one by linear combination. And recursively check on the combined point of next layer. For the final input layer, the verifier checks the claim by calculating the value by himself.
-
-The protocol proceeds layer by layer. The protocol start by checking the output layer ($0$-th layer). In the initialization, the verifier request a random claim about the output layer from the prover, and the prover answer the request by scanning through the layer. In the first round, both parties runs the sumcheck protocol on the claim about the output, and reduces to two claims about the next layer ($1$-st layer). The verifier will combine these two claims into one claim about $1$-st layer and runs into next round. In $i$-th round, both parties runs a sumcheck on the previous layer and reduce to a claim about current layer. Finally the protocol will get a claim about the input layer. The verifier will verify the claim by asking the oracle about the input layer. We will provide a implemetation about the oracle latter.
 
 \subsubsection{Protocol Details}\label{sec::gkr}
 
-The CMT protocol do sumchecks on polynomial $V_{i}$ for each layer and reduces the claim to next layer polynomial $V_{i+1}$. We will explain the protocol in detail.
+In the equation above, $V_i$ is expressed as a summation, so the verifier $\V$ can use the sumcheck protocol to check that it is computed correctly. As the sumcheck protocol operates on polynomials defined on $\mathbb{F}$, we rewrite the equation with their multilinear extensions:
+\begin{align}\label{eq:GKR}
+\tV_i(g)&=\sum_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
+&=\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(g,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))
+\end{align}
+where $g\in\mathbb{F}^{s_i}$ is a random vector. 
+
+With Equation~\ref{eq:GKR}, the GKR protocol proceeds as following. The prover $\P$ first sends the claimed output of the circuit to the verifier $\V$. From the claimed output, $\V$ defines polynomial $\tV_0$ and computes $\tV_0(g)$ for a random $g\in\mathbb{F}^{s_0}$. $\V$ and $\P$ then invoke a sumcheck protocol on Equation~\ref{eq:GKR} with $i=0$. As described in Section~\ref{subsec::sumcheck}, at the end of the sumcheck, $\V$ needs an oracle access to $f_i(u,v)$, where $u,v$ are random challenges in $\mathbb{F}^{s_{i+1}}$. To compute $f_i(u,v)$, $\V$ computes $\tadd_{i+1}(u,v)$ and $\tmult_{i+1}(u,v)$ locally (they only depend on the wiring pattern of the circuit, but not on the values), asks $\P$ to send $\tV_1(u)$ and $\tV_1(v)$ and computes $f_i(u,v)$ to complete the sumcheck protocol. In this way, $\V$ and $\P$ reduces a claim about the output to two claims about values in layer 1. $\V$ and $\P$ could invoke two sumcheck protocols on $\tV_1(u)$ and $\tV_1(v)$ to reduce them to claims on layer 2, and continue recursively until the input layer. However, the number of claims and the sumcheck protocols increases exponentially to $d$ by doing so, and the verification time is even more expensive than computing locally. 
+
+\smallskip\noindent\textbf{Combining two claims: condensing to one claim.} In~\cite{GKR}, Goldwasser et al. presented a protocol to reduce two claims $\tV_i(u)$ and $\tV_i(v)$ to one. $\V$ defines a line $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ such that $\gamma(0)=u, \gamma(1)=v$. $\V$ sends $\gamma(x)$ to $\P$. Then $\P$ sends $\V$ a degree $s_i$ polynomial $h(x)=\tilde{V_i}(\gamma(x))$. $\V$ checks that $h(0)=\tV_i(u), h(1)=\tV_i(v)$. Then it randomly chooses $r\in\mathbb{F}$ and sets a new claim $\tV_i(w) = \tV_i(\gamma(r)) = h(r)$ on $w=h(r) \in \mathbb{F}^{s_i}$. It sends $r, w$ to $\P$. In this way, the two claims are reduced to one claim $\tV_i(w)$. Combining this protocol with the sumcheck protocol on Equation~\ref{eq:GKR}, $\V$ and $\P$ can reduce a claim on layer $i$ to one claim on layer $i+1$, and eventually to a claim on the input, which completes the GKR protocol.
+
+\smallskip\noindent\textbf{Combining two claims: random linear combination.}  In~\cite{zksumcheck}, Chiesa et al. proposed an alternative approach using random linear combinations. Upon receiving the two claims $\tV_i(u)$ and $\tV_i(v)$, $\V$ selects $\alpha, \beta\in\mathbb{F}$ randomly and computes $\alpha\tV_i(u)+\beta\tV_i(v)$. Based on Equation~\ref{eq:GKR}, it can be written as
+\begin{align}\label{eq:randomGKR}
+&\alpha\tV_i(u)+\beta\tV_i(v)\nonumber\\
+=&\alpha\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(u,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(u,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\
+&+\beta\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(v,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(v,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\
+=&\sum_{x, y \in\binary^{s_{i+1}}}((\alpha\tadd_{i+1}(u,x,y)+\beta\tadd_{i+1}(v,x,y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
+&+(\alpha\tmult_{i+1}(u,x,y)+\beta\tmult_{i+1}(v,x,y))(\tV_{i+1}(x)\tV_{i+1}(y)))
+\end{align}
+$\V$ and $\P$ then execute the sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equation~\ref{eq:GKR}. At the end of the sumcheck protocol, $\V$ still receives two claims about $\tV_{i+1}$, computes their random linear combination and proceeds to an layer above recursively until the input layer.
+
+In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Figure~\ref{protocol::CMT}. \yupeng{change the protocol using the 2nd approach and new notations, and put it into a figure.}
 
 \begin{protocol}
 	\label{protocol::CMT}
@@ -92,5 +119,5 @@ The CMT protocol do sumchecks on polynomial $V_{i}$ for each layer and reduces t
 	\end{itemize}
 \end{protocol}
 
-\begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::CMT} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {S}}{|\mathbb{F}|})$, where $S$ is the maximal number of gates per circuit layer. It uses $O(d \log S)$ rounds of interaction and running time of prover $\mathcal{P}$ is $O(|C|\log S)$. Let the optimal computation time for $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of the verifier is $O(n+k+dT)$, in some applications, $T=\poly{\log S}$.
+\begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::CMT} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {S}}{|\mathbb{F}|})$, where $S$ is the maximal number of gates per circuit layer. It uses $O(d \log S)$ rounds of interaction and running time of prover $\mathcal{P}$ is $O(|C|\log S)$. Let the optimal computation time for $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of the verifier is $O(n+k+dT)$, in some applications, $T=\poly{\log S}$. \yupeng{rephrase the theorem.}
 \end{theorem}

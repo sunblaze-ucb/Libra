@@ -16,27 +16,22 @@ We formalize the "interactive proof" in the following:
 
 \subsection{Sumcheck Protocol}
 \label{subsec::sumcheck}
-The sumcheck problem is a fundamental problem that serves as a building block for varies applications. Informally the problem requires us to sum on a binary hypercube $(b_1, b_2, ..., b_{l})$ for a given polynomial $g(x_1, x_2, ..., x_{l})$. Directly compute the function requires exponential computation, Lund et al.\cite{sumcheck} proposed a interactive proof protocol such that a computationally unbounded prover $\mathcal{P}$ can convince a computationally bounded verifier $\mathcal{V}$ that $$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}g(b_1,b_2,...,b_{l})$$
-Using this protocol, even a polynomial bounded verifier can verify the statement above. Now we formally define the problem and provide a description of the protocol.
-
-\begin{definition}
-	Let $g$ be an $l$-variate polynomial $g(b_1, b_2, ..., b_{l})$ over a field $\mathbb{F}$; the prover's goal is to convince that 
-
-	$$H=\sum_{b_1\in\{0,1\}}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(b_1,b_2,...,b_{l})$$
-\end{definition}
+The sumcheck problem is a fundamental problem that serves as a building block for varies applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\limits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
+Directly computing the sum requires exponential time in $\ell$, as there are $2^\ell$ combinations of $b_1,\ldots,b_\ell$. Lund et al.~\cite{sumcheck} proposed a \emph{sumcheck} protocol that allows a verifier $\mathcal{V}$ to delegate the computation to a computationally unbounded prover $\mathcal{P}$, who can convince $\mathcal{V}$ that $H$ is the correct sum. We provide a description of the sumcheck protocol.
 
 \begin{protocol}[\textbf{Sumcheck}]
 \label{prot::sumcheck}
-	The protocol proceeds in $l$ rounds. 
+	The protocol proceeds in $\ell$ rounds. 
 	\begin{itemize}
-		\item In the first round, the prover sends a univariate polynomial $$g_1(x_1)\overset{def}{=}\sum_{b_2\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(x_1, b_2, b_3, ..., b_{l})\textnormal{,}$$ the verifier checks $H=g_1(0)+g_1(1)$. Then the verifier sends a random number $r_1$ to prover.
-		\item In the $i$-th round, where $2\le i \le l-1$, the prover sends 
-		$$g_{i}(x_{i})\overset{def}{=}\sum_{b_{i+1}\in\{0,1\}}\sum_{b_{i+2}\in\{0,1\}}...\sum_{b_{l}\in\{0,1\}}G(r_1, r_2, ..., r_{i-1}, x_{i}, b_{i+1}, b_{i+2}, ..., b_{l})\textnormal{.}$$ 
-		The verifier checks $g_{i-1}(r_{i-1})=g_{i}(0)+g_{i}(1)$, and then sends a random number $r_{i}$ to prover.
-		\item In the $l$-th round, the prover sends $$g_{l}(x_{l})\overset{def}{=}G(r_1, r_2, ..., r_{l-1}, x_{l})$$, the verifier checks $g_{l-1}(r_{l-1})=g_{l}(0)+g_{l}(1)$. Then verifier generate a random number $r_{l}$. Given oracle access to $g$, the verifier will accept the prover if and only if $g_{l}(r_l) = G(r_1, r_2, ..., r_l)$. We will provide a implemetation of the oracle latter. 
-		%The verifier also compute $Answer\overset{def}{=}g(r_1, r_2, ..., r_{l})$ locally. Verifier will accept iff $G_{l}=Answer$.
+		\item In the first round, the prover sends a univariate polynomial $$f_1(x_1)\overset{def}{=}\sum\limits_{b_2,\ldots,b_\ell\in\{0,1\}}f(x_1,b_2,...,b_\ell)\, ,$$ the verifier checks $H=f_1(0)+f_1(1)$. Then the verifier sends a random challenge $r_1\in\mathbb{F}$ to the prover.
+		\item In the $i$-th round, where $2\le i \le l-1$, the prover sends a univariate polynomial
+		$$f_{i}(x_{i})\overset{def}{=}\sum\limits_{b_{i+1},\ldots,b_\ell\in\{0,1\}}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ 
+		the verifier checks $f_{i-1}(r_{i-1})=f_{i}(0)+f_{i}(1)$, and sends a random challenge $r_{i}\in\mathbb{F}$ to the prover.
+		\item In the $\ell$-th round, the prover sends a univariate polynomial $$f_{\ell}(x_{\ell})\overset{def}{=}f(r_1, r_2, ..., r_{l-1}, x_{\ell})\, ,$$ the verifier checks $f_{\ell-1}(r_{\ell-1})=f_{\ell}(0)+f_{\ell}(1)$. The verifier generates a random challenge $r_{\ell}\in\mathbb{F}$. Given oracle access to an evaluation $f(r_1, r_2, ..., r_\ell)$ of $f$, the verifier will accept if and only if $f_{\ell}(r_\ell) = f(r_1, r_2, ..., r_\ell)$. The instantiation of the oracle access depends on the application of the sumcheck protocol.
 	\end{itemize}
 \end{protocol}
+
+The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, the prover sends a univariate polynomial for each variable in $f$, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
 
 \begin{definition}[\textbf{Multi-linear Extension}]
 	Let $V:\{0, 1\}^l \rightarrow \mathbb{F}$ be a function. The \textit{multi-linear extension} of $V$ is the unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ such that $\tilde{V}(x_1, x_2, ..., x_{l}) = V(x_1, x_2, ..., x_{l})$ for all $x_1, x_2, ..., x_{l}\in\{0,1\}^l$.
@@ -45,7 +40,7 @@ Using this protocol, even a polynomial bounded verifier can verify the statement
 	$\tilde{V}$ can be expressed as:
 	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
 	where $b_i$ is $i$-th bit of b.
-
+	
 	
 \end{definition}
 
