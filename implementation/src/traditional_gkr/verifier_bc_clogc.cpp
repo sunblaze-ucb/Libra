@@ -197,6 +197,7 @@ prime_field::field_element verifier::V_in(const prime_field::field_element* r_b,
 		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
 			output[j] = output[j << 1] * one_minus_r_b[i] * output[j << 1 | 1] * r_b[i];
+		output_size >>= 1;
 	}
 	auto ret = output[0];
 	ret.value = ret.value % prime_field::mod;
@@ -270,7 +271,7 @@ bool verifier::verify()
 		p -> sumcheck_phase0_init();
 		for(int j = 0; j < C.total_blocks_binary_length; ++j)
 		{
-			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
+			quadratic_poly poly = p -> sumcheck_phase0_update(previous_random, j);
 			previous_random = r_b[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
@@ -290,15 +291,15 @@ bool verifier::verify()
 		auto r_u = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
 		auto r_v = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
-		one_minus_r_u = new prime_field::field_element[C.circuit[i - 1].bit_length];
-		one_minus_r_v = new prime_field::field_element[C.circuit[i - 1].bit_length];
+		one_minus_r_u = new prime_field::field_element[C.blocks[0].circuit[i - 1].bit_length];
+		one_minus_r_v = new prime_field::field_element[C.blocks[0].circuit[i - 1].bit_length];
 		
-		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
+		for(int j = 0; j < C.blocks[0].circuit[i - 1].bit_length; ++j)
 		{
 			one_minus_r_u[j] = prime_field::field_element(1) - r_u[j];
 			one_minus_r_v[j] = prime_field::field_element(1) - r_v[j];
 		}
-		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
+		for(int j = 0; j < C.blocks[0].circuit[i - 1].bit_length; ++j)
 		{
 			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
 			previous_random = r_u[j];
@@ -326,7 +327,7 @@ bool verifier::verify()
 		t0 = std::chrono::high_resolution_clock::now();
 		p -> sumcheck_phase2_init(previous_random, r_u, one_minus_r_u);
 		previous_random = prime_field::field_element(0);
-		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
+		for(int j = 0; j < C.blocks[0].circuit[i - 1].bit_length; ++j)
 		{
 			quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
 			previous_random = r_v[j];
@@ -393,20 +394,24 @@ bool verifier::verify()
 
 	//post sumcheck
 	prime_field::field_element* input;
-	input = new prime_field::field_element[(1 << C.circuit[0].bit_length)];
+	input = new prime_field::field_element[(1 << C.blcoks[0].circuit[0].bit_length) * C.total_blocks];
 
-	for(int i = 0; i < (1 << C.circuit[0].bit_length); ++i)
+	for(int blk = 0; blk < C.total_blocks; ++blk)
 	{
-		int g = i;
-		if(C.circuit[0].gates[g].ty == 3)
+		int blk_size = (1 << C.blocks[blk].circuit[0].bit_length);
+		for(int i = 0; i < (1 << C.blocks[blk].circuit[0].bit_length); ++i)
 		{
-			input[g] = prime_field::field_element(C.circuit[0].gates[g].u);
+			int g = blk * blk_size + i;
+			if(C.blocks[blk].circuit[0].gates[i].ty == 3)
+			{
+				input[g] = prime_field::field_element(C.blocks[blk].circuit[0].gates[i].u);
+			}
+			else
+				assert(false);
 		}
-		else
-			assert(false);
 	}
-	auto input_0 = V_in(r_0, one_minus_r_0, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length)), 
-		 input_1 = V_in(r_1, one_minus_r_1, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
+	auto input_0 = V_in(r_b_0, one_minus_r_b_0, r_0, one_minus_r_0, input, C.total_blocks_binary_length, C.blocks[0].circuit[0].bit_length, (1 << C.blocks[0].circuit[0].bit_length)), 
+		 input_1 = V_in(r_b_0, one_minus_r_b_0, r_1, one_minus_r_1, input, C.total_blocks_binary_length, C.blocks[0].circuit[0].bit_length, (1 << C.blocks[0].circuit[0].bit_length));
 
 	delete[] input;
 	delete[] r_0;
