@@ -1,5 +1,7 @@
-#include "traditional_gkr/prover_clogc.h"
+#include "traditional_gkr/prover_bc_clogc.h"
 #include <cstring>
+#include <cassert>
+
 void prover::get_circuit(const blocked_circuit &from_verifier)
 {
 	C = from_verifier;
@@ -17,7 +19,7 @@ prime_field::field_element prover::V_res(const prime_field::field_element* one_m
 	{
 		for(int j = 0; j < (output_size >> 1); ++j)
 		{
-			output[j].value = (output[j << 1].value * one_minus_r_b[i].value + output[j << 1 | 1].value * r_b.value) % prime_field::mod;
+			output[j].value = (output[j << 1].value * one_minus_r_b[i].value + output[j << 1 | 1].value * r_b[i].value) % prime_field::mod;
 		}
 		output_size >>= 1;
 	}
@@ -60,7 +62,6 @@ prime_field::field_element* prover::evaluate()
 			assert(ty == 3);
 			circuit_value[blk][0][g] = prime_field::field_element(u);
 		}
-		assert(C.total_depth < 1000000);
 		for(int i = 1; i < C.blocks[blk].total_depth; ++i)
 		{
 			circuit_value[blk][i] = new prime_field::field_element[(1 << C.blocks[blk].circuit[i].bit_length)];
@@ -171,6 +172,22 @@ void prover::delete_self()
 
 prover::~prover()
 {
+}
+
+void prover::sumcheck_phase0_init()
+{
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+	
+	int total_blk = 1 << block_binary_length;
+	for(int i = 0; i < total_blk; ++i)
+	{
+		
+	}
+	
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	double tmp = time_span.count();
+	total_time += time_span.count();
 }
 
 void prover::sumcheck_phase1_init()

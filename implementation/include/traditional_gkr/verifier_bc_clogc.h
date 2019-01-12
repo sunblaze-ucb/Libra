@@ -17,7 +17,7 @@ public:
 	const prime_field::field_element* r_0, const prime_field::field_element* r_1, 
 	const prime_field::field_element* r_u, const prime_field::field_element* r_v, 
 	const prime_field::field_element* one_minus_r_0, const prime_field::field_element* one_minus_r_1, 
-	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
+	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v);
 	bool verify();
 	void set_blocks(int, int);
 	void get_prover(prover*);

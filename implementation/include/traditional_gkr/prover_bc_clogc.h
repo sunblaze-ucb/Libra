@@ -38,7 +38,7 @@ public:
 	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
 	quadratic_poly sumcheck_phase1_update(prime_field::field_element, int);
 	quadratic_poly sumcheck_phase2_update(prime_field::field_element, int);
-	prime_field::field_element V_res(const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, int, int);
+	prime_field::field_element V_res(const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, int, int, int);
 	std::pair<prime_field::field_element, prime_field::field_element> sumcheck_finalize(prime_field::field_element);
 	void delete_self();
 	prover()

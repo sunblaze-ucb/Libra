@@ -1,4 +1,4 @@
-#include "traditional_gkr/verifier_traditional.h"
+#include "traditional_gkr/verifier_bc_clogc.h"
 #include <string>
 #include <utility>
 #include <iostream>
@@ -77,7 +77,7 @@ void verifier::read_circuit_from_string(char* file, int block_id)
 			C.blocks[block_id].circuit[i].bit_length = cnt - 1;
 		}
 		fprintf(stderr, "layer %d, bit_length %d\n", i, C.blocks[block_id].circuit[i].bit_length);
-		if(C.circuit[i].bit_length > max_bit_length)
+		if(C.blocks[block_id].circuit[i].bit_length > max_bit_length)
 			max_bit_length = C.blocks[block_id].circuit[i].bit_length;
 	}
 	p -> init_array(max_bit_length);
@@ -224,8 +224,8 @@ bool verifier::verify()
 	beta.value = 0;
 	random_oracle oracle;
 	//initial random value
-	prime_field::field_element *r_0 = generate_randomness(C.blocks[0].circuit[C.total_depth - 1].bit_length), 
-							   *r_1 = generate_randomness(C.blocks[0].circuit[C.total_depth - 1].bit_length);
+	prime_field::field_element *r_0 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length), 
+							   *r_1 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
 	prime_field::field_element *r_b_0 = generate_randomness(C.total_blocks_binary_length);
 	prime_field::field_element *one_minus_r_0, *one_minus_r_1, *one_minus_r_b_0;
 	one_minus_r_0 = new prime_field::field_element[C.blocks[0].circuit[C.total_depth - 1].bit_length];
@@ -259,7 +259,7 @@ bool verifier::verify()
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
-		p -> sumcheck_init(i, C.total_blocks_binary_length, C.blocks[0].circuit[i].bit_length, C.blocks[0].circuit[i - 1].bit_length, C.blocks[0].circuit[i - 1].bit_length, alpha, beta, r_b_0 r_0, r_1, one_minus_r_b_0, one_minus_r_0, one_minus_r_1);
+		p -> sumcheck_init(i, C.total_blocks_binary_length, C.blocks[0].circuit[i].bit_length, C.blocks[0].circuit[i - 1].bit_length, C.blocks[0].circuit[i - 1].bit_length, alpha, beta, r_b_0, r_0, r_1, one_minus_r_b_0, one_minus_r_0, one_minus_r_1);
 		std::cerr << "Bound blk index start" << std::endl;
 		prime_field::field_element previous_random = prime_field::field_element(0);
 		auto r_b = generate_randomness(C.total_blocks_binary_length);
