@@ -39,6 +39,7 @@ public:
 	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
 	quadratic_poly sumcheck_phase1_update(prime_field::field_element, int);
 	quadratic_poly sumcheck_phase2_update(prime_field::field_element, int);
+	quadratic_poly sumcheck_finalround(prime_field::field_element, int);
 	prime_field::field_element V_res(const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, int, int);
 	std::pair<prime_field::field_element, prime_field::field_element> sumcheck_finalize(prime_field::field_element);
 	void delete_self();
@@ -57,11 +58,17 @@ public:
 	prime_field::field_element maskpoly_sumr;
 	void generate_maskpoly(int, int);
 
-	prime_field::field_element **maskR;
+	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*);
+
+	prime_field::field_element premaskR[9], maskR[9];
+	prime_field::field_element maskR_sumcu, maskR_sumcv;
+	quadratic_poly summaskR;
 	void generate_maskR();
 
+	prime_field::field_element Zu, Zv, preu1, prev1;
+
 	void sumcheck_maskpoly_init();
-	prime_field::field_element *maskpoly_partialsum;
+	//prime_field::field_element *maskpoly_partialsum;
 };
 
 #endif
