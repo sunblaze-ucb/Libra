@@ -108,7 +108,7 @@ prime_field::field_element* prover::evaluate()
 	int bs = (1 << C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
 	for(int i = 0; i < C.total_blocks; ++i)
 		for(int j = 0; j < bs; ++j)
-			result[i * bs + j] = circuit[blk][C.blocks[0].total_depth - 1][j];
+			result[i * bs + j] = circuit_value[i][C.blocks[0].total_depth - 1][j];
 	return result;
 }
 
@@ -134,7 +134,7 @@ void prover::sumcheck_init(int layer_id, int block_bn, int bit_length_g, int bit
 	block_binary_length = block_bn;
 }
 
-void prover::init_array(int max_bit_length)
+void prover::init_array(int max_bit_length, int blk_bit_length)
 {
 	add_linear = new quadratic_poly[(1 << max_bit_length)];
 //	multV_linear = new linear_poly[(1 << max_bit_length)];
@@ -150,6 +150,8 @@ void prover::init_array(int max_bit_length)
 	beta_g_r1_shalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_fhalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_shalf = new prime_field::field_element[(1 << half_length)];
+	block_value = new prime_field::field_element[(1 << blk_bit_length)];
+	beta_blk = new prime_field::field_element[1 << blk_bit_length];
 }
 
 void prover::delete_self()
@@ -166,8 +168,15 @@ void prover::delete_self()
 	delete[] beta_g_r1_shalf;
 	delete[] beta_u_fhalf;
 	delete[] beta_u_shalf;
-	for(int i = 0; i < C.total_depth; ++i)
-		delete[] circuit_value[i];
+	for(int blk = 0; blk < (1 << C.total_blocks_binary_length); ++blk)
+	{
+		for(int i = 0; i < C.blocks[blk].total_depth; ++i)
+			delete[] circuit_value[blk][i];
+		delete[] circuit_value[blk];
+	}
+	delete[] circuit_value;
+	delete[] block_value;
+	delete[] beta_blk;
 }
 
 prover::~prover()
@@ -179,30 +188,16 @@ void prover::sumcheck_phase0_init()
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	
 	int total_blk = 1 << block_binary_length;
-	for(int i = 0; i < total_blk; ++i)
+	beta_blk[0] = prime_field::field_element(1);
+	for(int i = 0; i < C.total_blocks_binary_length; ++i)
 	{
-		
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_blk[j | (1 << i)] = beta_blk[j] * r_b_0[i];
+			beta_blk[j] = beta_blk[j] * one_minus_r_0[i];
+		}
 	}
-	
-	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
-	double tmp = time_span.count();
-	total_time += time_span.count();
-}
 
-void prover::sumcheck_phase1_init()
-{
-	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
-	//mult init
-	//O(n) cache friendly implementation of initialize beta values
-	//CMT protocol uses an O(n log n) one
-	total_uv = (1 << C.circuit[sumcheck_layer_id - 1].bit_length);
-	prime_field::field_element zero = prime_field::field_element(0);
-	for(int i = 0; i < total_uv; ++i)
-	{
-		V_mult_add[i] = circuit_value[sumcheck_layer_id - 1][i];
-	}
-	
 	beta_g_r0_fhalf[0] = alpha;
 	beta_g_r1_fhalf[0] = beta;
 	beta_g_r0_shalf[0] = prime_field::field_element(1);
@@ -239,6 +234,58 @@ void prover::sumcheck_phase1_init()
 		beta_g_sum[i].value = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
 							 + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
 	}
+
+	for(int i = 0; i < total_blk; ++i)
+	{
+		block_value[i] = prime_field::field_element(0);
+		for(int j = 0; j < (1 << length_g); ++j)
+		{
+			int g = j;
+			int u = C.blocks[i].circuit[sumcheck_layer_id].gates[g].u;
+			int v = C.blocks[i].circuit[sumcheck_layer_id].gates[g].v;
+			int ty = C.blocks[i].circuit[sumcheck_layer_id].gates[g].ty;
+			switch(ty)
+			{
+				case 0: //add gate
+					block_value[i] = block_value[i] + beta_blk[i] * beta_g_sum[g] * (circuit_value[i][sumcheck_layer_id - 1][u] + circuit_value[i][sumcheck_layer_id - 1][v]);
+					break;
+				case 1: //mult gate
+					block_value[i] = block_value[i] + beta_blk[i] * beta_g_sum[g] * (circuit_value[i][sumcheck_layer_id - 1][u] * circuit_value[i][sumcheck_layer_id - 1][v]);
+					break;
+				case 2: //dummy gate
+					break;
+				case 3: //input gate
+					assert(false);
+					break;
+			}
+		}
+	}
+	
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	double tmp = time_span.count();
+	total_time += time_span.count();
+}
+
+quadratic_poly prover::sumcheck_phase0_update(prime_field::field_element previous_random, int current_bit)
+{
+	
+}
+
+void prover::sumcheck_phase1_init()
+{
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+	//mult init
+	//O(n) cache friendly implementation of initialize beta values
+	//CMT protocol uses an O(n log n) one
+	total_uv = (1 << C.circuit[sumcheck_layer_id - 1].bit_length);
+	prime_field::field_element zero = prime_field::field_element(0);
+	for(int i = 0; i < total_uv; ++i)
+	{
+		V_mult_add[i] = circuit_value[sumcheck_layer_id - 1][i];
+	}
+	
+	
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 	double tmp = time_span.count();

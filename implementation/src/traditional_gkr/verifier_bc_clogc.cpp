@@ -80,7 +80,7 @@ void verifier::read_circuit_from_string(char* file, int block_id)
 		if(C.blocks[block_id].circuit[i].bit_length > max_bit_length)
 			max_bit_length = C.blocks[block_id].circuit[i].bit_length;
 	}
-	p -> init_array(max_bit_length);
+	p -> init_array(max_bit_length, C.total_blocks_binary_length);
 
 	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
 	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
@@ -228,12 +228,11 @@ bool verifier::verify()
 							   *r_1 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
 	prime_field::field_element *r_b_0 = generate_randomness(C.total_blocks_binary_length);
 	prime_field::field_element *one_minus_r_0, *one_minus_r_1, *one_minus_r_b_0;
-	one_minus_r_0 = new prime_field::field_element[C.blocks[0].circuit[C.total_depth - 1].bit_length];
-	one_minus_r_1 = new prime_field::field_element[C.blocks[0].circuit[C.total_depth - 1].bit_length];
+	one_minus_r_0 = new prime_field::field_element[C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length];
+	one_minus_r_1 = new prime_field::field_element[C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length];
 	one_minus_r_b_0 = new prime_field::field_element[C.total_blocks_binary_length];
-	one_minus_r_b_1 = new prime_field::field_element[C.total_blocks_binary_length];
 
-	for(int i = 0; i < (C.blocks[0].circuit[C.total_depth - 1].bit_length); ++i)
+	for(int i = 0; i < (C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length); ++i)
 	{
 		one_minus_r_0[i] = prime_field::field_element(1) - r_0[i];
 		one_minus_r_1[i] = prime_field::field_element(1) - r_1[i];
@@ -245,7 +244,7 @@ bool verifier::verify()
 	
 	std::chrono::high_resolution_clock::time_point t_a = std::chrono::high_resolution_clock::now();
 	std::cerr << "Calc V_output(r)" << std::endl;
-	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, one_minus_r_b_0, r_b_0, result, C.blocks[0].circuit[C.total_depth - 1].bit_length, C.total_blocks_binary_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
+	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, one_minus_r_b_0, r_b_0, result, C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length, C.total_blocks_binary_length, (1 << (C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length)));
 	delete[] result;
 	std::chrono::high_resolution_clock::time_point t_b = std::chrono::high_resolution_clock::now();
 
@@ -256,7 +255,7 @@ bool verifier::verify()
 
 	prime_field::field_element alpha_beta_sum = a_0; //+ a_1
 
-	for(int i = C.total_depth - 1; i >= 1; --i)
+	for(int i = C.blocks[0].total_depth - 1; i >= 1; --i)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 		p -> sumcheck_init(i, C.total_blocks_binary_length, C.blocks[0].circuit[i].bit_length, C.blocks[0].circuit[i - 1].bit_length, C.blocks[0].circuit[i - 1].bit_length, alpha, beta, r_b_0, r_0, r_1, one_minus_r_b_0, one_minus_r_0, one_minus_r_1);
@@ -394,7 +393,7 @@ bool verifier::verify()
 
 	//post sumcheck
 	prime_field::field_element* input;
-	input = new prime_field::field_element[(1 << C.blcoks[0].circuit[0].bit_length) * C.total_blocks];
+	input = new prime_field::field_element[(1 << C.blocks[0].circuit[0].bit_length) * C.total_blocks];
 
 	for(int blk = 0; blk < C.total_blocks; ++blk)
 	{
