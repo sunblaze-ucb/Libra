@@ -270,7 +270,7 @@ bool verifier::verify()
 		p -> sumcheck_phase0_init();
 		for(int j = 0; j < C.total_blocks_binary_length; ++j)
 		{
-			quadratic_poly poly = p -> sumcheck_phase0_update(previous_random, j);
+			cubic_poly poly = p -> sumcheck_phase0_update(previous_random, j);
 			previous_random = r_b[j];
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{

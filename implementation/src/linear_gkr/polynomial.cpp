@@ -74,6 +74,11 @@ quadratic_poly quadratic_poly::operator + (const quadratic_poly &x) const
 	return quadratic_poly(a + x.a, b + x.b, c + x.c);
 }
 
+cubic_poly quadratic_poly::operator * (const linear_poly &x) const
+{
+	return cubic_poly(a * x.a, a * x.b + b * x.a, b * x.b + c * x.a, c * x.b);
+}
+
 prime_field::field_element quadratic_poly::eval(const prime_field::field_element &x) const
 {
 	return ((a * x) + b) * x + c;

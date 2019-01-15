@@ -150,8 +150,8 @@ void prover::init_array(int max_bit_length, int blk_bit_length)
 	beta_g_r1_shalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_fhalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_shalf = new prime_field::field_element[(1 << half_length)];
-	block_value = new prime_field::field_element[(1 << blk_bit_length)];
-	beta_blk = new prime_field::field_element[1 << blk_bit_length];
+	block_beta_value = new prime_field::field_element[(1 << blk_bit_length)];
+	block_v_value = new prime_field::field_element[1 << (blk_bit_length + max_bit_length)];
 }
 
 void prover::delete_self()
@@ -175,8 +175,8 @@ void prover::delete_self()
 		delete[] circuit_value[blk];
 	}
 	delete[] circuit_value;
-	delete[] block_value;
-	delete[] beta_blk;
+	delete[] block_beta_value;
+	delete[] block_v_value;
 }
 
 prover::~prover()
@@ -188,13 +188,13 @@ void prover::sumcheck_phase0_init()
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	
 	int total_blk = 1 << block_binary_length;
-	beta_blk[0] = prime_field::field_element(1);
+	block_beta_value[0] = prime_field::field_element(1);
 	for(int i = 0; i < C.total_blocks_binary_length; ++i)
 	{
 		for(int j = 0; j < (1 << i); ++j)
 		{
-			beta_blk[j | (1 << i)] = beta_blk[j] * r_b_0[i];
-			beta_blk[j] = beta_blk[j] * one_minus_r_0[i];
+			block_beta_value[j | (1 << i)] = block_beta_value[j] * r_b_0[i];
+			block_beta_value[j] = block_beta_value[j] * one_minus_r_0[i];
 		}
 	}
 
@@ -237,27 +237,9 @@ void prover::sumcheck_phase0_init()
 
 	for(int i = 0; i < total_blk; ++i)
 	{
-		block_value[i] = prime_field::field_element(0);
-		for(int j = 0; j < (1 << length_g); ++j)
+		for(int j = 0; j < (1 << length_u); ++j)
 		{
-			int g = j;
-			int u = C.blocks[i].circuit[sumcheck_layer_id].gates[g].u;
-			int v = C.blocks[i].circuit[sumcheck_layer_id].gates[g].v;
-			int ty = C.blocks[i].circuit[sumcheck_layer_id].gates[g].ty;
-			switch(ty)
-			{
-				case 0: //add gate
-					block_value[i] = block_value[i] + beta_blk[i] * beta_g_sum[g] * (circuit_value[i][sumcheck_layer_id - 1][u] + circuit_value[i][sumcheck_layer_id - 1][v]);
-					break;
-				case 1: //mult gate
-					block_value[i] = block_value[i] + beta_blk[i] * beta_g_sum[g] * (circuit_value[i][sumcheck_layer_id - 1][u] * circuit_value[i][sumcheck_layer_id - 1][v]);
-					break;
-				case 2: //dummy gate
-					break;
-				case 3: //input gate
-					assert(false);
-					break;
-			}
+			block_v_value[i << length_u | j] = circuit_value[i][sumcheck_layer_id - 1][j];
 		}
 	}
 	
@@ -267,9 +249,88 @@ void prover::sumcheck_phase0_init()
 	total_time += time_span.count();
 }
 
-quadratic_poly prover::sumcheck_phase0_update(prime_field::field_element previous_random, int current_bit)
+cubic_poly prover::sumcheck_phase0_update(prime_field::field_element previous_random, int current_bit)
 {
+	cubic_poly ret;
+	ret = cubic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	
+	if(current_bit != 0)
+	{
+		//update arrays
+		for(int blk = 0; blk < (1 << (block_binary_length - current_bit)); ++blk)
+		{
+			prime_field::field_element zero_beta_point = block_beta_value[blk << 1 | 0];
+			prime_field::field_element one_beta_point = block_beta_value[blk << 1 | 1];
+			block_beta_value[blk] = (one_beta_point - zero_beta_point) * previous_random + zero_beta_point;
+			for(int u = 0; u < (1 << length_u); ++u)
+			{
+				int blk_zero = blk << 1 | 0, blk_one = blk << 1 | 1;
+				prime_field::field_element zero_point = block_v_value[blk_zero << length_u | u];
+				prime_field::field_element one_point = block_v_value[blk_one << length_u | u];
+				block_v_value[blk << length_u] = (one_point - zero_point) * previous_random + zero_point;
+			}
+		}
+	}
+
+	for(int blk = 0; blk < (1 << (block_binary_length - current_bit - 1)); ++blk)
+	{
+		prime_field::field_element zero_beta_point = block_beta_value[blk << 1 | 0];
+		prime_field::field_element one_beta_point = block_beta_value[blk << 1 | 1];
+		quadratic_poly v_part;
+		linear_poly beta_part;
+		beta_part = linear_poly(one_beta_point - zero_beta_point, zero_beta_point);
+		v_part = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+
+		for(int g = 0; g < (1 << length_g); ++g)
+		{
+			int u = C.blocks[blk].circuit[sumcheck_layer_id].gates[g].u;
+			int v = C.blocks[blk].circuit[sumcheck_layer_id].gates[g].v;
+			int ty = C.blocks[blk].circuit[sumcheck_layer_id].gates[g].ty;
+
+			linear_poly var_u_poly, var_v_poly;
+			prime_field::field_element one_value, zero_value;
+			
+			int blk_one = blk << 1 | 1, blk_zero = blk << 1;
+			
+			one_value = block_v_value[blk_one << length_u | u];
+			zero_value = block_v_value[blk_zero << length_u | u];
+			var_u_poly = linear_poly(one_value - zero_value, zero_value);
+
+			one_value = block_v_value[blk_one << length_u | v];
+			zero_value = block_v_value[blk_zero << length_u | v];
+			var_v_poly = linear_poly(one_value - zero_value, zero_value);
+
+			switch(ty)
+			{
+				case 0:
+					//add gate
+					{
+						linear_poly tmp = var_u_poly + var_v_poly;
+						tmp.a = tmp.a * beta_g_sum[g];
+						tmp.b = tmp.b * beta_g_sum[g];
+						v_part = v_part + quadratic_poly(prime_field::field_element(0), tmp.a, tmp.b);
+					}
+					break;
+				case 1:
+					{
+						quadratic_poly tmp = var_u_poly * var_v_poly;
+						tmp.a = tmp.a * beta_g_sum[g];
+						tmp.b = tmp.b * beta_g_sum[g];
+						tmp.c = tmp.c * beta_g_sum[g];
+						v_part = v_part + tmp;
+					}
+					break;
+				case 2:
+					assert(false);
+					break;
+				case 3:
+					break;
+			}
+		}
+
+		ret = ret + v_part * beta_part;
+	}
+	return ret;
 }
 
 void prover::sumcheck_phase1_init()

@@ -4,27 +4,7 @@
 #include <vector>
 #include "linear_gkr/prime_field.h"
 
-//ax^5 + bx^4 + cx^3 + dx^2 + ex + f
-class quintuple_poly
-{
-public:
-	prime_field::field_element a, b, c, d, e, f;
-	quintuple_poly();
-	quintuple_poly(const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&);
-	quintuple_poly operator + (const quintuple_poly &) const;
-	prime_field::field_element eval(const prime_field::field_element &) const;
-};
-
-//ax^4 + bx^3 + cx^2 + dx + e
-class quadruple_poly
-{
-public:
-	prime_field::field_element a, b, c, d, e;
-	quadruple_poly();
-	quadruple_poly(const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&);
-	quadruple_poly operator + (const quadruple_poly &) const;
-	prime_field::field_element eval(const prime_field::field_element &) const;
-};
+class linear_poly;
 
 //ax^3 + bx^2 + cx + d
 class cubic_poly
@@ -36,6 +16,7 @@ public:
 	cubic_poly operator + (const cubic_poly &) const;
 	prime_field::field_element eval(const prime_field::field_element &) const;
 };
+
 //ax^2 + bx + c
 class quadratic_poly
 {
@@ -44,8 +25,10 @@ public:
 	quadratic_poly();
 	quadratic_poly(const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&);
 	quadratic_poly operator + (const quadratic_poly &) const;
+	cubic_poly operator * (const linear_poly &) const;
 	prime_field::field_element eval(const prime_field::field_element &) const;
 };
+
 
 //ax + b
 class linear_poly
@@ -60,5 +43,28 @@ public:
 	prime_field::field_element eval(const prime_field::field_element &) const;
 };
 
+
+
+//ax^4 + bx^3 + cx^2 + dx + e
+class quadruple_poly
+{
+public:
+	prime_field::field_element a, b, c, d, e;
+	quadruple_poly();
+	quadruple_poly(const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&);
+	quadruple_poly operator + (const quadruple_poly &) const;
+	prime_field::field_element eval(const prime_field::field_element &) const;
+};
+
+//ax^5 + bx^4 + cx^3 + dx^2 + ex + f
+class quintuple_poly
+{
+public:
+	prime_field::field_element a, b, c, d, e, f;
+	quintuple_poly();
+	quintuple_poly(const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&, const prime_field::field_element&);
+	quintuple_poly operator + (const quintuple_poly &) const;
+	prime_field::field_element eval(const prime_field::field_element &) const;
+};
 
 #endif
