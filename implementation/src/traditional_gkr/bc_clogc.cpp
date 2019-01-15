@@ -23,6 +23,8 @@ void run_verifications()
 		v.read_circuit_from_string(inputs[i], i);
 	}
 	p.get_circuit(v.C);
+	final_result &= v.verify();
+	total_time = p.total_time;
 	if(final_result)
 	{
 		printf("Verification Pass, total time %f\n", (float)total_time);
@@ -31,8 +33,6 @@ void run_verifications()
 	{
 		printf("Verification Fail.\n");
 	}
-	delete[] p;
-	delete[] v;
 }
 
 void redistribute_circuit(const char *path)

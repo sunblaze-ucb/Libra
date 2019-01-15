@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 				int id = (i * block_size) + j;
 				int nxta = (i * block_size * 2) + j * 2;
 				int nxtb = (i * block_size * 2) + j * 2 + 1;
-				str_length += printf("%d %d %d %d\n", 1, id, nxta, nxtb);
+				str_length += printf("%d %d %d %d ", 1, id, nxta, nxtb);
 			}
 		}
 		str_length += printf("\n");

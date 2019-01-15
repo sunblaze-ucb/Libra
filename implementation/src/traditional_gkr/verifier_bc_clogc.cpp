@@ -76,7 +76,7 @@ void verifier::read_circuit_from_string(char* file, int block_id)
 		{
 			C.blocks[block_id].circuit[i].bit_length = cnt - 1;
 		}
-		fprintf(stderr, "layer %d, bit_length %d\n", i, C.blocks[block_id].circuit[i].bit_length);
+	//	fprintf(stderr, "layer %d, bit_length %d\n", i, C.blocks[block_id].circuit[i].bit_length);
 		if(C.blocks[block_id].circuit[i].bit_length > max_bit_length)
 			max_bit_length = C.blocks[block_id].circuit[i].bit_length;
 	}
@@ -183,22 +183,23 @@ prime_field::field_element verifier::V_in(const prime_field::field_element* r_b,
 	//output are arranged in blocks
 	for(int i = 0; i < output_size; ++i)
 		output[i] = output_raw[i];
+
 	for(int i = 0; i < r_g_size; ++i)
 	{
-		int last_gate;
 		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
 			output[j] = output[j << 1] * (one_minus_r_g[i]) + output[j << 1 | 1] * (r_g[i]);
 		output_size >>= 1;
 	}
+	
 	for(int i = 0; i < r_b_size; ++i)
 	{
-		int last_gate;
 		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
-			output[j] = output[j << 1] * one_minus_r_b[i] * output[j << 1 | 1] * r_b[i];
+			output[j] = output[j << 1] * one_minus_r_b[i] + output[j << 1 | 1] * r_b[i];
 		output_size >>= 1;
 	}
+
 	auto ret = output[0];
 	ret.value = ret.value % prime_field::mod;
 	delete[] output;
@@ -224,9 +225,9 @@ bool verifier::verify()
 	beta.value = 0;
 	random_oracle oracle;
 	//initial random value
-	prime_field::field_element *r_0 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length), 
-							   *r_1 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
+	prime_field::field_element *r_0 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
 	prime_field::field_element *r_b_0 = generate_randomness(C.total_blocks_binary_length);
+	prime_field::field_element *r_1 = generate_randomness(C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length);
 	prime_field::field_element *one_minus_r_0, *one_minus_r_1, *one_minus_r_b_0;
 	one_minus_r_0 = new prime_field::field_element[C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length];
 	one_minus_r_1 = new prime_field::field_element[C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length];
@@ -244,7 +245,7 @@ bool verifier::verify()
 	
 	std::chrono::high_resolution_clock::time_point t_a = std::chrono::high_resolution_clock::now();
 	std::cerr << "Calc V_output(r)" << std::endl;
-	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, one_minus_r_b_0, r_b_0, result, C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length, C.total_blocks_binary_length, (1 << (C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length)));
+	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, one_minus_r_b_0, r_b_0, result, C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length, C.total_blocks_binary_length, (1 << (C.blocks[0].circuit[C.blocks[0].total_depth - 1].bit_length + C.total_blocks_binary_length)));
 	delete[] result;
 	std::chrono::high_resolution_clock::time_point t_b = std::chrono::high_resolution_clock::now();
 
@@ -261,7 +262,10 @@ bool verifier::verify()
 		p -> sumcheck_init(i, C.total_blocks_binary_length, C.blocks[0].circuit[i].bit_length, C.blocks[0].circuit[i - 1].bit_length, C.blocks[0].circuit[i - 1].bit_length, alpha, beta, r_b_0, r_0, r_1, one_minus_r_b_0, one_minus_r_0, one_minus_r_1);
 		std::cerr << "Bound blk index start" << std::endl;
 		prime_field::field_element previous_random = prime_field::field_element(0);
+		//next level random
+		auto r_u = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
 		auto r_b = generate_randomness(C.total_blocks_binary_length);
+		auto r_v = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
 		prime_field::field_element *one_minus_r_b;
 		one_minus_r_b = new prime_field::field_element[C.total_blocks_binary_length];
 		for(int j = 0; j < C.total_blocks_binary_length; ++j)
@@ -272,6 +276,7 @@ bool verifier::verify()
 		{
 			cubic_poly poly = p -> sumcheck_phase0_update(previous_random, j);
 			previous_random = r_b[j];
+			auto tmp = poly.eval(0) + poly.eval(1);
 			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 			{
 				fprintf(stderr, "Verification fail, phase0, circuit %d, current bit %d\n", i, j);
@@ -285,10 +290,7 @@ bool verifier::verify()
 		}
 
 		std::cerr << "Bound u start" << std::endl;
-		p -> sumcheck_phase1_init();
-		//next level random
-		auto r_u = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
-		auto r_v = generate_randomness(C.blocks[0].circuit[i - 1].bit_length);
+		p -> sumcheck_phase1_init(previous_random);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
 		one_minus_r_u = new prime_field::field_element[C.blocks[0].circuit[i - 1].bit_length];
 		one_minus_r_v = new prime_field::field_element[C.blocks[0].circuit[i - 1].bit_length];
@@ -324,7 +326,7 @@ bool verifier::verify()
 		
 		std::cerr << "Bound v start" << std::endl;
 		t0 = std::chrono::high_resolution_clock::now();
-		p -> sumcheck_phase2_init(previous_random, r_u, one_minus_r_u);
+		p -> sumcheck_phase2_init(previous_random);
 		previous_random = prime_field::field_element(0);
 		for(int j = 0; j < C.blocks[0].circuit[i - 1].bit_length; ++j)
 		{
@@ -360,7 +362,7 @@ bool verifier::verify()
 //		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
 //		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
 
-		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v)
+		if(alpha_beta_sum != p -> beta_blk_val * (add_value * (v_u + v_v) + mult_value * v_u * v_v))
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
@@ -409,15 +411,15 @@ bool verifier::verify()
 				assert(false);
 		}
 	}
-	auto input_0 = V_in(r_b_0, one_minus_r_b_0, r_0, one_minus_r_0, input, C.total_blocks_binary_length, C.blocks[0].circuit[0].bit_length, (1 << C.blocks[0].circuit[0].bit_length)), 
-		 input_1 = V_in(r_b_0, one_minus_r_b_0, r_1, one_minus_r_1, input, C.total_blocks_binary_length, C.blocks[0].circuit[0].bit_length, (1 << C.blocks[0].circuit[0].bit_length));
+	auto input_0 = V_in(r_b_0, one_minus_r_b_0, r_0, one_minus_r_0, input, C.total_blocks_binary_length, C.blocks[0].circuit[0].bit_length, (1 << (C.blocks[0].circuit[0].bit_length + C.total_blocks_binary_length))), 
+		 input_1 = V_in(r_b_0, one_minus_r_b_0, r_1, one_minus_r_1, input, C.total_blocks_binary_length, C.blocks[0].circuit[0].bit_length, (1 << (C.blocks[0].circuit[0].bit_length + C.total_blocks_binary_length)));
 
 	delete[] input;
 	delete[] r_0;
 	delete[] r_1;
 	delete[] one_minus_r_0;
 	delete[] one_minus_r_1;
-	if(alpha_beta_sum != input_0 * alpha + input_1 * beta)
+	if(alpha_beta_sum != (input_0 * alpha + input_1 * beta))
 	{
 		fprintf(stderr, "Verification fail, final input check fail.\n");
 		return false;

@@ -62,6 +62,6 @@ public:
 		blocks = NULL;
 		total_blocks = 0;
 	}
-}
+};
 
 #endif

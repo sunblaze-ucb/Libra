@@ -27,6 +27,8 @@ public:
 	prime_field::field_element *beta_g_r0_fhalf, *beta_g_r0_shalf, *beta_g_r1_fhalf, *beta_g_r1_shalf, *beta_u_fhalf, *beta_u_shalf;
 	prime_field::field_element *beta_g_sum;
 	prime_field::field_element *block_beta_value, *block_v_value;
+	prime_field::field_element *V_mult_add_copy;
+	prime_field::field_element beta_blk_val;
 	double total_time;
 	void init_array(int, int blk_bit_length);
 	void get_circuit(const blocked_circuit &from_verifier);
@@ -36,8 +38,8 @@ public:
 		const prime_field::field_element &, const prime_field::field_element*, const prime_field::field_element*,
 		const prime_field::field_element*, prime_field::field_element*, prime_field::field_element*, prime_field::field_element*);
 	void sumcheck_phase0_init();
-	void sumcheck_phase1_init();
-	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
+	void sumcheck_phase1_init(prime_field::field_element);
+	void sumcheck_phase2_init(prime_field::field_element);
 	cubic_poly sumcheck_phase0_update(prime_field::field_element, int);
 	quadratic_poly sumcheck_phase1_update(prime_field::field_element, int);
 	quadratic_poly sumcheck_phase2_update(prime_field::field_element, int);
@@ -46,7 +48,6 @@ public:
 	void delete_self();
 	prover()
 	{
-		memset(circuit_value, 0, sizeof circuit_value);
 	}
 	~prover();
 };

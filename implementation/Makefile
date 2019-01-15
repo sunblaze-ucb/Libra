@@ -14,6 +14,16 @@ linear_gkr_zk: src/linear_gkr/main_zk.cpp
 	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/linear_gkr/zk_verifier.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/zk_prover.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_zk.cpp -o bin/main_zk -O2 -lgmp -lgmpxx
 clean:
 	rm bin/main
+
+
+clogc: src/traditional_gkr/ClogC.cpp
+	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/ClogC.cpp -g -o bin/main_clogc
+bclogc: src/traditional_gkr/bclogc.cpp
+	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bclogc.cpp -o bin/main_bclogc $(OPT)
+
+bc_clogc:
+	$(CC) $(CFLAGS) -I $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_bc_clogc.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_bc_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bc_clogc.cpp -g -o bin/main_bc_clogc
+
 #linear_gkr_zk: 
 #	$(CC) $(CFLAGS) $(CDBG_FLAGS) -I $(INCLUDE) -std=c++11 -pg src/linear_gkr/zk_verifier.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/zk_prover.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_zk.cpp -o bin/main -lgmp -lgmpxx
 	
