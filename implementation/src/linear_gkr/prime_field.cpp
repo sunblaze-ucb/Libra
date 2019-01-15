@@ -81,7 +81,23 @@ namespace prime_field
 				 (__uint128_t)mid * (__uint128_t)x.mid + (((__uint128_t)mid * (__uint128_t)x.hi + (__uint128_t)hi * (__uint128_t)x.mid) << 64) + carry2;
 		return ret;
 	}
-	
+	/*
+	inline u256b u256b::operator << (const int &x) const{
+		u256b ret;
+		for(int i = 0; i < x; i++)
+			ret << 1;
+		ret = ret % prime_field::mod;
+		return ret;
+	}
+
+	inline u256b u256b::operator >> (const int &x) const{
+		u256b ret;
+		for(int i = 0; i < x; i++)
+			ret >> 1;
+		ret = ret % prime_field::mod;
+		return ret;
+	}
+	*/
 	inline u256b u256b::left_128()
 	{
 		u256b ret;

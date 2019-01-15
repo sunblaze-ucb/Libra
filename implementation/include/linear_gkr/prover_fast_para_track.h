@@ -60,4 +60,5 @@ public:
 void phase1_init_func(prover *p, int);
 void phase1_update_func(prover *p, int, int, int , prime_field::field_element);
 void phase1_update_write(prover *p, int id, int total_uv);
+
 #endif

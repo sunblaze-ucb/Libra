@@ -38,8 +38,11 @@ public:
 	void sumcheck_phase1_init();
 	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
 	quadratic_poly sumcheck_phase1_update(prime_field::field_element, int);
+	quintuple_poly sumcheck_phase1_updatelastbit(prime_field::field_element, int);
 	quadratic_poly sumcheck_phase2_update(prime_field::field_element, int);
-	quadratic_poly sumcheck_finalround(prime_field::field_element, int);
+	quintuple_poly sumcheck_phase2_updatelastbit(prime_field::field_element, int);
+
+	quadratic_poly sumcheck_finalround(prime_field::field_element, int, prime_field::field_element);
 	prime_field::field_element V_res(const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, int, int);
 	std::pair<prime_field::field_element, prime_field::field_element> sumcheck_finalize(prime_field::field_element);
 	void delete_self();
@@ -58,17 +61,21 @@ public:
 	prime_field::field_element maskpoly_sumr;
 	void generate_maskpoly(int, int);
 
-	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*);
+	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*, prime_field::field_element);
+	prime_field::field_element queryRg1(prime_field::field_element);
+	prime_field::field_element queryRg2(prime_field::field_element);
 
 	prime_field::field_element premaskR[9], maskR[9];
-	prime_field::field_element maskR_sumcu, maskR_sumcv;
-	quadratic_poly summaskR;
+	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
+	quadratic_poly summaskR, Rg1, Rg2, sumRc;
 	void generate_maskR();
 
-	prime_field::field_element Zu, Zv, preu1, prev1;
+	//prime_field::field_element preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
 
 	void sumcheck_maskpoly_init();
 	//prime_field::field_element *maskpoly_partialsum;
+	//prime_field::field_element inv_2 = from_string("8399054365507916142470402071115866954879789801702376374514189432082785107975");
+
 };
 
 #endif

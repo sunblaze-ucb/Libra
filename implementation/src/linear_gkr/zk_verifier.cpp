@@ -662,6 +662,7 @@ bool zk_verifier::verify()
 		//next level random
 		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
 		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
+		auto r_c = generate_randomness(1);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
 		one_minus_r_u = new prime_field::field_element[C.circuit[i - 1].bit_length];
 		one_minus_r_v = new prime_field::field_element[C.circuit[i - 1].bit_length];
@@ -675,24 +676,45 @@ bool zk_verifier::verify()
 		//std::cout << "get into " << std::endl;
 
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
-		{
-			quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
-			previous_random = r_u[j];
-
-			//std::cout << "poly.eval(0) = " << poly.eval(0).value << " " << "poly.eval(1) = " << poly.eval(1).value << " " << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
+		{	
+			if(j == C.circuit[i - 1].bit_length - 1){
+				quintuple_poly poly = p->sumcheck_phase1_updatelastbit(previous_random, j);
+				previous_random = r_u[j];
 			
 
-			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
-			{ 
-				std::cout << "round j = " << j << std::endl;
-				fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
-				return false;
+				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+				{ 
+					std::cout << "round j = " << j << std::endl;
+					fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
+					return false;
+				}
+				else
+				{
+				//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+				}
+				alpha_beta_sum = poly.eval(r_u[j]);
 			}
-			else
-			{
-			//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+
+			else{
+				quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
+		
+				previous_random = r_u[j];
+
+				//std::cout << "poly.eval(0) = " << poly.eval(0).value << " " << "poly.eval(1) = " << poly.eval(1).value << " " << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
+			
+
+				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+				{ 
+					std::cout << "round j = " << j << std::endl;
+					fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
+					return false;
+				}
+				else
+				{
+				//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+				}
+				alpha_beta_sum = poly.eval(r_u[j]);
 			}
-			alpha_beta_sum = poly.eval(r_u[j]);
 		}
 		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -705,18 +727,36 @@ bool zk_verifier::verify()
 		previous_random = prime_field::field_element(0);
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{
-			quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
-			previous_random = r_v[j];
-			if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
-			{
-				fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d\n", i, j);
-				return false;
+			if(j == C.circuit[i - 1].bit_length - 1){
+				quintuple_poly poly = p -> sumcheck_phase2_updatelastbit(previous_random, j);
+				previous_random = r_v[j];
+				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+				{
+					fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d\n", i, j);
+					return false;
+				}
+				else
+				{
+				//	fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
+				}
+				alpha_beta_sum = poly.eval(r_v[j]);
 			}
 			else
 			{
+				quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
+			
+				previous_random = r_v[j];
+				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+				{
+					fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d\n", i, j);
+					return false;
+				}
+				else
+				{
 			//	fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
+				}
+				alpha_beta_sum = poly.eval(r_v[j]);
 			}
-			alpha_beta_sum = poly.eval(r_v[j]);
 		}
 		//Add one more round for maskR
 		//quadratic_poly poly p->sumcheck_finalroundR(previous_random, C.current[i - 1].bit_length);
@@ -738,11 +778,22 @@ bool zk_verifier::verify()
 		auto add_value = add(i);
 //		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
 //		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
-		//quadratic_poly poly p->sumcheck_finalroundR(previous_random, C.current[i - 1].bit_length, mult_value, add_value, v_u, v_v);
+		previous_random = r_c[0];
+		quadratic_poly poly = p->sumcheck_finalround(previous_random, (C.circuit[i - 1].bit_length << 1) + 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
 
-		prime_field::field_element maskpoly_value = p->query(r_u, r_v);
+		if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+		{
+			fprintf(stderr, "Verification fail, phase2, lastbit for c\n");
+			return false;
+		}
 
-		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v + maskpoly_value)
+		alpha_beta_sum = poly.eval(r_c[0]);
+
+		prime_field::field_element maskpoly_value = p->query(r_u, r_v, r_c[0]);
+		prime_field::field_element maskRg1_value = p->queryRg1(r_c[0]);
+		prime_field::field_element maskRg2_value = p->queryRg2(r_c[0]);
+
+		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + maskRg1_value + maskRg2_value + maskpoly_value)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;

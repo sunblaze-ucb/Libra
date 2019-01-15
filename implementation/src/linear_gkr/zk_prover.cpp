@@ -578,7 +578,20 @@ void zk_prover::proof_init()
 }
 */
 #include "linear_gkr/zk_prover.h"
-
+#include <iostream>
+#include <cstring>
+prime_field::field_element from_string(const char* str)
+{
+	prime_field::field_element ret = prime_field::field_element(0);
+	int len = strlen(str);
+	for(int i = 0; i < len; ++i)
+	{
+		int digit = str[i] - '0';
+		ret = ret * prime_field::field_element(10) + prime_field::field_element(digit);
+	}
+	return ret;
+}
+prime_field::field_element inv_2 = from_string("8399054365507916142470402071115866954879789801702376374514189432082785107975");
 void zk_prover::get_circuit(const layered_circuit &from_verifier)
 {
 	C = from_verifier;
@@ -688,22 +701,38 @@ void zk_prover::generate_maskpoly(int length, int degree){
 	maskpoly_sumr = prime_field::field_element(0);
 }
 //new zk function
+//a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c + a6g1^2c + a7g1c^2 + a8g1^2c^2;
 void zk_prover::generate_maskR(){
-	for(int i = 0; i < 9; i++)
-		premaskR[i] = maskR[i];
-	summaskR.a.value = (2 * maskR[2].value + maskR[6].value + maskR[8].value) % prime_field::mod;
-	summaskR.b.value = (2 * maskR[1].value + maskR[5].value + maskR[7].value) % prime_field::mod;
-	summaskR.c.value = (2 * maskR[0].value + maskR[3].value + maskR[4].value) % prime_field::mod;
+	summaskR.a = maskR[2] + maskR[2] + maskR[6] + maskR[8];
+	summaskR.b = maskR[1] + maskR[1] + maskR[5] + maskR[7];
+	summaskR.c = maskR[0] + maskR[0] + maskR[3] + maskR[4];
 	maskR_sumcu = Zu * summaskR.eval(preu1);
 	maskR_sumcu.value = (maskR_sumcu.value * alpha.value) % prime_field::mod;
 	maskR_sumcv = Zv * summaskR.eval(prev1); 
 	maskR_sumcv.value = (maskR_sumcv.value * beta.value) % prime_field::mod;
+	preZu = Zu;
+	preZv = Zv;
+	Zu = prime_field::field_element(1);
+	Zv = prime_field::field_element(1);
+	Iuv = prime_field::field_element(1);
+	Rg1.a = maskR[4] + maskR[7] * preu1 + maskR[8] * preu1 * preu1;
+	Rg1.b = maskR[3] + maskR[5] * preu1 + maskR[6] * preu1 + preu1;
+	Rg1.c = maskR[0] + maskR[1] * preu1 + maskR[2] * preu1 * preu1;
+
+	Rg2.a = maskR[4] + maskR[7] * prev1 + maskR[8] * prev1 * prev1;
+	Rg2.b = maskR[3] + maskR[5] * prev1 + maskR[6] * prev1 + prev1;
+	Rg2.c = maskR[0] + maskR[1] * prev1 + maskR[2] * prev1 * prev1;
 
 	for(int i = 0; i < 9; i++)
+		premaskR[i] = maskR[i];
+	for(int i = 0; i < 9; i++)
 		maskR[i] = prime_field::random(); 
+	sumRc.a = maskR[2] + maskR[2] + maskR[6] + maskR[8];
+	sumRc.b = maskR[1] + maskR[1] + maskR[5] + maskR[7];
+	sumRc.c = maskR[0] + maskR[0] + maskR[3] + maskR[4];
 }
 
-prime_field::field_element zk_prover::query(prime_field::field_element *u, prime_field::field_element *v){
+prime_field::field_element zk_prover::query(prime_field::field_element *u, prime_field::field_element *v, prime_field::field_element r_c){
 	//std::cout << "u[1].value = " << u[1].value << std::endl;
 	prime_field::field_element result;
 	//std::cout << "length_u = " << length_u << "length_v = " << length_v << std::endl; 
@@ -712,16 +741,24 @@ prime_field::field_element zk_prover::query(prime_field::field_element *u, prime
 	if(result.value > prime_field::mod) std::cout << "overflow!!!" << std::endl;
 	for(int i = 0; i < length_v; i++)
 		result = result + maskpoly[2*(i + length_u)] * v[i] * v[i] + maskpoly[2 * (i + length_u) + 1] * v[i];
-	if(result.value > prime_field::mod) std::cout << "overflow!!!" << std::endl;
+	//if(result.value > prime_field::mod) std::cout << "overflow!!!" << std::endl;
 	//std::cout << "maskpoly[2 * (length_u + length_v)] = " <<  maskpoly[2 * (length_u + length_v)].value << std::endl;
-	if(maskpoly[2 * (length_u + length_v)].value > prime_field::mod)
-		std::cout << "maskpoly[2 * (length_u + length_v)] = " <<  maskpoly[2 * (length_u + length_v)].value << std::endl;
-
+	//if(maskpoly[2 * (length_u + length_v)].value > prime_field::mod)
+	//	std::cout << "maskpoly[2 * (length_u + length_v)] = " <<  maskpoly[2 * (length_u + length_v)].value << std::endl;
+	result = result + maskpoly[2 * (length_u + length_v)] * r_c * r_c + maskpoly[2 * (length_u + length_v) + 1] * r_c;
 	result = result + maskpoly[2 * (length_u + length_v)];
-	if(result.value > prime_field::mod) std::cout << "here overflow!!!" << result.value << std::endl;
+	//if(result.value > prime_field::mod) std::cout << "here overflow!!!" << result.value << std::endl;
 
 	return result;
 }	
+
+prime_field::field_element zk_prover::queryRg1(prime_field::field_element r_c){
+	return Iuv * preZu * Rg1.eval(r_c) * alpha;
+}
+
+prime_field::field_element zk_prover::queryRg2(prime_field::field_element r_c){
+	return Iuv * preZv * Rg2.eval(r_c) * beta;	
+}
 
 //new zk function
 void zk_prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, 
@@ -923,10 +960,14 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 	total_uv >>= 1;
 
 	//compute with maskpolyR
-	
+	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+
 	std::cout << "current_bit = " << current_bit << std::endl;
-	if(current_bit == 1) preu1 = previous_random;
+	std::cout << "total_uv = " << total_uv << std::endl;
+
+	//if(current_bit == 1) preu1 = previous_random;
 	//prime_field::field_element tmp5, tmp6;
+	Iuv = Iuv * (prime_field::field_element(1) - previous_random);
 	if(current_bit > 0){
 		maskR_sumcu = maskR_sumcu * (prime_field::field_element(1) - previous_random);
 		Zu = Zu * (prime_field::field_element(1) - previous_random) * previous_random;
@@ -937,14 +978,22 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 	ret.b.value = (ret.b.value - maskR_sumcu.value) % prime_field::mod;
 	ret.c.value = (ret.c.value + maskR_sumcu.value) % prime_field::mod;
 	
-	//compute with sumcheck maskpoly
+	//compute with sumcheck maskpol
+	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	
+
 	prime_field::field_element tmp1, tmp2;
 	tmp1.value = maskpoly[current_bit << 1].value;
 	tmp2.value = maskpoly[(current_bit << 1) + 1].value;
-	tmp1.value = tmp1.value << (length_u + length_v - current_bit - 1);
-	tmp2.value = tmp2.value << (length_u + length_v - current_bit - 1);
-	maskpoly_sumc.value = (maskpoly_sumc.value - tmp1.value - tmp2.value) / 2;
+
+	for(int i = 0; i < length_u + length_v - current_bit - 1; i++){
+		tmp1 = tmp1 + tmp1;
+		tmp2 = tmp2 + tmp2;
+	}
+
+	//tmp1.value = tmp1.value << (length_u + length_v - current_bit - 1);
+	//tmp2.value = tmp2.value << (length_u + length_v - current_bit - 1);
+	maskpoly_sumc = (maskpoly_sumc - tmp1 - tmp2) * inv_2;
 
 	prime_field::field_element tmp3;
 	if(current_bit > 0){
@@ -958,8 +1007,7 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 	ret.b.value = (ret.b.value + tmp2.value)% prime_field::mod;
 	ret.c.value = (ret.c.value + maskpoly_sumc.value + tmp3.value)% prime_field::mod;
 
-	
-	
+
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
@@ -967,14 +1015,137 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 	return ret;
 }
 
+quintuple_poly zk_prover::sumcheck_phase1_updatelastbit(prime_field::field_element previous_random, int current_bit)
+{	
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+	quintuple_poly ret = quintuple_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+	for(int i = 0; i < (total_uv >> 1); ++i)
+	{
+		prime_field::field_element zero_value, one_value;
+		int g_zero = i << 1, g_one = i << 1 | 1;
+		if(current_bit == 0)
+		{
+			V_mult_add[i].b = V_mult_add[g_zero].b;
+			V_mult_add[i].a = V_mult_add[g_one].b - V_mult_add[i].b;
+
+			addV_array[i].b = addV_array[g_zero].b;
+			addV_array[i].a = addV_array[g_one].b - addV_array[i].b;
+
+			add_mult_sum[i].b = add_mult_sum[g_zero].b;
+			add_mult_sum[i].a = add_mult_sum[g_one].b - add_mult_sum[i].b;
+
+		}
+		else
+		{
+			V_mult_add[i].b.value = (V_mult_add[g_zero].a.value * previous_random.value + V_mult_add[g_zero].b.value) % prime_field::mod;
+			V_mult_add[i].a.value = (V_mult_add[g_one].a.value * previous_random.value + V_mult_add[g_one].b.value - V_mult_add[i].b.value + prime_field::mod) % prime_field::mod;
+
+			addV_array[i].b.value = (addV_array[g_zero].a.value * previous_random.value + addV_array[g_zero].b.value) % prime_field::mod;
+			addV_array[i].a.value = (addV_array[g_one].a.value * previous_random.value + addV_array[g_one].b.value - addV_array[i].b.value + prime_field::mod) % prime_field::mod;
+
+			add_mult_sum[i].b.value = (add_mult_sum[g_zero].a.value * previous_random.value + add_mult_sum[g_zero].b.value) % prime_field::mod;
+			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
+
+		}
+		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		{
+			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
+									  + addV_array[i].a.value) % prime_field::mod;
+			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									  + addV_array[i].b.value) % prime_field::mod;
+		}
+		else
+		{
+			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
+			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
+									  + addV_array[i].a.value);
+			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									  + addV_array[i].b.value);
+		}
+	}
+
+	total_uv >>= 1;
+
+	//compute with maskpolyR
+	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+
+	std::cout << "current_bit = " << current_bit << std::endl;
+	std::cout << "total_uv = " << total_uv << std::endl;
+
+	//if(current_bit == 1) preu1 = previous_random;
+	//prime_field::field_element tmp5, tmp6;
+	Iuv = Iuv * (prime_field::field_element(1) - previous_random);
+	if(current_bit > 0){
+		maskR_sumcu = maskR_sumcu * (prime_field::field_element(1) - previous_random);
+		Zu = Zu * (prime_field::field_element(1) - previous_random) * previous_random;
+	}
+	//std::cout << "maskR_sumcu = " << maskR_sumcu.value << std::endl;
+	//std::cout << "maskR_sumcv = " << maskR_sumcv.value << std::endl;
+
+	ret.b.value = (ret.b.value - maskR_sumcu.value) % prime_field::mod;
+	ret.c.value = (ret.c.value + maskR_sumcu.value) % prime_field::mod;
+	
+	//compute with sumcheck maskpol
+	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+	if(current_bit == length_u - 1){
+		//(du + e)u(1 - u)(au^2 + bu + c) 
+		//(-du^3 + (d - e)u^2 + eu)(au^2 + bu + c)
+		//-adu^5 + (a * (d - e) - db)u^4 + (ae + b(d-e) -cd)u^3 + (c(d - e) + be)u^2 + ceu
+		prime_field::field_element a = sumRc.a;
+		prime_field::field_element b = sumRc.b;
+		prime_field::field_element c = sumRc.c;
+		prime_field::field_element d = add_mult_sum[0].a;
+		prime_field::field_element e = add_mult_sum[0].b;
+		//d: coeff of x^5; e coeff of x^4; f coeff of x^3
+		ret.d = (prime_field::field_element(0) - a) * d * Zu;
+		ret.e = (a * (d - e) - b * d) * Zu;
+		ret.f = (a * e + b * (d - e) - c * d) * Zu;
+		ret.a = ret.a + (c * (d - e) + b * e) * Zu;  
+		ret.b = ret.b + c * e * Zu;
+	}
+
+	prime_field::field_element tmp1, tmp2;
+	tmp1.value = maskpoly[current_bit << 1].value;
+	tmp2.value = maskpoly[(current_bit << 1) + 1].value;
+	for(int i = 0; i < length_u + length_v - current_bit - 1; i++){
+		tmp1 = tmp1 + tmp1;
+		tmp2 = tmp2 + tmp2;
+	}
+	//tmp1.value = tmp1.value << (length_u + length_v - current_bit - 1);
+	//tmp2.value = tmp2.value << (length_u + length_v - current_bit - 1);
+	maskpoly_sumc = (maskpoly_sumc - tmp1 - tmp2) * inv_2;
+
+	prime_field::field_element tmp3;
+	if(current_bit > 0){
+		maskpoly_sumr = maskpoly_sumr + maskpoly[(current_bit << 1) - 2] * previous_random * previous_random + maskpoly[(current_bit << 1) - 1] * previous_random; 
+		tmp3 = maskpoly_sumr;
+		for(int i = 0; i < length_u + length_v - current_bit - 1; i++)
+			tmp3 = tmp3 + tmp3;
+	}
+
+	ret.a.value = (ret.a.value + tmp1.value)% prime_field::mod;
+	ret.b.value = (ret.b.value + tmp2.value)% prime_field::mod;
+	ret.c.value = (ret.c.value + maskpoly_sumc.value + tmp3.value)% prime_field::mod;
+
+	quintuple_poly ret5(ret.d, ret.e, ret.f, ret.a, ret.b, ret.c);
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	total_time += time_span.count();
+	return ret5;
+}
 
 void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random, const prime_field::field_element* r_u, const prime_field::field_element* one_minus_r_u)
 {
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+	preu1 = previous_random;
+	maskR_sumcu = maskR_sumcu * (prime_field::field_element(1) - previous_random);
+	Iuv = Iuv * (prime_field::field_element(1) - previous_random);
 	v_u = V_mult_add[0].eval(previous_random);
 	//update v_u to \dot(v_u);
 	Zu = Zu * (prime_field::field_element(1) - previous_random) * previous_random; 
-	v_u = v_u + Zu;
+	v_u = v_u + Zu * sumRc.eval(previous_random);
 //	fprintf(stderr, "v_u %s\n", v_u.to_string(10).c_str());
 
 	int first_half = length_u >> 1, second_half = length_u - first_half;
@@ -1136,23 +1307,30 @@ quadratic_poly zk_prover::sumcheck_phase2_update(prime_field::field_element prev
 	total_uv >>= 1;
 	//maskR
 	std::cout << "current_bit = " << current_bit << std::endl;
-	if(current_bit == 1) preu1 = previous_random;
+	//if(current_bit == 1) preu1 = previous_random;
 	//prime_field::field_element tmp5, tmp6;
 	if(current_bit > 0){
+		Iuv = Iuv * (prime_field::field_element(1) - previous_random);
 		maskR_sumcv = maskR_sumcv * (prime_field::field_element(1) - previous_random);
 		Zv = Zv * (prime_field::field_element(1) - previous_random) * previous_random;
 	}
 	ret.b.value = (ret.b.value - maskR_sumcv.value) % prime_field::mod;
 	ret.c.value = (ret.c.value + maskR_sumcv.value) % prime_field::mod;
+
+
 	//mask sumcheck
 	int current = current_bit + length_u;
 
 	prime_field::field_element tmp1, tmp2;
 	tmp1.value = maskpoly[current << 1].value;
 	tmp2.value = maskpoly[(current << 1) + 1].value;
-	tmp1.value = tmp1.value << (length_u + length_v - current - 1);
-	tmp2.value = tmp2.value << (length_u + length_v - current - 1);
-	maskpoly_sumc.value = (maskpoly_sumc.value - tmp1.value - tmp2.value) / 2;
+	for(int i = 0; i < length_u + length_v - current_bit - 1; i++){
+		tmp1 = tmp1 + tmp1;
+		tmp2 = tmp2 + tmp2;
+	}
+	//tmp1.value = tmp1.value << (length_u + length_v - current - 1);
+	//tmp2.value = tmp2.value << (length_u + length_v - current - 1);
+	maskpoly_sumc = (maskpoly_sumc - tmp1 - tmp2) * inv_2;
 
 	prime_field::field_element tmp3;
 	maskpoly_sumr = maskpoly_sumr + maskpoly[(current << 1) - 2] * previous_random * previous_random + maskpoly[(current << 1) - 1] * previous_random; 
@@ -1171,17 +1349,151 @@ quadratic_poly zk_prover::sumcheck_phase2_update(prime_field::field_element prev
 	return ret;
 }
 
-quadratic_poly sumcheck_finalround(prime_field::field_element previous_random, int final_bit){
+quintuple_poly zk_prover::sumcheck_phase2_updatelastbit(prime_field::field_element previous_random, int current_bit)
+{
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
+	quintuple_poly ret = quintuple_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
+	for(int i = 0; i < (total_uv >> 1); ++i)
+	{
+		int g_zero = i << 1, g_one = i << 1 | 1;
+		if(current_bit == 0)
+		{
+			V_mult_add[i].b = V_mult_add[g_zero].b;
+			V_mult_add[i].a = V_mult_add[g_one].b - V_mult_add[i].b;
+
+			addV_array[i].b = addV_array[g_zero].b;
+			addV_array[i].a = addV_array[g_one].b - addV_array[i].b;
+
+			add_mult_sum[i].b = add_mult_sum[g_zero].b;
+			add_mult_sum[i].a = add_mult_sum[g_one].b - add_mult_sum[i].b;
+		}
+		else
+		{
+			
+			V_mult_add[i].b.value = (V_mult_add[g_zero].a.value * previous_random.value + V_mult_add[g_zero].b.value) % prime_field::mod;
+			V_mult_add[i].a.value = (V_mult_add[g_one].a.value * previous_random.value + V_mult_add[g_one].b.value - V_mult_add[i].b.value) % prime_field::mod;
+
+			addV_array[i].b.value = (addV_array[g_zero].a.value * previous_random.value + addV_array[g_zero].b.value) % prime_field::mod;
+			addV_array[i].a.value = (addV_array[g_one].a.value * previous_random.value + addV_array[g_one].b.value - addV_array[i].b.value) % prime_field::mod;
+
+			add_mult_sum[i].b.value = (add_mult_sum[g_zero].a.value * previous_random.value + add_mult_sum[g_zero].b.value) % prime_field::mod;
+			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value) % prime_field::mod;
+		}
+
+		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		{
+			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
+									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
+									  + addV_array[i].a.value) % prime_field::mod;
+			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									  + addV_array[i].b.value) % prime_field::mod;
+		}
+		else
+		{
+			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
+			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
+									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
+									  + addV_array[i].a.value);
+			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									  + addV_array[i].b.value);
+		}
+	}
+
+	total_uv >>= 1;
+	//maskR
+	std::cout << "current_bit = " << current_bit << std::endl;
+	//if(current_bit == 1) preu1 = previous_random;
+	//prime_field::field_element tmp5, tmp6;
+	if(current_bit > 0){
+		maskR_sumcv = maskR_sumcv * (prime_field::field_element(1) - previous_random);
+		Zv = Zv * (prime_field::field_element(1) - previous_random) * previous_random;
+	}
+	ret.b.value = (ret.b.value - maskR_sumcv.value) % prime_field::mod;
+	ret.c.value = (ret.c.value + maskR_sumcv.value) % prime_field::mod;
+	if(current_bit == length_v - 1){
+		//(du + e)u(1 - u)(au^2 + bu + c) 
+		//(-du^3 + (d - e)u^2 + eu)(au^2 + bu + c)
+		//-adu^5 + (a * (d - e) - db)u^4 + (ae + b(d-e) -cd)u^3 + (c(d - e) + be)u^2 + ceu
+		prime_field::field_element a = sumRc.a;
+		prime_field::field_element b = sumRc.b;
+		prime_field::field_element c = sumRc.c;
+		prime_field::field_element d = add_mult_sum[0].a;
+		prime_field::field_element e = add_mult_sum[0].b;
+		//d: coeff of x^5; e coeff of x^4; f coeff of x^3
+		ret.d = (prime_field::field_element(0) - a) * d * Zu;
+		ret.e = (a * (d - e) - b * d) * Zu;
+		ret.f = (a * e + b * (d - e) - c * d) * Zu;
+		ret.a = ret.a + (c * (d - e) + b * e) * Zu;  
+		ret.b = ret.b + c * e * Zu;
+	}
+	//mask sumcheck
+	int current = current_bit + length_u;
+
+	prime_field::field_element tmp1, tmp2;
+	tmp1.value = maskpoly[current << 1].value;
+	tmp2.value = maskpoly[(current << 1) + 1].value;
+	for(int i = 0; i < length_u + length_v - current_bit - 1; i++){
+		tmp1 = tmp1 + tmp1;
+		tmp2 = tmp2 + tmp2;
+	}
+	//tmp1.value = tmp1.value << (length_u + length_v - current - 1);
+	//tmp2.value = tmp2.value << (length_u + length_v - current - 1);
+	maskpoly_sumc = (maskpoly_sumc - tmp1 - tmp2) * inv_2;
+
+	prime_field::field_element tmp3;
+	maskpoly_sumr = maskpoly_sumr + maskpoly[(current << 1) - 2] * previous_random * previous_random + maskpoly[(current << 1) - 1] * previous_random; 
+	tmp3 = maskpoly_sumr;
+	for(int i = 0; i < length_u + length_v - current - 1; i++)
+		tmp3 = tmp3 + tmp3;
+	
+
+	ret.a.value = (ret.a.value + tmp1.value) % prime_field::mod;
+	ret.b.value = (ret.b.value + tmp2.value) % prime_field::mod;
+	ret.c.value = (ret.c.value + maskpoly_sumc.value + tmp3.value) % prime_field::mod;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	quintuple_poly ret5(ret.d, ret.e, ret.f, ret.a, ret.b, ret.c);
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	total_time += time_span.count();
+	return ret5;
+}
+
+quadratic_poly zk_prover::sumcheck_finalround(prime_field::field_element previous_random, int current, prime_field::field_element general_value){
+	//prev1 = previous_random;
 	quadratic_poly ret = quadratic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	//to do
-	ret.a.value = 0;
-	ret.b = ret.b +  
+	ret.a = Iuv * preZu * Rg1.a * alpha + Iuv * preZv * Rg2.a * beta;
+	ret.b = Iuv * preZu * Rg1.b * alpha + Iuv * preZu * Rg2.b * beta + general_value;
+	ret.c = Iuv * preZu * Rg1.c * alpha + Iuv * preZu * Rg2.c * beta;
+
+	prime_field::field_element tmp1, tmp2;
+	tmp1.value = maskpoly[current << 1].value;
+	tmp2.value = maskpoly[(current << 1) + 1].value;
+	for(int i = 0; i < length_u + length_v - current - 1; i++){
+		tmp1 = tmp1 + tmp1;
+		tmp2 = tmp2 + tmp2;
+	}
+	//tmp1.value = tmp1.value << (length_u + length_v - current - 1);
+	//tmp2.value = tmp2.value << (length_u + length_v - current - 1);
+	maskpoly_sumc = (maskpoly_sumc - tmp1 - tmp2) * inv_2;
+
+	prime_field::field_element tmp3;
+	maskpoly_sumr = maskpoly_sumr + maskpoly[(current << 1) - 2] * previous_random * previous_random + maskpoly[(current << 1) - 1] * previous_random; 
+	tmp3 = maskpoly_sumr;
+	for(int i = 0; i < length_u + length_v - current - 1; i++)
+		tmp3 = tmp3 + tmp3;
+	
+
+	ret.a.value = (ret.a.value + tmp1.value) % prime_field::mod;
+	ret.b.value = (ret.b.value + tmp2.value) % prime_field::mod;
+	ret.c.value = (ret.c.value + maskpoly_sumc.value + tmp3.value) % prime_field::mod;
 	return ret;
 };
 
 
 std::pair<prime_field::field_element, prime_field::field_element> zk_prover::sumcheck_finalize(prime_field::field_element previous_random)
 {
+	prev1 = previous_random;
 	v_v = V_mult_add[0].eval(previous_random);
 	Zv = Zv * (prime_field::field_element(1) - previous_random) * previous_random;
 	v_v = v_v + Zv;

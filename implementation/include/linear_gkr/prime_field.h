@@ -27,6 +27,10 @@ namespace prime_field
 
 		inline u256b operator - (const u256b &x) const;
 
+		//inline u256b operator << (const int &x) const;
+		//inline u256b operator >> (const int &x) const;
+
+
 		u256b operator * (const u256b &x) const;
 		
 		inline u256b left_128();
