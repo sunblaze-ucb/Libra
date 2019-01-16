@@ -3,7 +3,9 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/implementation/include",
+                "${workspaceFolder}/implementation/include/ate-pairing/include"
             ],
             "defines": [],
             "macFrameworkPath": [

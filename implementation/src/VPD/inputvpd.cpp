@@ -61,56 +61,6 @@ std::vector<mpz_class> pre_input(std::vector<mpz_class>& input){
 			}
 		}
 	}
-
-	/*
-	std::vector<convert> coeffs; 
-	coeffs.resize(total);
-	coeffs[0].value = input[0];
-	coeffs[0].list.resize(1);
-	coeffs[0].tag.resize(1);
-	coeffs[0].list[0] = 0;
-	coeffs[0].tag[0] = 1;
-	for(int i = 0; i < NumOfVar; i++){
-		//cout << "i = " << i << endl;
-		for(int j = pow(2, i); j < pow(2, i+1); j++){
-			int temp = j - pow(2, i);
-			//cout << "j = " << j << " temp = " << temp << endl;
-			coeffs[j].value = -coeffs[temp].value;
-			coeffs[j].list.resize(2 * coeffs[temp].list.size());
-			coeffs[j].tag.resize(2 * coeffs[temp].list.size());
-			// cout << "size = " << coeffs[j].list.size() << endl;
-			for(int k = 0; k < coeffs[temp].tag.size(); k++){
-				//cout << "k = " << k << endl;
-				if(!coeffs[temp].tag[k]){
-					//if(j == 6) cout << "coeffs[j].value = " << coeffs[j].value << endl;
-
-					coeffs[j].value = coeffs[j].value - input[coeffs[temp].list[k] + pow(2, i)];
-					coeffs[j].list[k] = coeffs[temp].list[k];
-					coeffs[j].tag[k] = 1;
-					coeffs[j].list[k + coeffs[temp].tag.size()] = coeffs[temp].list[k] + pow(2, i);
-					coeffs[j].tag[k + coeffs[temp].tag.size()] = coeffs[temp].tag[k];
-				}
-				if(coeffs[temp].tag[k]){
-					//if(j == 6) cout << "coeffs[j].value = " << coeffs[j].value << endl;
-					coeffs[j].value = coeffs[j].value + input[coeffs[temp].list[k] + pow(2, i)];
-					
-					coeffs[j].list[k] = coeffs[temp].list[k];
-					
-					coeffs[j].tag[k] = 0;
-					//cout << "get out!" << endl;
-					coeffs[j].list[k + coeffs[temp].tag.size()] = coeffs[temp].list[k] + pow(2, i);
-					coeffs[j].tag[k + coeffs[temp].tag.size()] = coeffs[temp].tag[k];
-					//if(j == 2) {cout << "zjh" << endl;
-					//cout << k + pow(2, i) << endl;  cout << coeffs[j].tag[k + pow(2, i)] << endl;}
-					//cout << "get out!" << endl;
-				}
-			}
-		}
-	}
-	std::vector<mpz_class> result(total);
-	for(int i = 0; i < total; i++)
-		result[i] = coeffs[i].value;
-	*/
 	return result[nxt];
 }
 
