@@ -37,7 +37,30 @@ std::vector<mpz_class> pre_input(std::vector<mpz_class>& input){
 	cout << "inputsize = " << input.size() << endl; 
 	int total = 1 << NumOfVar;
 	
-	std::vector<mpz_class> result;
+	std::vector<mpz_class> result[2];
+	
+	result[0].resize(total);
+	result[1].resize(total);
+	for(int i = 0; i < total; ++i)
+		result[0][i] = input[i] % p;
+	int current;
+	int nxt;
+	for(int i = 0; i < NumOfVar; ++i)
+	{
+		current = i & 1;
+		nxt = current ^ 1;
+		int group_size = 1 << (i + 1);
+		int half_group_size = 1 << i;
+		for(int j = 0; j < (1 << NumOfVar) / group_size; ++j)
+		{
+			int base = j * group_size;
+			for(int k = 0; k < group_size / 2; ++k)
+			{
+				result[nxt][base + k] = result[current][base + half_group_size + k];
+				result[nxt][base + k + half_group_size] = (result[current][base + k] - result[current][base + half_group_size + k] + p) % p;
+			}
+		}
+	}
 
 	/*
 	std::vector<convert> coeffs; 
@@ -88,7 +111,7 @@ std::vector<mpz_class> pre_input(std::vector<mpz_class>& input){
 	for(int i = 0; i < total; i++)
 		result[i] = coeffs[i].value;
 	*/
-	return result;
+	return result[nxt];
 }
 
 void test(int l){
@@ -161,42 +184,7 @@ T pre_exp(vector<T>& pre, mpz_class n){
 	}
 	return temp;
 }
-/*
-void KeyGen(int d){
-	NumOfVar = d;
-	clock_t KeyGen_t = clock();
-	mpz_urandomm(a.get_mpz_t(), r_state, p.get_mpz_t());
-	//precompute_g1(a);
-	const mie::Vuint temp(a.get_str().c_str());
-	//cout << "a = " << a << " " << "tmep = " << temp << endl; 
-	g1a = g1 * temp;
-	g2a = g2 * temp;
-	//cout << "g1 = " << g1 << endl;
-	//cout << "g1 = " << g1 * 2 - g1 << endl;
-	//vector<mpz_class> s(NumOfVar);
-	s.resize(NumOfVar);
-	for(int i = 0; i < NumOfVar; i++)
-		mpz_urandomm(s[i].get_mpz_t(), r_state, p.get_mpz_t());
-	pub_g1_exp.resize((int)pow(2, d));
-	pub_g1.resize((int)pow(2, d));
-	pub_g2.resize((int)pow(2, d));
-	pub_g1_exp[0] = 1;
-	pub_g1[0] = g1;
-	pub_g2[0] = g2;
-	for(int i = 0; i < d; i++){
-		for(int j = (int)pow(2, i); j < (int)pow(2, i+1); j++){
-			//pub_g1_exp[j] = (s[i] * pub_g1[j - (int)pow(2, i)]) % p;
-			mie::Vuint temp1(s[i].get_str().c_str());
-			pub_g1[j] = pub_g1[j - (int)pow(2, i)] * temp1;
-			if(j == pow(2, i))
-				pub_g2[j] = g2 * temp1;
-		}
-	}
-	cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
-	
-	return;
-}
-*/
+
 void KeyGen(int d){
 	NumOfVar = d;
 	clock_t KeyGen_t = clock();
@@ -413,11 +401,11 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 
 
 int main(int argc, char** argv){
+	p.set_str("16798108731015832284940804142231733909759579603404752749028378864165570215949",10);
 	test(atoi(argv[1]));
 	seed = rand();
     gmp_randinit_default(r_state);
     gmp_randseed_ui(r_state, seed);
-	p.set_str("16798108731015832284940804142231733909759579603404752749028378864165570215949",10);
 	
 	
 	//bilinear g1 g2
