@@ -488,6 +488,7 @@ namespace prime_field
 	{
 		field_element ret;
 		ret.value.random();
+		ret.value = ret.value % mod;
 		return ret;
 	}
 	bool field_element::operator != (const field_element &b) const

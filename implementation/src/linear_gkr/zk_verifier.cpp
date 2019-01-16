@@ -644,6 +644,8 @@ bool zk_verifier::verify()
 
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{	
+		//std::cout << "alpha = " << alpha.to_string() << std::endl;
+		//std::cout << "beta = " << beta.to_string() << std::endl;
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 		std::cerr << "Bound u start" << std::endl;
 		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
@@ -653,7 +655,7 @@ bool zk_verifier::verify()
 
 		alpha_beta_sum.value = (alpha_beta_sum.value + p->maskpoly_sumc.value) % prime_field::mod;
 
-		//std::cout << "maskpoly_sumc = " << p->maskpoly_sumc.value << std::endl;
+		//std::cout << "maskpoly_sumc = " << p->maskpoly_sumc.to_string() << std::endl;
 
 		//std::cout << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
 
@@ -661,7 +663,10 @@ bool zk_verifier::verify()
 		prime_field::field_element previous_random = prime_field::field_element(0);
 		//next level random
 		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
+		//std::cout << "Zu = " << (t - r_u[2]).to_string() << std::endl;
 		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
+		//std::cout << "r_v[2] = " << r_v[2].to_string() << std::endl;
+
 		auto r_c = generate_randomness(1);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
 		one_minus_r_u = new prime_field::field_element[C.circuit[i - 1].bit_length];
@@ -696,6 +701,7 @@ bool zk_verifier::verify()
 			}
 
 			else{
+				//std::cout << "j = " << j << std::endl;
 				quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
 		
 				previous_random = r_u[j];
@@ -705,6 +711,7 @@ bool zk_verifier::verify()
 
 				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 				{ 
+					//std::cout << "why" << std::endl;
 					std::cout << "round j = " << j << std::endl;
 					fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
 					return false;
@@ -764,8 +771,19 @@ bool zk_verifier::verify()
 		t1 = std::chrono::high_resolution_clock::now();
 		time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 		std::cerr << "	Time: " << time_span.count() << std::endl;
-		
+		//std::cout << "right previous_random = " << previous_random.to_string() << std::endl;
 		auto final_claims = p -> sumcheck_finalize(previous_random);
+		prime_field::field_element ttt = prime_field::field_element(1);
+		//std::cout << "Iuv = " << (ttt - r_u[0]).to_string() << std::endl;
+
+		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1])).to_string() << std::endl;
+		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2])).to_string() << std::endl;
+		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2]) * (ttt - r_v[0]) ).to_string() << std::endl;
+		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2]) * (ttt - r_v[0]) * (ttt - r_v[1])).to_string() << std::endl;
+
+		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2]) * (ttt - r_v[0]) * (ttt - r_v[1]) * (ttt - r_v[2])).to_string() << std::endl;
+		//std::cout << "Zv = " << (r_v[0] * r_v[1] * r_v[2] * (ttt - r_v[0]) * (ttt - r_v[1]) * (ttt - r_v[2])).to_string() << std::endl;
+
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;
 //		std::cout << "v_u = " << v_u.to_string(10) << std::endl;
@@ -778,20 +796,21 @@ bool zk_verifier::verify()
 		auto add_value = add(i);
 //		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
 //		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
-		previous_random = r_c[0];
-		quadratic_poly poly = p->sumcheck_finalround(previous_random, (C.circuit[i - 1].bit_length << 1) + 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
+		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
 
 		if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 		{
 			fprintf(stderr, "Verification fail, phase2, lastbit for c\n");
 			return false;
 		}
-
+		//previous_random = r_c[0];
 		alpha_beta_sum = poly.eval(r_c[0]);
 
 		prime_field::field_element maskpoly_value = p->query(r_u, r_v, r_c[0]);
 		prime_field::field_element maskRg1_value = p->queryRg1(r_c[0]);
 		prime_field::field_element maskRg2_value = p->queryRg2(r_c[0]);
+		//std::cout << "maskRg1_value = " << maskRg1_value.to_string() << std::endl;
+		//std::cout << "maskRg2_value = " << maskRg2_value.to_string() << std::endl;
 
 		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + maskRg1_value + maskRg2_value + maskpoly_value)
 		{
@@ -807,7 +826,11 @@ bool zk_verifier::verify()
 		beta = tmp_beta[0];
 		delete[] tmp_alpha;
 		delete[] tmp_beta;
-		alpha_beta_sum = alpha * v_u + alpha * p->Zu * p->summaskR.eval(p->preu1) + beta * v_v + beta * p->summaskR.eval(p->prev1);
+		//v_u = v_u - p->Zu * p->sumRc.eval(p->preu1);
+		//v_v = v_v - p->Zv * p->sumRc.eval(p->prev1);
+
+		//std::cout << "test = " << alpha * p->Zu * p->sumRc.eval(p->preu1).to_string() << std::endl;  
+		alpha_beta_sum = alpha * v_u + beta * v_v;
 
 		delete[] r_0;
 		delete[] r_1;
@@ -835,6 +858,8 @@ bool zk_verifier::verify()
 	}
 	auto input_0 = V_in(r_0, one_minus_r_0, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length)), 
 		 input_1 = V_in(r_1, one_minus_r_1, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
+	input_0 = input_0 + p->Zu * p->sumRc.eval(p->preu1);
+	input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
 
 	delete[] input;
 	delete[] r_0;
