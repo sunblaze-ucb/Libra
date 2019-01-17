@@ -42,6 +42,8 @@ namespace prime_field
 
 		inline bool operator > (const u256b &x) const;
 		inline bool operator < (const u256b &x) const;
+		int bitLen();
+		int testBit(int i);
 	};
 	//extern int512_t mod;
 	extern bool initialized;
@@ -94,9 +96,12 @@ namespace prime_field
 		field_element operator * (const field_element &b) const;
 		field_element operator / (const field_element &b) const;
 		field_element operator - (const field_element &b) const;
+		field_element shr15() const;
 		field_element mul_non_mod(const field_element &b) const;
 		char* to_string();
+		int bitLen();
 		bool operator != (const field_element &b) const;
+		int testBit(int i);
 	};
 	field_element random();
 }

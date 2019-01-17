@@ -183,6 +183,45 @@ namespace prime_field
 		return ret;
 	}
 
+	inline int u256b::bitLen()
+	{
+		if(hi != 0)
+		{
+			unsigned long long hihi, hilo;
+			unsigned long long zero = 0;
+			hihi = hi >> 64;
+			hilo = hi & (~zero);
+			if(hihi != 0)
+				return 256 - __builtin_clzll(hihi);
+			else
+				return 256 - 64 - __builtin_clzll(hilo);
+		}
+		else if(mid != 0)
+		{
+			return 128 - __builtin_clzll(mid);
+		}
+		else
+		{
+			return 64 - __builtin_clzll(lo);
+		}
+	}
+
+	int u256b::testBit(int i)
+	{
+		if(i <= 64)
+		{
+			return (lo >> i) & 1;
+		}
+		else if(i <= 128)
+		{
+			return (mid >> (i - 64)) & 1;
+		}
+		else
+		{
+			return (hi >> (i - 128)) & 1;
+		}
+	}
+
 	u256b interm_tmp;
 	u256b interesting_tmps[256];
 	u256b interesting_combination[256 / 8][1 << 8];
@@ -494,5 +533,60 @@ namespace prime_field
 	bool field_element::operator != (const field_element &b) const
 	{
 		return value != b.value;
+	}
+	int field_element::bitLen()
+	{
+		if(value.hi != u256b(0))
+		{
+			return value.hi.bitLen() + 256;
+		}
+		else if(value.mid != 0)
+		{
+			unsigned long long hi, lo;
+			unsigned long long zero = 0;
+			hi = value.mid >> 64;
+			lo = value.mid & (~zero);
+			if(hi != 0)
+				return 256 - __builtin_clzll(hi);
+			return 256 - 64 - __builtin_clzll(lo);
+		}
+		else
+		{
+			unsigned long long hi, lo;
+			unsigned long long zero = 0;
+			hi = value.lo >> 64;
+			lo = value.lo & (~zero);
+			if(hi != 0)
+				return 128 - __builtin_clzll(hi);
+			return 64 - __builtin_clzll(lo);
+		}
+	}
+	field_element field_element::shr15() const
+	{
+		field_element ret;
+		ret.value.lo = value.lo >> 15;
+		ret.value.lo = ret.value.lo | ((value.mid & ((1 << 15) - 1)) << 15);
+		ret.value.mid = value.mid >> 15;
+		ret.value.mid = ret.value.lo | ((value.hi.lo & ((1 << 15) - 1)) << 15);
+		ret.value.hi.lo = value.hi.lo >> 15;
+		ret.value.hi.lo = ret.value.hi.lo | ((ret.value.hi.mid & ((1 << 15) - 1)) << 15);
+		ret.value.hi.mid = value.hi.mid >> 15;
+		ret.value.hi.mid = ret.value.hi.mid | ((ret.value.hi.hi & ((1 << 15) - 1)) << 15);
+		ret.value.hi.hi = value.hi.hi >> 15;
+	}
+	int field_element::testBit(int i)
+	{
+		if(i <= 128)
+		{
+			return (value.lo >> i) & 1;
+		}
+		else if(i <= 256)
+		{
+			return (value.mid >> (i - 128)) & 1;
+		}
+		else
+		{
+			return (value.hi.testBit(i - 256));
+		}
 	}
 }

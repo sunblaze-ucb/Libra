@@ -16,6 +16,7 @@ using namespace std;
 using namespace bn;
 
 #define P 512
+const int multi_scalar_w = 2;
 
 unsigned long int seed;
 int NumOfVar;
@@ -26,6 +27,14 @@ Ec2 g2, g2a;
 
 vector<Ec1> pub_g1, g1_pre;
 vector<Ec2> pub_g2, g2_pre;
+
+class multi_scalar_state
+{
+public:
+	Ec1 value[1 << multi_scalar_w];
+};
+
+vector<multi_scalar_state> multi_scalar_g1;
 
 std::vector<mpz_class> pub_g1_exp;
 
@@ -135,6 +144,37 @@ T pre_exp(vector<T>& pre, mpz_class n){
 	return temp;
 }
 
+Ec1 g_baby_step[256 / 15 + 1][1 << 15];
+
+void KeyGen_preprocessing(Ec1 g)
+{
+	printf("Preprocess start\n");
+	Ec1 g_pow = g * 0;
+	mie::Vuint exponent = 1;
+	for(int i = 0; i < 256 / 15 + 1; ++i)
+	{
+		g_pow = g * exponent;
+		g_baby_step[i][0] = g * 0;
+		for(int j = 1; j < (1 << 15); ++j)
+			g_baby_step[i][j] = g_baby_step[i][j - 1] + g_pow;
+		exponent = exponent * (1 << 15);
+	}
+	printf("Preprocess end\n");
+}
+
+Ec1 g1_exp(mpz_class a)
+{
+	Ec1 ret = g1 * 0;
+	int length = mpz_sizeinbase(a.get_mpz_t(), 2);
+	for(int i = 0; i < length / 15 + 1; ++i)
+	{
+		mpz_class mask_mpz = (a >> (i * 15)) & ((1 << 15) - 1);
+		int mask = mpz_get_si(mask_mpz.get_mpz_t());
+		ret = ret + g_baby_step[i][mask];
+	}
+	return ret;
+}
+
 void KeyGen(int d){
 	NumOfVar = d;
 	clock_t KeyGen_t = clock();
@@ -145,6 +185,7 @@ void KeyGen(int d){
 	//g1a = g1 * temp;
 	//g2a = g2 * temp;
 	precompute_g1();
+	KeyGen_preprocessing(g1);
 	g1a = pre_exp(g1_pre, a);
 	g2a = pre_exp(g2_pre, a);
 
@@ -160,9 +201,9 @@ void KeyGen(int d){
 	//precompute_g1();
 	for(int i = 0; i < d; i++){
 		mie::Vuint temp1(s[i].get_str().c_str()); 
-		for(int j = (int)pow(2, i); j < (int)pow(2, i+1); j++){
-			pub_g1_exp[j] = (s[i] * pub_g1_exp[j - (int)pow(2, i)]) % p;
-			pub_g1[j] = pre_exp(g1_pre, pub_g1_exp[j]);
+		for(int j = 1 << i; j < (1 << (i + 1)); j++){
+			pub_g1_exp[j] = (s[i] * pub_g1_exp[j - (1 << i)]) % p;
+			pub_g1[j] = g1_exp(pub_g1_exp[j]);
 			if(j == pow(2, i))
 				pub_g2[j] = pre_exp(g2_pre, s[i]);
 				//pub_g2[j] = g2 * temp1;
@@ -172,6 +213,8 @@ void KeyGen(int d){
 	
 	return;
 }
+
+
 
 void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	
@@ -186,7 +229,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 			coeffs[i] += p;
 	//vector<Ec1> pub_pre(2 * NumOfVar + 1);
 	//mpz_class ans = 0;
-	for(int i = 0; i < (int)pow(2, NumOfVar); i++){
+	for(int i = 0; i < (1 << NumOfVar); i++){
 		mie::Vuint temp(coeffs[i].get_str().c_str());
 		//cout << "i = " << i << endl;
 		//cout << "pub_g1[i] * temp = " << pub_g1[i] * temp << endl;
@@ -329,7 +372,6 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 		//Ec2 temp3 = pub_g2[pow(2, i)] - g2 * temp4;
 		Ec2 temp3 = pub_g2[pow(2, i)] - pre_exp(g2_pre, r[i]);
 		
-	
 		opt_atePairing(temp[i], temp3, witness[i]);
 		
 		ea4 *= temp[i];

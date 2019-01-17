@@ -17,7 +17,7 @@ clean:
 	rm bin/main
 
 vpd_test:
-	$(CC) $(CFLAGS) $(INCLUDE) -L $(LIB) -std=c++11 src/VPD/inputvpd.cpp -o inputvpd $(OPT) -lgmp -lgmpxx -lzm
+	$(CC) $(CFLAGS) $(INCLUDE) -L $(LIB) -std=c++11 src/VPD/inputvpd.cpp -g -o inputvpd $(OPT) -lzm -lgmp -lgmpxx
 
 clogc: src/traditional_gkr/ClogC.cpp
 	$(CC) $(CFLAGS) $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/ClogC.cpp -g -o bin/main_clogc
