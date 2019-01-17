@@ -298,7 +298,17 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	const mie::Vuint temp1(a.get_str().c_str());
 
 	digesta = digest * temp1;
-	
+	cout << "digest = " << digest << endl;
+
+	Ec1 compare = g1;
+	for(int i = 0; i < (int)pow(2, NumOfVar); i++){
+		mie::Vuint temp(coeffs[i].get_str().c_str());
+		//cout << "i = " << i << endl;
+		//cout << "pub_g1[i] * temp = " << pub_g1[i] * temp << endl;
+		compare = compare + (pub_g1[i] * temp);
+	} 
+	cout << "compare = " << compare << endl;
+
 	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
@@ -335,30 +345,63 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 			ans = (ans + (ans_pre[j] * coeffs[j]) % p) % p; 
 		}	
 	}
-	//cout << "ans = " << ans << endl;
-	//cout << "rightans = " << (coeffs[0] + r[0] * coeffs[1] + r[1] * coeffs[2] + r[0] * r[1] * coeffs[3]) % p << endl;
-
+	
 	witness.resize(NumOfVar);
 	for(int i = 0; i < NumOfVar; i++)
-		witness[i] = g1 * 0;
+		witness[i] = g1;
 	witnessa.resize(NumOfVar);
 	vector<mpz_class> witness_coeffs((int)pow(2, NumOfVar)), temp_coeffs = coeffs;
 
 	int start_index = 0;
-	
+	//cout << "r.size() = " << r.size() << endl;
 	for(int i = 0; i < NumOfVar; i++){
-		for(int j = 0; j < pow(2,r.size() - i - 1); j++){
-			witness_coeffs[start_index + j] = temp_coeffs[2 * j + 1] % p;
-			temp_coeffs[j] = (temp_coeffs[2 * j] + temp_coeffs[2 * j + 1] * r[i]) % p;
-			//cout << "i = " << i << " j = " << j << " witness = " << witness_coeffs[start_index + j] << endl;
+		for(int j = 0; j < pow(2, r.size() - i - 1); j++){
+			witness_coeffs[start_index + j] = temp_coeffs[pow(2, r.size() - i - 1) + j] % p;
+			temp_coeffs[j] = (temp_coeffs[j] + (temp_coeffs[pow(2, r.size() - i - 1) + j] * r[NumOfVar - 1 - i]) % p) % p;
+			//cout << "p = " << temp_coeffs[j] << endl;
+			//cout << "i = " << i << " j = " << j << "witness_coeffs = " << witness_coeffs[j] << endl;
+
 		}
-		temp_coeffs.resize(pow(2, r.size() - i - 1));
+		//temp_coeffs.resize(pow(2, r.size() - i - 1));
 		start_index += pow(2, r.size() - i - 1);
 	}
-
 	for(int i = 0; i < witness_coeffs.size(); i++)
 		if(witness_coeffs[i] < 0)
 			witness_coeffs[i] += p;
+
+	const mie::Vuint tempa(a.get_str().c_str());
+	//std::cout << "hello world " << std::endl;
+	std::vector<mpz_class> scalar_pow(multi_scalar_w);
+	int temp = 0;
+	for(int k = NumOfVar - 1; k >= 0; k--){
+		int temp1 = 1 << k;
+		//temp += temp1;
+		for(int i = 0; i < temp1 / multi_scalar_w + 1; i++){
+			for(int j = 0; j < multi_scalar_w; ++j)
+			{
+				int id = i * multi_scalar_w + j;
+				if(id >= (1 << k))
+				{
+					scalar_pow[j] = 0;
+				}
+				else
+				{
+					cout << "k = " << k << " i = " << i << " j = " << j << endl;
+					scalar_pow[j] = witness_coeffs[id + temp];
+					cout << "witness_coeffs[id + temp] = " << witness_coeffs[id + temp] << endl;
+				}
+			}
+			witness[k] = witness[k] + multi_scalar_calc(i, scalar_pow);
+			//std::cout << "k = " << k << " i = " << i << std::endl;
+		}
+		cout << "witness[k] = " << witness[k] << endl;
+		mie::Vuint tempa(a.get_str().c_str());
+		witnessa[k] = witness[k] * tempa;
+		temp += temp1;
+		//std::cout << "hello world " << std::endl;
+	}	
+	//std::cout << "hello world " << std::endl;
+	
 
 	/*
 	int start_index2 = 0;
@@ -375,7 +418,6 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		witnessa[i] = witness[i] * temp2;
 		start_index2 += pow(2, r.size() - i - 1);
 	}
-	*/
 	int start_index2 = 0;
 	std::vector<mpz_class> witness_pre(r.size());
 	for(int i = 0; i < NumOfVar; i++){
@@ -391,6 +433,25 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		witnessa[i] = witness[i] * temp2;
 		start_index2 += pow(2, r.size() - i - 1);
 	}
+	*/
+	/*
+	int start_index2 = 0;
+	std::vector<mpz_class> witness_pre(r.size());
+	for(int i = 0; i < NumOfVar; i++){
+		multi_scalar_calc()
+		for(int j = 0; j < pow(2, r.size() - i - 1); j++){
+			//mie::Vuint temp(witness_coeffs[start_index2 + j].get_str().c_str());
+			witness_pre[i] += (pub_g1_exp[pow(2, i + 1) * j] * witness_coeffs[start_index2 + j]) % p;
+			//witness[i] = pre_exp(g1_pre, witness_pre[i])
+			//cout << "g1*coeffs[1] = " << g1 * temp1 << endl;
+			//cout << "witness[0] = " << witness[i] << endl;
+		}
+		witness[i] = pre_exp(g1_pre, witness_pre[i]);
+		const mie::Vuint temp2(a.get_str().c_str());
+		witnessa[i] = witness[i] * temp2;
+		start_index2 += pow(2, r.size() - i - 1);
+	}
+	*/
 	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
@@ -480,10 +541,12 @@ int main(int argc, char** argv){
 	for(int i = 0; i < input.size(); i++){
 		input[i] = rand();
 		//cout << "input[i] = " << input[i] << endl;
+		mie::Vuint temp(input[i].get_str().c_str());
+		cout << "g1 * input[i] = " << g1 * temp << endl;
 	}
 	
-	
-	
+	//cout << "p = " << p << endl;
+
 	Ec1 digest, digesta;
 	digest = g1 * 0;
 	
