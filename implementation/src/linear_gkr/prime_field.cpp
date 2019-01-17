@@ -536,7 +536,7 @@ namespace prime_field
 	}
 	int field_element::bitLen()
 	{
-		if(value.hi != u256b(0))
+		if(value.hi != u256b((unsigned long long)0))
 		{
 			return value.hi.bitLen() + 256;
 		}

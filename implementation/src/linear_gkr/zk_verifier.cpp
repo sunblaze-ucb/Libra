@@ -242,6 +242,8 @@ bool zk_verifier::verify()
 		//std::cout << "beta = " << beta.to_string() << std::endl;
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 		std::cerr << "Bound u start" << std::endl;
+		auto rho = prime_field::random();
+		p -> rho = rho;
 		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		
 		//add maskpoly

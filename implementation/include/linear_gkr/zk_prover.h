@@ -59,6 +59,7 @@ public:
 	prime_field::field_element *maskpoly; 
 	prime_field::field_element maskpoly_sumc;
 	prime_field::field_element maskpoly_sumr;
+	prime_field::field_element rho;
 	void generate_maskpoly(int, int);
 
 	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*, prime_field::field_element);
