@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 #include <gmp.h>
 #include <gmpxx.h>
 #include <math.h>
@@ -16,7 +17,7 @@ using namespace std;
 using namespace bn;
 
 #define P 512
-const int multi_scalar_w = 2;
+const int multi_scalar_w = 4;
 
 unsigned long int seed;
 int NumOfVar;
@@ -149,15 +150,14 @@ Ec1 g_baby_step[256 / 15 + 1][1 << 15];
 void KeyGen_preprocessing(Ec1 g)
 {
 	printf("Preprocess start\n");
-	Ec1 g_pow = g * 0;
+	Ec1 g_pow = g;
 	mie::Vuint exponent = 1;
 	for(int i = 0; i < 256 / 15 + 1; ++i)
 	{
-		g_pow = g * exponent;
 		g_baby_step[i][0] = g * 0;
 		for(int j = 1; j < (1 << 15); ++j)
 			g_baby_step[i][j] = g_baby_step[i][j - 1] + g_pow;
-		exponent = exponent * (1 << 15);
+		g_pow = g_pow * (1 << 15);
 	}
 	printf("Preprocess end\n");
 }
@@ -200,21 +200,67 @@ void KeyGen(int d){
 	pub_g2[0] = g2;
 	//precompute_g1();
 	for(int i = 0; i < d; i++){
-		mie::Vuint temp1(s[i].get_str().c_str()); 
 		for(int j = 1 << i; j < (1 << (i + 1)); j++){
 			pub_g1_exp[j] = (s[i] * pub_g1_exp[j - (1 << i)]) % p;
 			pub_g1[j] = g1_exp(pub_g1_exp[j]);
-			if(j == pow(2, i))
-				pub_g2[j] = pre_exp(g2_pre, s[i]);
 				//pub_g2[j] = g2 * temp1;
 		}
+	}
+
+	//multi_scalar
+	vector<Ec1> scalars;
+	scalars.resize(multi_scalar_w);
+	multi_scalar_g1.resize((1 << d) / multi_scalar_w + 1);
+	for(int i = 0; i < (1 << d) / multi_scalar_w + 1; ++i)
+	{
+		for(int j = 0; j < multi_scalar_w; ++j)
+		{
+			int id = i * multi_scalar_w + j;
+			if(j >= (1 << d))
+			{
+				scalars[j] = g1 * 0;
+			}
+			else
+			{
+				scalars[j] = pub_g1[id];
+			}
+		}
+		for(int j = 0; j < (1 << multi_scalar_w); ++j)
+		{
+			multi_scalar_g1[i].value[j] = g1 * 0;
+			for(int k = 0; k < multi_scalar_w; ++k)
+			{
+				if((j >> k) & 1)
+				{
+					multi_scalar_g1[i].value[j] = multi_scalar_g1[i].value[j] + scalars[k];
+				}
+			}
+		}
+	}
+	for(int i = 0; i < d; ++i)
+	{
+		pub_g2[1 << i] = pre_exp(g2_pre, s[i]);
 	}
 	cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
 
-
+Ec1 multi_scalar_calc(int index, const vector<mpz_class> &scalar_pow)
+{
+	Ec1 ret = g1 * 0;
+	int max_len = 0;
+	for(int j = 0; j < multi_scalar_w; ++j)
+		max_len = max(max_len, (int)mpz_sizeinbase(scalar_pow[j].get_mpz_t(), 2));
+	for(int j = max_len - 1; j >= 0; --j)
+	{
+		int current_scalar = 0;
+		for(int k = 0; k < multi_scalar_w; ++k)
+			current_scalar |= (mpz_tstbit(scalar_pow[k].get_mpz_t(), j) == 1) << (k);
+		ret = ret * 2 + multi_scalar_g1[index].value[current_scalar];
+	}
+	return ret;
+}
 
 void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	
@@ -229,11 +275,25 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 			coeffs[i] += p;
 	//vector<Ec1> pub_pre(2 * NumOfVar + 1);
 	//mpz_class ans = 0;
-	for(int i = 0; i < (1 << NumOfVar); i++){
-		mie::Vuint temp(coeffs[i].get_str().c_str());
+	vector<mpz_class> scalar_pow;
+	scalar_pow.resize(multi_scalar_w);
+
+	for(int i = 0; i < (1 << NumOfVar) / multi_scalar_w + 1; i++){
+		for(int j = 0; j < multi_scalar_w; ++j)
+		{
+			int id = i * multi_scalar_w + j;
+			if(id >= (1 << NumOfVar))
+			{
+				scalar_pow[j] = 0;
+			}
+			else
+			{
+				scalar_pow[j] = coeffs[id];
+			}
+		}
 		//cout << "i = " << i << endl;
 		//cout << "pub_g1[i] * temp = " << pub_g1[i] * temp << endl;
-		digest = digest + (pub_g1[i] * temp);
+		digest = digest + multi_scalar_calc(i, scalar_pow);
 	} 
 	const mie::Vuint temp1(a.get_str().c_str());
 
