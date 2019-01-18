@@ -17,7 +17,7 @@ using namespace std;
 using namespace bn;
 
 #define P 512
-int multi_scalar_w;
+const int multi_scalar_w = 2;
 
 unsigned long int seed;
 int NumOfVar;
@@ -32,15 +32,13 @@ vector<Ec2> pub_g2, g2_pre;
 class multi_scalar_state
 {
 public:
-	//Ec1 value[1 << multi_scalar_w];
-	Ec1 value[1 << 10];
+	Ec1 value[1 << multi_scalar_w];
 };
 
 vector<multi_scalar_state> multi_scalar_g1;
 
 std::vector<mpz_class> pub_g1_exp;
 
-//mpz_class globalright, globalleft;
 
 vector<mpz_class> s;
 
@@ -82,13 +80,9 @@ void test(int l){
 	for(int i = 0; i < pow(2, l); i++)
 		test[i] = rand();
 	std::vector<mpz_class> res = pre_input(test);
-	//for(int i = 0; i < 16; i++)
-		//cout << "res[i] = " << res[i] << endl;
-	//cout << "pre_input time: " << (double)(clock() - preinput_t) / CLOCKS_PER_SEC << endl;
 	return;
 }	
 
-//std::vector<Ec1> g1_pre;
 void precompute_g1(){
 	g1_pre.resize(P);
 	g2_pre.resize(P);
@@ -100,40 +94,7 @@ void precompute_g1(){
 	}
 	return;
 }
-/*
-Ec1 multi_scalar(vector<Ec1>& pub, vector<Ec1>& pre, vector<mpz_class>& e){
-	Ec1 temp = pubs_g1[0][0]*0;
-	
-	clock_t t1=clock();
-	
-	int length = P;
 
-	for(int i=length-1;i>=0;i--){
-		for(int j=0;j<e.size()/W;j++){
-			int selector = 0;
-			for(int k=W-1;k>=1;k--){
-				selector+=mpz_tstbit(e[j*W+k].get_mpz_t(),i);
-				selector*=2;
-				
-			}
-			selector+=mpz_tstbit(e[j*W].get_mpz_t(),i);
-
-			if(selector == 3) 
-				temp+=pre[j];
-			else if(selector == 1)
-				temp+=pub[j*2];
-			else if(selector == 2)
-				temp+=pub[j*2+1];
-			else{}	
-			
-		}
-		if(i!=0)
-			temp = temp*2;
-			
-	}
-	return temp;
-}
-*/
 template<class T>
 T pre_exp(vector<T>& pre, mpz_class n){
 	T temp = pre[0]*0;
@@ -438,7 +399,7 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 	
 	Fp12 ea3, ea4 = 1;
 
-	std::vector<Fp12> temp(r.size());
+	std::vector<Fp12> temp(r.size() + 1);
 	//ans = ans % p;
 	//globalleft = globalleft % p + p;
 	//mie::Vuint temp1(ans.get_str().c_str());
@@ -496,36 +457,34 @@ int main(int argc, char** argv){
 	
 
 	int d = atoi(argv[1]);
-	for(multi_scalar_w = 2; multi_scalar_w <= 2; multi_scalar_w++){
-		cout << "multi_scalar_w = " << multi_scalar_w << endl;
-	
-		KeyGen(d);
-		int N = (int)pow(2, d);
-		vector<mpz_class> input(N + 1);
-		for(int i = 0; i < input.size(); i++){
-			input[i] = rand();
-		}
-		
-		//cout << "p = " << p << endl;
+	cout << "multi_scalar_w = " << multi_scalar_w << endl;
 
-		Ec1 digest, digesta;
-		digest = g1 * 0;
-			
-		commit(digest,digesta,input);
-		//cout << "check commit: " << check_commit(digest, digesta) << endl;
-			
-		vector<Ec1> proof, proofa;
-		vector<mpz_class> r(d);
-		mpz_class ans;
-		
-		for(int i = 0; i < r.size(); i++)
-			mpz_urandomm(r[i].get_mpz_t(), r_state, p.get_mpz_t());
-		
-		prove(r, ans, input, proof, proofa);
-		
-		bool tf = verify(r, digest, ans, proof, proofa);
-		cout<< "verify: " << tf <<endl;
+	KeyGen(d);
+	int N = (int)pow(2, d);
+	vector<mpz_class> input(N + 1);
+	for(int i = 0; i < input.size(); i++){
+		input[i] = rand();
 	}
+	
+	//cout << "p = " << p << endl;
+
+	Ec1 digest, digesta;
+	digest = g1 * 0;
+		
+	commit(digest,digesta,input);
+	//cout << "check commit: " << check_commit(digest, digesta) << endl;
+		
+	vector<Ec1> proof, proofa;
+	vector<mpz_class> r(d);
+	mpz_class ans;
+	
+	for(int i = 0; i < r.size(); i++)
+		mpz_urandomm(r[i].get_mpz_t(), r_state, p.get_mpz_t());
+	
+	prove(r, ans, input, proof, proofa);
+	
+	bool tf = verify(r, digest, ans, proof, proofa);
+	cout<< "verify: " << tf <<endl;
 
 	return 0;
 }
