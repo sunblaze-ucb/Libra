@@ -217,7 +217,7 @@ void KeyGen(int d){
 		for(int j = 0; j < multi_scalar_w; ++j)
 		{
 			int id = i * multi_scalar_w + j;
-			if(j >= (1 << d))
+			if(id >= (1 << d))
 			{
 				scalars[j] = g1 * 0;
 			}
