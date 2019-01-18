@@ -190,12 +190,12 @@ void KeyGen(int d){
 	g1a = pre_exp(g1_pre, a);
 	g2a = pre_exp(g2_pre, a);
 
-	s.resize(NumOfVar);
-	for(int i = 0; i < NumOfVar; i++)
+	s.resize(NumOfVar + 1);
+	for(int i = 0; i < NumOfVar + 1; i++)
 		mpz_urandomm(s[i].get_mpz_t(), r_state, p.get_mpz_t());
 	pub_g1_exp.resize((int)pow(2, d));
-	pub_g1.resize((int)pow(2, d));
-	pub_g2.resize((int)pow(2, d));
+	pub_g1.resize((int)pow(2, d) + 1);
+	pub_g2.resize(d + 1);
 	pub_g1_exp[0] = 1;
 	pub_g1[0] = g1;
 	pub_g2[0] = g2;
@@ -207,7 +207,7 @@ void KeyGen(int d){
 				//pub_g2[j] = g2 * temp1;
 		}
 	}
-
+	pub_g1[1 << d] = pre_exp(g1_pre, s[d]);
 	//multi_scalar
 	vector<Ec1> scalars;
 	scalars.resize(multi_scalar_w);
@@ -238,9 +238,9 @@ void KeyGen(int d){
 			}
 		}
 	}
-	for(int i = 0; i < d; ++i)
+	for(int i = 0; i < d + 1; ++i)
 	{
-		pub_g2[1 << i] = pre_exp(g2_pre, s[i]);
+		pub_g2[i] = pre_exp(g2_pre, s[i]);
 	}
 	//cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
@@ -296,9 +296,12 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 		//cout << "pub_g1[i] * temp = " << pub_g1[i] * temp << endl;
 		digest = digest + multi_scalar_calc(i, scalar_pow);
 	} 
-	const mie::Vuint temp1(a.get_str().c_str());
 
-	digesta = digest * temp1;
+	mie::Vuint temp(input[1 << NumOfVar].get_str().c_str());
+	digest += pub_g1[1 << NumOfVar] * temp;
+	const mie::Vuint tempa(a.get_str().c_str());
+
+	digesta = digest * tempa;
 
 	//cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
@@ -320,6 +323,10 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	vector<mpz_class> coeffs = input;
 	clock_t prove_t = clock();
 
+	std::vector<mpz_class> t(NumOfVar);
+	for(int i = 0; i < t.size(); i++)
+		mpz_urandomm(t[i].get_mpz_t(), r_state, p.get_mpz_t());
+
 	for(int i = 0; i < coeffs.size(); i++)
 		if(coeffs[i] < 0)
 			coeffs[i] += p;
@@ -337,10 +344,10 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		}	
 	}
 	
-	witness.resize(NumOfVar);
+	witness.resize(NumOfVar + 1);
 	for(int i = 0; i < NumOfVar; i++)
 		witness[i] = g1 * 0;
-	witnessa.resize(NumOfVar);
+	witnessa.resize(NumOfVar + 1);
 	vector<mpz_class> witness_coeffs((int)pow(2, NumOfVar)), temp_coeffs = coeffs;
 
 	int start_index = 0;
@@ -386,11 +393,27 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 			//std::cout << "k = " << k << " i = " << i << std::endl;
 		}
 		//cout << "witness[k] = " << witness[k] << endl;
-		mie::Vuint tempa(a.get_str().c_str());
+		mie::Vuint temptk(t[k].get_str().c_str());
+		witness[k] += pub_g1[1 << NumOfVar] * temptk;
+		//mie::Vuint tempa(a.get_str().c_str());
 		witnessa[k] = witness[k] * tempa;
 		temp += temp1;
 		//std::cout << "hello world " << std::endl;
 	}	
+
+	mpz_class tmp = coeffs[1 << NumOfVar];
+	for(int i = 0; i < NumOfVar; i++)
+		tmp += (t[i] * r[i]) % p;
+	//mie::Vuint temp(tmp.get_str().c_str());
+	witness[NumOfVar] = pre_exp(g1_pre, tmp);
+	clock_t zkt = clock();
+	for(int i = 0; i < NumOfVar; i++){
+		mie::Vuint tempti(t[i].get_str().c_str());
+		witness[NumOfVar] -= pub_g1[1 << i] * tempti;
+	}
+	//mie::Vuint tempa(a.get_str().c_str());
+	witnessa[NumOfVar] = witness[NumOfVar] * tempa;
+	cout << "zkt time: " << (double)(clock() - zkt) / CLOCKS_PER_SEC << endl;
 
 	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
@@ -426,15 +449,15 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 
 	opt_atePairing(ea3, g2, digest - temp2);
 
-	for(int i = 0; i < r.size(); i++){
-
-		mie::Vuint temp4(r[i].get_str().c_str());
+	for(int i = 0; i < r.size() + 1; i++){
+		if(i == r.size()){
+			opt_atePairing(temp[i], pub_g2[i], witness[i]);
+		}
+		if(i < r.size()){
+			Ec2 temp3 = pub_g2[i] - pre_exp(g2_pre, r[i]);
 		
-		//Ec2 temp3 = pub_g2[pow(2, i)] - g2 * temp4;
-		Ec2 temp3 = pub_g2[pow(2, i)] - pre_exp(g2_pre, r[i]);
-		
-		opt_atePairing(temp[i], temp3, witness[i]);
-		
+			opt_atePairing(temp[i], temp3, witness[i]);
+		}
 		ea4 *= temp[i];
 	}
 
@@ -473,12 +496,12 @@ int main(int argc, char** argv){
 	
 
 	int d = atoi(argv[1]);
-	for(multi_scalar_w = 2; multi_scalar_w <= 10; multi_scalar_w++){
+	for(multi_scalar_w = 2; multi_scalar_w <= 2; multi_scalar_w++){
 		cout << "multi_scalar_w = " << multi_scalar_w << endl;
 	
 		KeyGen(d);
 		int N = (int)pow(2, d);
-		vector<mpz_class> input(N);
+		vector<mpz_class> input(N + 1);
 		for(int i = 0; i < input.size(); i++){
 			input[i] = rand();
 		}
