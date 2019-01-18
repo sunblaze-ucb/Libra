@@ -132,51 +132,31 @@ void zk_prover::generate_maskpoly(int length, int degree){
 //new zk function
 //a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c + a6g1^2c + a7g1c^2 + a8g1^2c^2;
 void zk_prover::generate_maskR(int layer_id){
-	//summaskR = \sum_{c \in {0, 1}}maskR(g1, u);
+	Rg1.a = maskR[4];
+	Rg1.b = maskR[3] + maskR[5] * preu1;
+	Rg1.c = maskR[0] + maskR[1] * preu1 + maskR[2] * preu1 * preu1; 
+	//quadratic function of c that R(z, c) when z = g2;
+	//std::cout << "maskR_sumcu = " << (Rg1.a + Rg1.b + Rg1.c + Rg1.c).to_string() << std::endl;
 
-	summaskR.a = maskR[2] + maskR[2] + maskR[6] + maskR[8];
-	summaskR.b = maskR[1] + maskR[1] + maskR[5] + maskR[7];
-	summaskR.c = maskR[0] + maskR[0] + maskR[3] + maskR[4];
-	//std::cout << "summaskR.a = " << summaskR.a.to_string() << std::endl;
-	maskR_sumcu = alpha * Zu * summaskR.eval(preu1);
-	//std::cout << "Zu = " << Zu.to_string() << std::endl;
-	//std::cout << "preu1 = " << preu1.to_string() << std::endl;
-	//maskR_sumcu.value = (maskR_sumcu.value * alpha.value) % prime_field::mod;
-	//std::cout << "maskR_sumcu = " << summaskR.eval(preu1).to_string() << std::endl;
-	//std::cout << "alpha = " << alpha.to_string() << std::endl;
-	//std::cout << "beta = " << beta.to_string() << std::endl;
+	Rg2.a = maskR[4];
+	Rg2.b = maskR[3] + maskR[5] * prev1;
+	Rg2.c = maskR[0] + maskR[1] * prev1 + maskR[2] * prev1 * prev1;
+	prime_field::field_element sumRu = Rg1.a + Rg1.b + Rg1.c + Rg1.c;
+	prime_field::field_element sumRv = Rg2.a + Rg2.b + Rg2.c + Rg2.c;
 
-	maskR_sumcv = beta * Zv * summaskR.eval(prev1); 
-	//std::cout << "Zv = " << Zv.to_string() << std::endl;
+	maskR_sumcu = alpha * Zu * sumRu;
+	maskR_sumcv = beta * Zv * sumRv;
 
-	//std::cout << "prev1 = " << prev1.to_string() << std::endl;
-	//std::cout << "maskR_sumcv = " << summaskR.eval(prev1).to_string() << std::endl;
-
-	//maskR_sumcv.value = (maskR_sumcv.value * beta.value) % prime_field::mod;
 	preZu = Zu;
 	preZv = Zv;
 	Zu = prime_field::field_element(1);
 	Zv = prime_field::field_element(1);
 	Iuv = prime_field::field_element(1);
-	//quadratic function of c that R(z, c) when z = g1;
-	Rg1.a = maskR[4] + maskR[7] * preu1 + maskR[8] * preu1 * preu1;
-	Rg1.b = maskR[3] + maskR[5] * preu1 + maskR[6] * preu1 * preu1;
-	Rg1.c = maskR[0] + maskR[1] * preu1 + maskR[2] * preu1 * preu1;
-	//quadratic function of c that R(z, c) when z = g2;
-	//std::cout << "maskR_sumcu = " << (Rg1.a + Rg1.b + Rg1.c + Rg1.c).to_string() << std::endl;
-
-	Rg2.a = maskR[4] + maskR[7] * prev1 + maskR[8] * prev1 * prev1;
-	Rg2.b = maskR[3] + maskR[5] * prev1 + maskR[6] * prev1 * prev1;
-	Rg2.c = maskR[0] + maskR[1] * prev1 + maskR[2] * prev1 * prev1;
-	//std::cout << "maskR_sumcv = " << (Rg2.a + Rg2.b + Rg2.c + Rg2.c).to_string() << std::endl;
-
-	for(int i = 0; i < 9; i++)
-		premaskR[i] = maskR[i];
 	if(layer_id > 1){
-		for(int i = 0; i < 9; i++)
+		for(int i = 0; i < 6; i++)
 			maskR[i] = prime_field::random();
-		sumRc.a = maskR[2] + maskR[2] + maskR[6] + maskR[8];
-		sumRc.b = maskR[1] + maskR[1] + maskR[5] + maskR[7];
+		sumRc.a = maskR[2] + maskR[2];
+		sumRc.b = maskR[1] + maskR[1] + maskR[5];
 		sumRc.c = maskR[0] + maskR[0] + maskR[3] + maskR[4];
 	} 
 	if(layer_id == 1){

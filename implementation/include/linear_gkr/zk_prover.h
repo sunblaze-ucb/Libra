@@ -66,9 +66,9 @@ public:
 	prime_field::field_element queryRg1(prime_field::field_element);
 	prime_field::field_element queryRg2(prime_field::field_element);
 
-	prime_field::field_element premaskR[9], maskR[9];
-	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
-	quadratic_poly summaskR, Rg1, Rg2, sumRc;
+	prime_field::field_element maskR[6];
+	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv;
+	quadratic_poly Rg1, Rg2, sumRc;
 	void generate_maskR(int);
 
 	//prime_field::field_element preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
