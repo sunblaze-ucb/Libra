@@ -1,8 +1,8 @@
 CC=g++
 CFLAGS=
 CDBG_FLAGS=-g
-INCLUDE=-I include -I include/mcl/include/ -I /usr/local/opt/openssl/include -I /usr/local/opt/gmp/include
-LIB=include/mcl/lib
+INCLUDE=-I include -I include/ate-pairing/include
+LIB=include/ate-pairing/lib
 OPT=-O3
 
 linear_gkr: src/linear_gkr/main_fast_track.cpp
@@ -18,7 +18,6 @@ clean:
 
 vpd_test:
 	$(CC) $(CFLAGS) $(INCLUDE) -L $(LIB) -std=c++11 src/VPD/inputvpd.cpp -g -o inputvpd $(OPT) -lzm -lgmp -lgmpxx
-
 
 clogc: src/traditional_gkr/ClogC.cpp
 	$(CC) $(CFLAGS) $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/ClogC.cpp -g -o bin/main_clogc

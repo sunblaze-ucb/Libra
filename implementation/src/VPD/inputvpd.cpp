@@ -203,7 +203,7 @@ void KeyGen(int d){
 	{
 		pub_g2[i] = pre_exp(g2_pre, s[i]);
 	}
-	//cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
+	cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
@@ -219,7 +219,9 @@ Ec1 multi_scalar_calc(int index, const vector<mpz_class> &scalar_pow)
 		int current_scalar = 0;
 		for(int k = 0; k < multi_scalar_w; ++k)
 			current_scalar |= (mpz_tstbit(scalar_pow[k].get_mpz_t(), j) == 1) << (k);
-		ret = ret * 2 + multi_scalar_g1[index].value[current_scalar];
+		ret = ret * 2;
+		if(current_scalar)
+			ret = ret + multi_scalar_g1[index].value[current_scalar];
 	}
 	return ret;
 }
@@ -264,7 +266,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 
 	digesta = digest * tempa;
 
-	//cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
+	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 	
@@ -330,6 +332,8 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 
 	const mie::Vuint tempa(a.get_str().c_str());
 	//std::cout << "hello world " << std::endl;
+	clock_t multi_t0 = clock();
+	/*
 	std::vector<mpz_class> scalar_pow(multi_scalar_w);
 	int temp = 0;
 	for(int k = NumOfVar - 1; k >= 0; k--){
@@ -361,6 +365,46 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		temp += temp1;
 		//std::cout << "hello world " << std::endl;
 	}	
+	*/
+
+	std::vector<mpz_class> scalar_pow;
+	scalar_pow.resize(multi_scalar_w);
+	for(int i = 0; i < (1 << (NumOfVar - 1)) / multi_scalar_w + 1; ++i)
+	{
+		int k_low = 0;
+		int temp = 0;
+		for(int k = NumOfVar - 1; k >= 0; --k)
+		{
+			if(i >= ((1 << k) / multi_scalar_w + 1))
+			{
+				k_low = k + 1;
+				break;
+			}
+			for(int j = 0; j < multi_scalar_w; ++j)
+			{
+				int id = i * multi_scalar_w + j;
+				if(id >= (1 << k))
+				{
+					scalar_pow[j] = 0;
+				}
+				else
+				{
+					scalar_pow[j] = witness_coeffs[id + temp];
+				}
+			}
+			temp += (1 << k);
+			witness[k] += multi_scalar_calc(i, scalar_pow);
+		}
+	}
+
+	for(int k = NumOfVar - 1; k >= 0; --k)
+	{
+		mie::Vuint temptk(t[k].get_str().c_str());
+		witness[k] += pub_g1[1 << NumOfVar] * temptk;
+		witnessa[k] = witness[k] * tempa;
+	}
+
+	cout << "multiscalar time: " << (double)(clock() - multi_t0) / CLOCKS_PER_SEC << endl;	
 
 	mpz_class tmp = coeffs[1 << NumOfVar];
 	for(int i = 0; i < NumOfVar; i++)
