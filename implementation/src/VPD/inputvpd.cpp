@@ -301,7 +301,6 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 			ans = (ans + (ans_pre[j] * coeffs[j]) % p) % p; 
 		}	
 	}
-	
 	witness.resize(NumOfVar + 1);
 	for(int i = 0; i < NumOfVar; i++)
 		witness[i] = g1 * 0;
@@ -416,10 +415,6 @@ bool verify(vector<mpz_class> r, G1 digest, mpz_class& ans, vector<G1>& witness,
 		ea4 *= temp[i];
 	}
 
-
-
-
-
 	if(ea3 != ea4) {
 		cout << "final error" << endl;
 		flag = 0;
@@ -447,8 +442,8 @@ int main(int argc, char** argv){
 	mcl::bn256::CurveParam cp = mcl::bn256::CurveFp254BNb;
 	//Param::init(cp);
 	initPairing();
-	G2 g2(Fp2(aa, ab), Fp2(ba, bb));
-	G1 g1(-1, 1);
+	g2 = G2(Fp2(aa, ab), Fp2(ba, bb));
+	g1 = G1(-1, 1);
 	
 
 	int d = atoi(argv[1]);
