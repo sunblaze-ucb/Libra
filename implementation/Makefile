@@ -22,6 +22,9 @@ input_vpd:
 =======
 vpd_test:
 	$(CC) $(CFLAGS) $(INCLUDE) -L $(LIB) -std=c++11 src/VPD/inputvpd.cpp -g -o inputvpd $(OPT) -lzm -lgmp -lgmpxx
+<<<<<<< HEAD
+>>>>>>> parent of 8c81323... minor
+=======
 >>>>>>> parent of 8c81323... minor
 
 clogc: src/traditional_gkr/ClogC.cpp

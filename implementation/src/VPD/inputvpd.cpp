@@ -33,7 +33,12 @@ class multi_scalar_state
 {
 public:
 <<<<<<< HEAD
+<<<<<<< HEAD
 	G1 value[1 << multi_scalar_w];
+=======
+	//Ec1 value[1 << multi_scalar_w];
+	Ec1 value[1 << 10];
+>>>>>>> parent of 8c81323... minor
 =======
 	//Ec1 value[1 << multi_scalar_w];
 	Ec1 value[1 << 10];
@@ -494,17 +499,23 @@ int main(int argc, char** argv){
 		cout << "multi_scalar_w = " << multi_scalar_w << endl;
 	
 <<<<<<< HEAD
+<<<<<<< HEAD
 	//cout << "p = " << p << endl;
 
 	G1 digest, digesta;
 	digest = g1 * 0;
 =======
+=======
+>>>>>>> parent of 8c81323... minor
 		KeyGen(d);
 		int N = (int)pow(2, d);
 		vector<mpz_class> input(N + 1);
 		for(int i = 0; i < input.size(); i++){
 			input[i] = rand();
 		}
+<<<<<<< HEAD
+>>>>>>> parent of 8c81323... minor
+=======
 >>>>>>> parent of 8c81323... minor
 		
 		//cout << "p = " << p << endl;
@@ -520,6 +531,7 @@ int main(int argc, char** argv){
 		mpz_class ans;
 		
 <<<<<<< HEAD
+<<<<<<< HEAD
 	vector<G1> proof, proofa;
 	vector<mpz_class> r(d);
 	mpz_class ans;
@@ -532,6 +544,8 @@ int main(int argc, char** argv){
 	bool tf = verify(r, digest, ans, proof, proofa);
 	cout<< "verify: " << tf <<endl;
 =======
+=======
+>>>>>>> parent of 8c81323... minor
 		for(int i = 0; i < r.size(); i++)
 			mpz_urandomm(r[i].get_mpz_t(), r_state, p.get_mpz_t());
 		
@@ -540,6 +554,9 @@ int main(int argc, char** argv){
 		bool tf = verify(r, digest, ans, proof, proofa);
 		cout<< "verify: " << tf <<endl;
 	}
+<<<<<<< HEAD
+>>>>>>> parent of 8c81323... minor
+=======
 >>>>>>> parent of 8c81323... minor
 
 	return 0;
