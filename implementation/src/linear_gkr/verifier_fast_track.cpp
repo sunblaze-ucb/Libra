@@ -384,13 +384,8 @@ bool verifier::verify()
 //		std::cout << "alpha = " << alpha.to_string(10) << std::endl;
 //		std::cout << "beta = " << beta.to_string(10) << std::endl;
 		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
-		std::chrono::high_resolution_clock::time_point t_addmulta = std::chrono::high_resolution_clock::now();
 		auto mult_value = mult(i);
 		auto add_value = add(i);
-		std::chrono::high_resolution_clock::time_point t_addmultb = std::chrono::high_resolution_clock::now();
-
-		std::chrono::duration<double> ts2 = std::chrono::duration_cast<std::chrono::duration<double>>(t_addmultb - t_addmulta);
-		std::cerr << "addmult Time: " << ts2.count() << std::endl;
 //		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
 //		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
 
