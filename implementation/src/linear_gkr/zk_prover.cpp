@@ -17,6 +17,8 @@ prime_field::field_element from_string(const char* str)
 prime_field::field_element inv_2;
 void zk_prover::get_circuit(const layered_circuit &from_verifier)
 {
+	vpdR::environment_init();
+	vpd_test::environment_init();
 	C = from_verifier;
 	inv_2 = from_string("8399054365507916142470402071115866954879789801702376374514189432082785107975");
 	//std::cout << "test inv_2 = " << inv_2.to_string() << std::endl;
@@ -157,6 +159,17 @@ void zk_prover::generate_maskpoly_after_rho(int length, int degree)
 //new zk function
 //a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c + a6g1^2c + a7g1c^2 + a8g1^2c^2;
 std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
+	vpdR::KeyGen(2);
+	std::vector<bn::Ec1> ret;
+	ret.resize(2);
+
+	std::vector<mpz_class> maskR_gmp;
+	for(int i = 0; i < 6; ++i)
+		maskR_gmp.push_back(maskR[i].to_gmp_class());
+
+	r_f_R = vpdR::commit(ret[0], ret[1], maskR_gmp);
+	for(int i = 0; i < 6; i++)
+		preR[i] = maskR[i];
 	Rg1.a = maskR[4];
 	Rg1.b = maskR[3] + maskR[5] * preu1;
 	Rg1.c = maskR[0] + maskR[1] * preu1 + maskR[2] * preu1 * preu1; 
@@ -191,16 +204,7 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 		sumRc.b = maskR[1];
 		sumRc.c = maskR[0];
 	}
-	vpdR::environment_init();
-	vpdR::KeyGen(2);
-	std::vector<bn::Ec1> ret;
-	ret.resize(2);
 
-	std::vector<mpz_class> maskR_gmp;
-	for(int i = 0; i < 6; ++i)
-		maskR_gmp.push_back(maskR[i].to_gmp_class());
-
-	r_f_R = vpdR::commit(ret[0], ret[1], maskR_gmp);
 	return ret;
 }
 

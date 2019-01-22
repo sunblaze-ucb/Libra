@@ -251,6 +251,7 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 
 void environment_init()
 {
+	cout << "vpdR initialized" << endl;
 	seed = rand();
     gmp_randinit_default(r_state);
     gmp_randseed_ui(r_state, seed);

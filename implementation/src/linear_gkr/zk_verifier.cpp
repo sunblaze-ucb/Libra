@@ -415,8 +415,10 @@ bool zk_verifier::verify()
 		r.resize(2);
 		r[0] = p -> preu1.to_gmp_class(), r[1] = r_c[0].to_gmp_class();
 		p -> prove_R(r, maskRg1_value_mpz);
-		mpz_class alpha_gmp = alpha.to_gmp_class();
-		cout << alpha_gmp * maskRg1_value_mpz << "\nvs\n" << maskRg1_value.to_gmp_class() << endl;
+		prime_field::field_element tmp_rg1;
+		tmp_rg1.value = prime_field::u512b(maskRg1_value_mpz.get_str().c_str(), maskRg1_value_mpz.get_str().length(), 10);
+
+		cout << (alpha * tmp_rg1).to_gmp_class() << "\nvs\n" << maskRg1_value.to_gmp_class() << endl;
 		
 
 		//std::cout << "maskRg1_value = " << maskRg1_value.to_string() << std::endl;

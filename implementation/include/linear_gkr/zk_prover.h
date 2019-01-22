@@ -75,7 +75,7 @@ public:
 	prime_field::field_element queryRg1(prime_field::field_element);
 	prime_field::field_element queryRg2(prime_field::field_element);
 
-	prime_field::field_element maskR[6];
+	prime_field::field_element maskR[6], preR[6];
 	mpz_class r_f_R, r_f_mask_poly;
 	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv;
 	quadratic_poly Rg1, Rg2, sumRc;
