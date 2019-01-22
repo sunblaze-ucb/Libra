@@ -250,6 +250,7 @@ bool zk_verifier::verify()
 		p -> rho = rho;
 		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
+		bool r_verify_cc = vpdR::check_commit(digest_maskR[0], digest_maskR[1]);
 		
 		//add maskpoly
 		//std::cout << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
@@ -413,13 +414,24 @@ bool zk_verifier::verify()
 		mpz_class maskRg1_value_mpz, maskRg2_value_mpz;
 		std::vector<mpz_class> r;
 		r.resize(2);
-		r[0] = p -> preu1.to_gmp_class(), r[1] = r_c[0].to_gmp_class();
-		p -> prove_R(r, maskRg1_value_mpz);
+		r[0] = p -> prepreu1.to_gmp_class(), r[1] = r_c[0].to_gmp_class();
+		auto witnesses = p -> prove_R(r, maskRg1_value_mpz);
 		prime_field::field_element tmp_rg1;
-		tmp_rg1.value = prime_field::u512b(maskRg1_value_mpz.get_str().c_str(), maskRg1_value_mpz.get_str().length(), 10);
+		bool r_verify_verify = vpdR::verify(r, digest_maskR[0], maskRg1_value_mpz, witnesses.first, witnesses.second);
 
-		cout << (alpha * tmp_rg1).to_gmp_class() << "\nvs\n" << maskRg1_value.to_gmp_class() << endl;
-		
+		r[0] = p -> preprev1.to_gmp_class();
+		witnesses = p -> prove_R(r, maskRg2_value_mpz);
+		r_verify_verify &= vpdR::verify(r, digest_maskR[0], maskRg2_value_mpz, witnesses.first, witnesses.second);
+
+		if(r_verify_verify & r_verify_cc)
+		{
+			fprintf(stderr, "VPD R pass\n");
+		}
+		else
+		{
+			fprintf(stderr, "VPD R failed\n");
+			return false;
+		}
 
 		//std::cout << "maskRg1_value = " << maskRg1_value.to_string() << std::endl;
 		//std::cout << "maskRg2_value = " << maskRg2_value.to_string() << std::endl;

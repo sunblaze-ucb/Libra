@@ -111,9 +111,11 @@ void KeyGen(int d){
 //F = a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c + a6g1^2c + a7g1c^2 + a8g1^2c^2;
 mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	mpz_class r_f;
+	digest = g1 * 0;
 	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
 	//cout << "digest = " << digest << endl; 
 	vector<mpz_class> coeffs = input;
+	coeffs.push_back(r_f);
 	
 	//int d = ceil(log2(input.size()));
 	
@@ -149,13 +151,13 @@ bool check_commit(Ec1 digest, Ec1 digesta){
 	
 	opt_atePairing(ea1, g2, digesta);
 	opt_atePairing(ea2, g2a, digest);
-	
-	
+	mie::Vuint temp1(a.get_str().c_str());
+
 	return (ea1 == ea2);
 }
 
 //F = a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c;
-void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa){
+void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa, mpz_class r_f){
 	vector<mpz_class> coeffs = input;
 	clock_t prove_t = clock();
 
@@ -169,6 +171,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	for(int i = 0; i < coeffs.size(); i++)
 		if(coeffs[i] < 0)
 			coeffs[i] += p;
+	coeffs.push_back(r_f);
 	mie::Vuint tempa2(coeffs[2].get_str().c_str());
 	mie::Vuint tempa5(coeffs[5].get_str().c_str());
 
@@ -198,7 +201,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
-bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
+bool verify(vector<mpz_class> r, Ec1 digest, mpz_class ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
 	clock_t verify_t = clock();	
 
 	Fp12 ea1, ea2;

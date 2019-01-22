@@ -282,7 +282,7 @@ namespace prime_field
 	{
 		u512b ret = (u256b)(unsigned long long)0;
 		u512b tmp = (u256b)(unsigned long long)1;
-		for(int i = 0; i < len; ++i)
+		for(int i = len - 1; i >= 0; --i)
 		{
 			ret = ret + tmp * (u512b)((u256b)(unsigned long long)(x[i] - '0'));
 			tmp = tmp * (u512b)((u256b)(unsigned long long)10);

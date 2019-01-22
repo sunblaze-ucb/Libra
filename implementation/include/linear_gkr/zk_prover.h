@@ -77,7 +77,7 @@ public:
 
 	prime_field::field_element maskR[6], preR[6];
 	mpz_class r_f_R, r_f_mask_poly;
-	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv;
+	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv, prepreu1, preprev1;
 	quadratic_poly Rg1, Rg2, sumRc;
 	std::vector<bn::Ec1> generate_maskR(int);
 

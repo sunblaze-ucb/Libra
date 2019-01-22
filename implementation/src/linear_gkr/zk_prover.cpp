@@ -166,13 +166,18 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 	std::vector<mpz_class> maskR_gmp;
 	for(int i = 0; i < 6; ++i)
 		maskR_gmp.push_back(maskR[i].to_gmp_class());
-
+	prepreu1 = preu1;
+	preprev1 = prev1;
 	r_f_R = vpdR::commit(ret[0], ret[1], maskR_gmp);
+
+	cout << "fuck " << vpdR::check_commit(ret[0], ret[1]) << endl;
+
 	for(int i = 0; i < 6; i++)
 		preR[i] = maskR[i];
 	Rg1.a = maskR[4];
 	Rg1.b = maskR[3] + maskR[5] * preu1;
 	Rg1.c = maskR[0] + maskR[1] * preu1 + maskR[2] * preu1 * preu1; 
+	
 	//quadratic function of c that R(z, c) when z = g2;
 	//std::cout << "maskR_sumcu = " << (Rg1.a + Rg1.b + Rg1.c + Rg1.c).to_string() << std::endl;
 
@@ -213,8 +218,8 @@ std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_R(std::v
 	std::vector<bn::Ec1> witness, witnessa;
 	std::vector<mpz_class> input;
 	for(int i = 0; i < 6; ++i)
-		input.push_back(maskR[i].to_gmp_class());
-	vpdR::prove(R, ans, input, witness, witnessa);
+		input.push_back(preR[i].to_gmp_class());
+	vpdR::prove(R, ans, input, witness, witnessa, r_f_R);
 	return std::make_pair(witness, witnessa);
 }
 
