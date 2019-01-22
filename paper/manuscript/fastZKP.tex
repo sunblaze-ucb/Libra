@@ -372,7 +372,7 @@
 \newcommand{\ignore}[1]{}
 \newcommand{\etal}{\textit{et al.}\xspace}
 
-%\renewcommand{\paragraph}[1]{\vspace{3.8pt}\noindent\textbf{#1}}
+\renewcommand{\paragraph}[1]{\vspace{3.8pt}\noindent\textbf{#1}}
 \newcommand{\squish}{
       \setlength{\topsep}{0pt}
       \setlength{\itemsep}{0ex}
@@ -453,6 +453,13 @@ elaine: \\
 \newcommand{\binary}{\{0,1\}}
 \newcommand{\V}{\mathcal{V}}
 \renewcommand{\P}{\mathcal{P}}
+\renewcommand{\S}{\mathcal{S}}
+\newcommand{\A}{\mathcal{A}}
+
+
+\newcommand{\accept}{\mathsf{accept}}
+\newcommand{\reject}{\mathsf{reject}}
+
 
 %===============rafael's macros ==============
 \newcommand{\commentout}[1]{}
@@ -617,7 +624,7 @@ elaine: \\
 \newcommand{\Y}{{\bf Y}\xspace}
 %\newcommand{\Z}{{\bf Z}\xspace}
 \newcommand{\T}{{\bf T}\xspace}
-\newcommand{\A}{{\bf A}\xspace}
+%\newcommand{\A}{{\bf A}\xspace}
 \newcommand{\lshort}{\ensuremath{L}\xspace}
 \newcommand{\llong}{\ensuremath{L_0}\xspace}
 \newcommand{\lead}{{\sf lead}\xspace}
@@ -668,10 +675,12 @@ elaine: \\
 \author{placeholder}
 \end{titlepage}
 \maketitle
+\input{abstract.tex}
+\input{intro.tex}
 \input{prelim.tex}
-\input{definition.tex}
 \input{gkr_linear.tex}
 \input{zkgkr.tex}
+\input{evaluation.tex}
 
 \bibliographystyle{siam}
 \bibliography{tiancx}

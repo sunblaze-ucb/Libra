@@ -2,6 +2,40 @@
 
 \subsection{GKR Protocol}\label{subsec::GKR}
 
+In~\cite{GKR}, Goldwasser et al. proposed an efficient interactive proof protocol for layered arithmetic circuits, which we use as a building block for our new zero-knowledge argument and is referred as the \emph{GKR} protocol. It is later improved in~\cite{CMT,t13, vram, ...} for different categories of circuits. We present the detailed protocol here.
+
+
+
+\subsubsection{Sumcheck Protocol}
+\label{subsec::sumcheck}
+The sumcheck problem is a fundamental problem that serves as a building block for varies applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\limits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
+Directly computing the sum requires exponential time in $\ell$, as there are $2^\ell$ combinations of $b_1,\ldots,b_\ell$. Lund et al.~\cite{sumcheck} proposed a \emph{sumcheck} protocol that allows a verifier $\mathcal{V}$ to delegate the computation to a computationally unbounded prover $\mathcal{P}$, who can convince $\mathcal{V}$ that $H$ is the correct sum. We provide a description of the sumcheck protocol.
+
+\begin{protocol}[\textbf{Sumcheck}]
+	\label{prot::sumcheck}
+	The protocol proceeds in $\ell$ rounds. 
+	\begin{itemize}
+		\item In the first round, the prover sends a univariate polynomial $$f_1(x_1)\overset{def}{=}\sum\limits_{b_2,\ldots,b_\ell\in\{0,1\}}f(x_1,b_2,...,b_\ell)\, ,$$ the verifier checks $H=f_1(0)+f_1(1)$. Then the verifier sends a random challenge $r_1\in\mathbb{F}$ to the prover.
+		\item In the $i$-th round, where $2\le i \le l-1$, the prover sends a univariate polynomial
+		$$f_{i}(x_{i})\overset{def}{=}\sum\limits_{b_{i+1},\ldots,b_\ell\in\{0,1\}}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ 
+		the verifier checks $f_{i-1}(r_{i-1})=f_{i}(0)+f_{i}(1)$, and sends a random challenge $r_{i}\in\mathbb{F}$ to the prover.
+		\item In the $\ell$-th round, the prover sends a univariate polynomial $$f_{\ell}(x_{\ell})\overset{def}{=}f(r_1, r_2, ..., r_{l-1}, x_{\ell})\, ,$$ the verifier checks $f_{\ell-1}(r_{\ell-1})=f_{\ell}(0)+f_{\ell}(1)$. The verifier generates a random challenge $r_{\ell}\in\mathbb{F}$. Given oracle access to an evaluation $f(r_1, r_2, ..., r_\ell)$ of $f$, the verifier will accept if and only if $f_{\ell}(r_\ell) = f(r_1, r_2, ..., r_\ell)$. The instantiation of the oracle access depends on the application of the sumcheck protocol.
+	\end{itemize}
+\end{protocol}
+
+The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, the prover sends a univariate polynomial for each variable in $f$, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
+
+\begin{definition}[\textbf{Multi-linear Extension}]
+	Let $V:\{0, 1\}^l \rightarrow \mathbb{F}$ be a function. The \textit{multi-linear extension} of $V$ is the unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ such that $\tilde{V}(x_1, x_2, ..., x_{l}) = V(x_1, x_2, ..., x_{l})$ for all $x_1, x_2, ..., x_{l}\in\{0,1\}^l$.
+	
+	
+	$\tilde{V}$ can be expressed as:
+	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
+	where $b_i$ is $i$-th bit of b.
+	
+	
+\end{definition}
+
 
 Using the sumcheck protocol as a building block, Goldwasser et al.~\cite{GKR} showed an interactive proof protocol (referred as the \emph{GKR protocol} in this paper) for \textit{layered arithmetic circuits}. 
 

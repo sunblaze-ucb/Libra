@@ -1,34 +1,15 @@
 %!TEX root = fastZKP.tex
 
-\subsection{Zero-Knowledge Verifiable Polynomial Delegation Commitment Scheme}
+\subsection{Zero-Knowledge Verifiable Polynomial Delegation Scheme}
 \label{subsec::zkvpd}
+
+\yupeng{At this point, I think it suffices to only give a definition of ZKVPD here.}
+
+
+\ignore{
 Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for short) is a important building block for our zero knowledge construction. We will use the construction from Zhang et al. \cite{zkvpd}.
 
-\subsubsection{Cryptographic Assumptions}
 
-\begin{assumption}[$q$-Strong Diffie-Hellman]
-	\label{asp::qSDH}
-	For any probabilistic polynomial time (PPT) adversary $\mathcal{A}$, the following holds:
-
-	\[\Pr\left[ \begin{aligned}
-		&bp \leftarrow BilGen(1^\lambda) & \\
-		&s \overset{R}{\leftarrow} \mathbb{Z}^{*}_{p} & : (x, e(g, g)^{\frac{1}{s+x}}) \leftarrow \mathcal{A}(1^\lambda, \sigma)\\
-		&\sigma = (bp, g^s, ..., g^{s^q})
-	\end{aligned} \right] \le \negl{(\lambda)}\]
-\end{assumption}
-\begin{assumption}[$(d,l)$-Extended Power Knowledge of Exponent]
-	\label{asp::dlEPKE}
-	For any PPT adversary $\mathcal{A}$, there is a polynomial time algorithm $\mathcal{E}$ (takes the same randomness of $\mathcal{A}$ as input) such that for all benign auxiliary inputs $z \in \{0,1\}^{\poly{\lambda}}$ the following probability is negligible:
-	\[\Pr\left[ \begin{aligned}
-					bp \leftarrow BilGen(1^\lambda) && \\
-					s_1, ..., s_l, s_{l + 1}, \alpha \overset{R}{\leftarrow} Z_{p}^*, s_0=1 && \\
-					\sigma_1 = (\{g^{\prod_{i\in W}s_i}\}_{W\in \mathcal{W}_{l, d}, g^{s_{l+1}}}) &&\hspace*{10pt} e(h, g^\alpha)=e(\tilde{h}, g)\\
-					\sigma_2 = (\{g^{\alpha\prod_{i\in Ws_i}}\}_{W\in \mathcal{W}_{l, d}}, g^{\alpha s_{l+1}}) && : \prod_{W\in \mathcal{W}_{l, d}}g^{a_{W}\prod_{i\in W}s_i}g^{b_{s_{l+1}}}\neq h\\
-					\sigma = (bp, \sigma_1, \sigma_2, g^{\alpha}) && \\
-					\mathbb{G} \times \mathbb{G} \ni (h, \tilde{h}) \leftarrow \mathcal{A} \left(1^{\lambda}, \sigma, z\right)&& \\
-					\left( a _ { 0 } , \dots , a _ { \left| \mathcal { W } _ { \ell , d } \right| } , b \right) \leftarrow \mathcal { E } \left( 1 ^ { \lambda } , \sigma , z \right) &&
-				\end{aligned}\right] \le \negl{(\lambda)}\]
-\end{assumption}
 
 \subsubsection{Scheme Description}
 
@@ -111,4 +92,5 @@ Zhang et al.'s construction \cite{zkvpd} is a zero knowledge extractable verifia
 	%%%
 	\end{definition}
 \end{framed}
+}
 }

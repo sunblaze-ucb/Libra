@@ -1,9 +1,47 @@
 %!TEX root = fastZKP.tex
 \section{Preliminary}
 \label{sec::prelim}
-In this section, we will introduce some useful results and definitions.
-\subsection{Interactive Proof}
-Traditional proof involves two static objects: a prover $\mathcal{P}$ and a verifier $\mathcal{V}$. The prover $\mathcal{P}$ takes a statement $x$ as input and generate a string $\pi$ as proof, then the verifier $\mathcal{V}$ checks if the statement $x$ and the proof $\pi$ are correct. An interactive proof is a stronger notion of proof, it allows the prover $\mathcal{P}$ to convince the verifier $\mathcal{V}$ of the validity of some statement. The interactive proof runs in several rounds, allowing the verifier to ask questions in each round based on prover's answers of previous rounds. We phrase this in terms of $\mathcal{P}$ trying to convince $\mathcal{V}$ that $f(x)=1$. The proof system is interesting if and only if the running time of $\mathcal{V}$ is less than the time of directly computing the function $f$.
+
+\subsection{Notations}
+
+polynomials, PPT, vectors, ,binary, array, security parameter, $\neg$,
+
+\subsection{Cryptographic Assumptions}
+
+\paragraph{Bilinear pairing.} Let $\lambda$ be the security parameter, $\mathbb{G}, \mathbb{G}_T$ be two groups of order $p$ and $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map.
+
+Our scheme relies on the following assumptions.
+
+\begin{assumption}[$q$-Strong Diffie-Hellman]
+	\label{asp::qSDH}
+	For any probabilistic polynomial time (PPT) adversary $\mathcal{A}$, the following holds:
+	
+	\[\Pr\left[ \begin{aligned}
+	&\mathsf{bp} \leftarrow \mathsf{BilGen}(1^\lambda) & \\
+	&s \overset{R}{\leftarrow} \mathbb{Z}^{*}_{p} & : (x, e(g, g)^{\frac{1}{s+x}}) \leftarrow \mathcal{A}(1^\lambda, \sigma)\\
+	&\sigma = (\mathsf{bp}, g^s, ..., g^{s^q})
+	\end{aligned} \right] \le \negl{(\lambda)}\]
+\end{assumption}
+
+The second assumption is a generalization of the $q$-PKE assumption~\cite{groth2010short} to multivariate polynomials, proposed in~\cite{zhang2017vsql,zkvpd}. Let $\mathcal {W}_ {\ell,d}$ be the set of all multisets of $\{1, . . . , \ell\}$ with the cardinality of each element being at most $d$. 
+
+\begin{assumption}[$(d,\ell)$-Extended Power Knowledge of Exponent]
+	\label{asp::dlEPKE}
+	For any PPT adversary $\mathcal{A}$, there is a polynomial time algorithm $\mathcal{E}$ (takes the same randomness of $\mathcal{A}$ as input) such that for all benign auxiliary inputs $z \in \{0,1\}^{\poly({\lambda})}$ the following probability is negligible:
+	\[\Pr\left[ \begin{aligned}
+	\mathsf{bp} \leftarrow \mathsf{BilGen}(1^\lambda) && \\
+	s_1, ..., s_\ell, s_{\ell + 1}, \alpha \overset{R}{\leftarrow} Z_{p}^*, s_0=1 && \\
+	\sigma_1 = (\{g^{\prod_{i\in W}s_i}\}_{W\in \mathcal{W}_{\ell, d}, g^{s_{\ell+1}}}) &&\hspace*{10pt} e(h, g^\alpha)=e(\tilde{h}, g)\\
+	\sigma_2 = (\{g^{\alpha\prod_{i\in Ws_i}}\}_{W\in \mathcal{W}_{\ell, d}}, g^{\alpha s_{\ell+1}}) && : \prod_{W\in \mathcal{W}_{\ell, d}}g^{a_{W}\prod_{i\in W}s_i}g^{b{s_{\ell+1}}}\neq h\\
+	\sigma = (\mathsf{bp}, \sigma_1, \sigma_2, g^{\alpha}) && \\
+	\mathbb{G} \times \mathbb{G} \ni (h, \tilde{h}) \leftarrow \mathcal{A} \left(1^{\lambda}, \sigma, z\right)&& \\
+	\left( a _ { 0 } , \dots , a _ { \left| \mathcal { W } _ { \ell , d } \right| } , b \right) \leftarrow \mathcal { E } \left( 1 ^ { \lambda } , \sigma , z \right) &&
+	\end{aligned}\right] \le \negl{(\lambda)}\]
+\end{assumption}
+
+\subsection{Interactive Proof and Zero-knowledge Arguments}
+
+\paragraph{Interactive proof.} Traditional proof involves two static objects: a prover $\mathcal{P}$ and a verifier $\mathcal{V}$. The prover $\mathcal{P}$ takes a statement $x$ as input and generate a string $\pi$ as proof, then the verifier $\mathcal{V}$ checks if the statement $x$ and the proof $\pi$ are correct. An interactive proof is a stronger notion of proof, it allows the prover $\mathcal{P}$ to convince the verifier $\mathcal{V}$ of the validity of some statement. The interactive proof runs in several rounds, allowing the verifier to ask questions in each round based on prover's answers of previous rounds. We phrase this in terms of $\mathcal{P}$ trying to convince $\mathcal{V}$ that $f(x)=1$. The proof system is interesting if and only if the running time of $\mathcal{V}$ is less than the time of directly computing the function $f$.
 
 We formalize the "interactive proof" in the following:	
 \begin{definition}
@@ -14,33 +52,30 @@ We formalize the "interactive proof" in the following:
 	\end{itemize}
 \end{definition}
 
-\subsection{Sumcheck Protocol}
-\label{subsec::sumcheck}
-The sumcheck problem is a fundamental problem that serves as a building block for varies applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\limits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
-Directly computing the sum requires exponential time in $\ell$, as there are $2^\ell$ combinations of $b_1,\ldots,b_\ell$. Lund et al.~\cite{sumcheck} proposed a \emph{sumcheck} protocol that allows a verifier $\mathcal{V}$ to delegate the computation to a computationally unbounded prover $\mathcal{P}$, who can convince $\mathcal{V}$ that $H$ is the correct sum. We provide a description of the sumcheck protocol.
 
-\begin{protocol}[\textbf{Sumcheck}]
-\label{prot::sumcheck}
-	The protocol proceeds in $\ell$ rounds. 
+\paragraph{Zero-knowledge Argument.} An argument system for an NP relationship $R$ is a protocol between a computationally bounded prover $\P$ and a verifier $\V$. At the end of the protocol, $\V$ is convinced by $\P$ that there exists a witness $w$ such that $(x; w) \in R$ for some input $x$. We focus on arguments of knowledge which have the stronger property that if the prover convinces the verifier of the statement’s validity, then the prover must know $w$. We use $\mathcal{G}$ to represent private key $\pk$ and verificaiton key $\vk$ generation phase. Formally, consider the definition below.
+
+\begin{definition}\label{def::zkpd}
+	
+	Let $R$ be an NP relation and let $\lambda$ be the security parameter. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero knowledge argument fro $R$ if the following holds.
+	
 	\begin{itemize}
-		\item In the first round, the prover sends a univariate polynomial $$f_1(x_1)\overset{def}{=}\sum\limits_{b_2,\ldots,b_\ell\in\{0,1\}}f(x_1,b_2,...,b_\ell)\, ,$$ the verifier checks $H=f_1(0)+f_1(1)$. Then the verifier sends a random challenge $r_1\in\mathbb{F}$ to the prover.
-		\item In the $i$-th round, where $2\le i \le l-1$, the prover sends a univariate polynomial
-		$$f_{i}(x_{i})\overset{def}{=}\sum\limits_{b_{i+1},\ldots,b_\ell\in\{0,1\}}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ 
-		the verifier checks $f_{i-1}(r_{i-1})=f_{i}(0)+f_{i}(1)$, and sends a random challenge $r_{i}\in\mathbb{F}$ to the prover.
-		\item In the $\ell$-th round, the prover sends a univariate polynomial $$f_{\ell}(x_{\ell})\overset{def}{=}f(r_1, r_2, ..., r_{l-1}, x_{\ell})\, ,$$ the verifier checks $f_{\ell-1}(r_{\ell-1})=f_{\ell}(0)+f_{\ell}(1)$. The verifier generates a random challenge $r_{\ell}\in\mathbb{F}$. Given oracle access to an evaluation $f(r_1, r_2, ..., r_\ell)$ of $f$, the verifier will accept if and only if $f_{\ell}(r_\ell) = f(r_1, r_2, ..., r_\ell)$. The instantiation of the oracle access depends on the application of the sumcheck protocol.
+		
+		\item \textbf{Correctness}. For every $(\pk, \vk)$ output by $\mathcal{G}(1^\lambda)$ and $(x, w) \in R$, 
+		$$\langle \P(\pk, w), \V(\vk) \rangle(x) = \accept$$
+		
+		\item \textbf{Soundness}. For any PPT prover $\P$, there exists a PPT extractor $\varepsilon$ such that for any $x$ it holds that
+		
+		$$\Pr[\langle\P(\pk), \V(\vk) \rangle(x) = \accept \wedge (x, w) \notin R | w \leftarrow \varepsilon(\pk, x)] \leq \neg(\lambda)$$
+		
+		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$, it holds that
+		
+		$$\Pr\left[(x;w)\in R; \langle\P(\pk,w),\A(\sigma) \rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk) \right] = $$
+		$$\Pr\left[(x;w)\in R; \langle\S(\mathsf{trap}, z, \pk),\A(\sigma) \rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk)\right]$$
+		
+		where $=$ means perfect zero knowledge. 
+		
 	\end{itemize}
-\end{protocol}
-
-The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, the prover sends a univariate polynomial for each variable in $f$, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
-
-\begin{definition}[\textbf{Multi-linear Extension}]
-	Let $V:\{0, 1\}^l \rightarrow \mathbb{F}$ be a function. The \textit{multi-linear extension} of $V$ is the unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ such that $\tilde{V}(x_1, x_2, ..., x_{l}) = V(x_1, x_2, ..., x_{l})$ for all $x_1, x_2, ..., x_{l}\in\{0,1\}^l$.
-	
-	
-	$\tilde{V}$ can be expressed as:
-	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
-	where $b_i$ is $i$-th bit of b.
-	
 	
 \end{definition}
 
