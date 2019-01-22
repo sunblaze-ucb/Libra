@@ -1,7 +1,7 @@
 #include "linear_gkr/zk_prover.h"
 #include <iostream>
+#include <utility>
 #include <cstring>
-#include "VPD/vpd_test.h"
 #include "bn.h"
 prime_field::field_element from_string(const char* str)
 {
@@ -110,7 +110,7 @@ prime_field::field_element* zk_prover::evaluate()
 
 //a_0x_0 + a_1x_0^2 + a_2x_1 + a_3x_1^2\codts + a_{2n}
 
-vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree, mpz_class r_f)
+vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree)
 {
 	if(maskpoly != NULL) 
 		delete[] maskpoly;
@@ -131,7 +131,7 @@ vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree, mpz
 	for(int i = 0; i < length * degree + 7; ++i)
 		maskpoly_gmp[i] = maskpoly[i].to_gmp_class();
 
-	vpd_test::commit(ret[0], ret[1], maskpoly_gmp, r_f);
+	r_f_mask_poly = vpd_test::commit(ret[0], ret[1], maskpoly_gmp);
 	return ret;
 }
 
@@ -191,6 +191,27 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 		sumRc.b = maskR[1];
 		sumRc.c = maskR[0];
 	}
+	vpdR::environment_init();
+	vpdR::KeyGen(2);
+	std::vector<bn::Ec1> ret;
+	ret.resize(2);
+
+	std::vector<mpz_class> maskR_gmp;
+	for(int i = 0; i < 6; ++i)
+		maskR_gmp.push_back(maskR[i].to_gmp_class());
+
+	r_f_R = vpdR::commit(ret[0], ret[1], maskR_gmp);
+	return ret;
+}
+
+std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_R(std::vector<mpz_class> R, mpz_class &ans)
+{
+	std::vector<bn::Ec1> witness, witnessa;
+	std::vector<mpz_class> input;
+	for(int i = 0; i < 6; ++i)
+		input.push_back(maskR[i].to_gmp_class());
+	vpdR::prove(R, ans, input, witness, witnessa);
+	return std::make_pair(witness, witnessa);
 }
 
 prime_field::field_element zk_prover::query(prime_field::field_element *u, prime_field::field_element *v, prime_field::field_element r_c){
@@ -251,7 +272,7 @@ std::vector<bn::Ec1> zk_prover::sumcheck_init(int layer_id, int bit_length_g, in
 	one_minus_r_1 = o_r_1;
 	int sumcheck_length = length_u + length_v;
 	//std::cout << "sumcheck_length = " << sumcheck_length << std::endl;
-	generate_maskR(layer_id);
+	return generate_maskR(layer_id);
 }
 
 

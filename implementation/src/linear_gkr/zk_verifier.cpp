@@ -245,11 +245,11 @@ bool zk_verifier::verify()
 		std::cerr << "Bound u start" << std::endl;
 		auto rho = prime_field::random();
 		std::vector<bn::Ec1> digest_mask, digest_R;
-		auto r_f = prime_field::random();
-		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2, r_f.to_gmp_class());
+
+		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		p -> rho = rho;
 		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
-		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
+		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		
 		//add maskpoly
 		//std::cout << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
@@ -410,6 +410,15 @@ bool zk_verifier::verify()
 		prime_field::field_element maskpoly_value = p->query(r_u, r_v, r_c[0]);
 		prime_field::field_element maskRg1_value = p->queryRg1(r_c[0]);
 		prime_field::field_element maskRg2_value = p->queryRg2(r_c[0]);
+		mpz_class maskRg1_value_mpz, maskRg2_value_mpz;
+		std::vector<mpz_class> r;
+		r.resize(2);
+		r[0] = p -> preu1.to_gmp_class(), r[1] = r_c[0].to_gmp_class();
+		p -> prove_R(r, maskRg1_value_mpz);
+		mpz_class alpha_gmp = alpha.to_gmp_class();
+		cout << alpha_gmp * maskRg1_value_mpz << "\nvs\n" << maskRg1_value.to_gmp_class() << endl;
+		
+
 		//std::cout << "maskRg1_value = " << maskRg1_value.to_string() << std::endl;
 		//std::cout << "maskRg2_value = " << maskRg2_value.to_string() << std::endl;
 

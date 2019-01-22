@@ -130,8 +130,10 @@ void KeyGen(int d){
 	return;
 }
 
-void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input, mpz_class r_f){
+mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	//cout << "digest = " << digest << endl; 
+	mpz_class r_f;
+	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
 	vector<mpz_class> coeffs = input;
 	coeffs.push_back(r_f);
 	
@@ -159,7 +161,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input, mpz_class r_f){
 	
 	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
-	return;
+	return r_f;
 	
 }
 

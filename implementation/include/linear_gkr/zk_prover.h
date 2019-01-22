@@ -9,6 +9,8 @@
 #include <vector>
 #include <chrono>
 #include "bn.h"
+#include "VPD/vpdR.h"
+#include "VPD/vpd_test.h"
 
 class zk_prover
 {
@@ -66,14 +68,15 @@ public:
 	prime_field::field_element maskpoly_sumc;
 	prime_field::field_element maskpoly_sumr;
 	prime_field::field_element rho;
-	std::vector<bn::Ec1> generate_maskpoly_pre_rho(int, int, mpz_class);
+	std::vector<bn::Ec1> generate_maskpoly_pre_rho(int, int);
 	void generate_maskpoly_after_rho(int, int);
-
+	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > prove_R(std::vector<mpz_class> R, mpz_class &ans);
 	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*, prime_field::field_element);
 	prime_field::field_element queryRg1(prime_field::field_element);
 	prime_field::field_element queryRg2(prime_field::field_element);
 
 	prime_field::field_element maskR[6];
+	mpz_class r_f_R, r_f_mask_poly;
 	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv;
 	quadratic_poly Rg1, Rg2, sumRc;
 	std::vector<bn::Ec1> generate_maskR(int);

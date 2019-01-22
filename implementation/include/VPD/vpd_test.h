@@ -22,7 +22,7 @@ namespace vpd_test
 {
     void KeyGen(int d);
     void environment_init();
-    void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input, mpz_class r_f);
+    mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input);
 }
 
 #endif

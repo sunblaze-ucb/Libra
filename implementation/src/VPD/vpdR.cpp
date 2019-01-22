@@ -11,13 +11,13 @@
 
 #include "test_point.hpp"
 #include "bn.h"
-#include "vpdR.h"
+#include "VPD/vpdR.h"
 
 using namespace std;
 using namespace bn;
 
 #define P 512
-
+namespace vpdR{
 unsigned long int seed;
 int NumOfVar;
 gmp_randstate_t r_state;  
@@ -109,7 +109,9 @@ void KeyGen(int d){
 	return;
 }
 //F = a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c + a6g1^2c + a7g1c^2 + a8g1^2c^2;
-void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
+mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
+	mpz_class r_f;
+	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
 	//cout << "digest = " << digest << endl; 
 	vector<mpz_class> coeffs = input;
 	
@@ -138,7 +140,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	
 	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
-	return;
+	return r_f;
 	
 }
 
@@ -265,7 +267,7 @@ void environment_init()
 	);
 	g1 = Ec1(pt.g1.a, pt.g1.b);
 }
-
+}
 /*
 
 int main(int argc, char** argv){
