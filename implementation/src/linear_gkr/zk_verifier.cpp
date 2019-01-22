@@ -2,6 +2,7 @@
 #include <string>
 #include <utility>
 #include <gmp.h>
+#include <vector>
 #include <gmpxx.h>
 #include <iostream>
 #include "linear_gkr/random_generator.h"
@@ -243,7 +244,11 @@ bool zk_verifier::verify()
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 		std::cerr << "Bound u start" << std::endl;
 		auto rho = prime_field::random();
+		std::vector<bn::Ec1> digest_mask, digest_R;
+		auto r_f = prime_field::random();
+		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2, r_f.to_gmp_class());
 		p -> rho = rho;
+		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		
 		//add maskpoly

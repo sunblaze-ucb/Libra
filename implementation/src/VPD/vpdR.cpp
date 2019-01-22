@@ -11,6 +11,7 @@
 
 #include "test_point.hpp"
 #include "bn.h"
+#include "vpdR.h"
 
 using namespace std;
 using namespace bn;
@@ -246,7 +247,26 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 	
 }
 
+void environment_init()
+{
+	seed = rand();
+    gmp_randinit_default(r_state);
+    gmp_randseed_ui(r_state, seed);
+	p.set_str("16798108731015832284940804142231733909759579603404752749028378864165570215949",10);
+	
+	
+	//bilinear g1 g2
+	bn::CurveParam cp = bn::CurveFp254BNb;
+	Param::init(cp);
+	const Point& pt = selectPoint(cp);
+	g2 = Ec2(
+		Fp2(Fp(pt.g2.aa), Fp(pt.g2.ab)),
+		Fp2(Fp(pt.g2.ba), Fp(pt.g2.bb))
+	);
+	g1 = Ec1(pt.g1.a, pt.g1.b);
+}
 
+/*
 
 int main(int argc, char** argv){
 	seed = rand();
@@ -301,3 +321,4 @@ int main(int argc, char** argv){
 
 
 
+*/

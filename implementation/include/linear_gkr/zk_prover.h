@@ -6,7 +6,10 @@
 #include "linear_gkr/polynomial.h"
 #include <cstring>
 #include <utility>
+#include <vector>
 #include <chrono>
+#include "bn.h"
+
 class zk_prover
 {
 public:
@@ -26,6 +29,9 @@ public:
 	prime_field::field_element *beta_g_r0_fhalf, *beta_g_r0_shalf, *beta_g_r1_fhalf, *beta_g_r1_shalf, *beta_u_fhalf, *beta_u_shalf;
 	prime_field::field_element *beta_g_sum;
 	linear_poly *add_mult_sum;
+
+
+
 	int *addV_array_counter, *add_mult_sum_counter;
 	double total_time;
 	void init_array(int);
@@ -33,7 +39,7 @@ public:
 	prime_field::field_element* evaluate();
 	void proof_init();
 	
-	void sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, const prime_field::field_element &,
+	std::vector<bn::Ec1> sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, const prime_field::field_element &,
 		const prime_field::field_element &, const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, prime_field::field_element*);
 	void sumcheck_phase1_init();
 	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
@@ -60,7 +66,8 @@ public:
 	prime_field::field_element maskpoly_sumc;
 	prime_field::field_element maskpoly_sumr;
 	prime_field::field_element rho;
-	void generate_maskpoly(int, int);
+	std::vector<bn::Ec1> generate_maskpoly_pre_rho(int, int, mpz_class);
+	void generate_maskpoly_after_rho(int, int);
 
 	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*, prime_field::field_element);
 	prime_field::field_element queryRg1(prime_field::field_element);
@@ -69,7 +76,7 @@ public:
 	prime_field::field_element maskR[6];
 	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv;
 	quadratic_poly Rg1, Rg2, sumRc;
-	void generate_maskR(int);
+	std::vector<bn::Ec1> generate_maskR(int);
 
 	//prime_field::field_element preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
 

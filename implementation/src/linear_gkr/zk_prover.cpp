@@ -1,6 +1,8 @@
 #include "linear_gkr/zk_prover.h"
 #include <iostream>
 #include <cstring>
+#include "VPD/vpd_test.h"
+#include "bn.h"
 prime_field::field_element from_string(const char* str)
 {
 	prime_field::field_element ret = prime_field::field_element(0);
@@ -107,13 +109,36 @@ prime_field::field_element* zk_prover::evaluate()
 }
 
 //a_0x_0 + a_1x_0^2 + a_2x_1 + a_3x_1^2\codts + a_{2n}
-void zk_prover::generate_maskpoly(int length, int degree){
+
+vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree, mpz_class r_f)
+{
 	if(maskpoly != NULL) 
 		delete[] maskpoly;
 	//last 6 for u_n^5, u_n^4, u_n^3 and v_n^5, v_n^4, v_n^3;
 	maskpoly = new prime_field::field_element[length * degree + 1 + 6];
 	for(int i = 0; i < length * degree + 1 + 6; i++){
-		maskpoly[i] = prime_field::random() * rho; 
+		maskpoly[i] = prime_field::random();
+		//maskpoly[i].value = maskpoly[i].value % prime_field::mod;
+	}
+	
+	vpd_test::environment_init();
+	vpd_test::KeyGen(length);
+	vector<bn::Ec1> ret;
+	ret.resize(2);
+
+	vector<mpz_class> maskpoly_gmp;
+	maskpoly_gmp.resize(length * degree + 1 + 6);
+	for(int i = 0; i < length * degree + 7; ++i)
+		maskpoly_gmp[i] = maskpoly[i].to_gmp_class();
+
+	vpd_test::commit(ret[0], ret[1], maskpoly_gmp, r_f);
+	return ret;
+}
+
+void zk_prover::generate_maskpoly_after_rho(int length, int degree)
+{
+	for(int i = 0; i < length * degree + 1 + 6; i++){
+		maskpoly[i] = maskpoly[i] * rho;
 		//maskpoly[i].value = maskpoly[i].value % prime_field::mod;
 	}
 	maskpoly_sumc = maskpoly[length * degree];
@@ -125,13 +150,13 @@ void zk_prover::generate_maskpoly(int length, int degree){
 
 	for(int i = 1; i < length; i++)
 		maskpoly_sumc = maskpoly_sumc + maskpoly_sumc;
-
 	//std::cout << "maskpoly_sumc = " << maskpoly_sumc.value << std::endl;
 	maskpoly_sumr = prime_field::field_element(0);
 }
+
 //new zk function
 //a0 + a1g1 + a2g1^2 + a3c + a4c^2 + a5g1c + a6g1^2c + a7g1c^2 + a8g1^2c^2;
-void zk_prover::generate_maskR(int layer_id){
+std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 	Rg1.a = maskR[4];
 	Rg1.b = maskR[3] + maskR[5] * preu1;
 	Rg1.c = maskR[0] + maskR[1] * preu1 + maskR[2] * preu1 * preu1; 
@@ -209,7 +234,7 @@ prime_field::field_element zk_prover::queryRg2(prime_field::field_element r_c){
 }
 
 //new zk function
-void zk_prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, 
+std::vector<bn::Ec1> zk_prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, int bit_length_v, 
 	const prime_field::field_element &a, const prime_field::field_element &b, 
 	const prime_field::field_element* R_0, const prime_field::field_element* R_1,
 	prime_field::field_element* o_r_0, prime_field::field_element *o_r_1)
@@ -226,7 +251,6 @@ void zk_prover::sumcheck_init(int layer_id, int bit_length_g, int bit_length_u, 
 	one_minus_r_1 = o_r_1;
 	int sumcheck_length = length_u + length_v;
 	//std::cout << "sumcheck_length = " << sumcheck_length << std::endl;
-	generate_maskpoly(sumcheck_length + 1, 2);
 	generate_maskR(layer_id);
 }
 

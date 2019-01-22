@@ -589,4 +589,26 @@ namespace prime_field
 			return (value.hi.testBit(i - 256));
 		}
 	}
+	mpz_class field_element::to_gmp_class()
+	{
+		char* str_value;
+		str_value = new char[257];
+		if(value.hi != u256b((unsigned long long)0))
+			assert(false);
+		for(int i = 0; i < 128; ++i)
+			str_value[i] = ((value.lo >> i) & 1) + '0';
+		for(int i = 0; i < 128; ++i)
+			str_value[i + 128] = ((value.mid >> i) & 1) + '0';
+		for(int i = 0; i < 128; ++i)
+		{
+			char x;
+			x = str_value[i];
+			str_value[i] = str_value[255 - i];
+			str_value[255 - i] = x;
+		}
+		str_value[256] = 0;
+		mpz_class ret(str_value, 2);
+		delete str_value;
+		return ret;
+	} 
 }

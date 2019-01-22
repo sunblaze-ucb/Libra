@@ -1,3 +1,8 @@
+inputvpd
+
+*.dSYM.zip
+*.dSYM
+
 .DS_store
 main
 test_circuit.txt
