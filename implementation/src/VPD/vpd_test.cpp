@@ -132,6 +132,7 @@ void KeyGen(int d){
 
 mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	//cout << "digest = " << digest << endl; 
+	digest = g1 * 0;
 	mpz_class r_f;
 	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
 	vector<mpz_class> coeffs = input;
@@ -175,7 +176,7 @@ bool check_commit(Ec1 digest, Ec1 digesta){
 	return (ea1 == ea2);
 }
 
-void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa){
+void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa, mpz_class r_f){
 	vector<mpz_class> coeffs = input;
 	clock_t prove_t = clock();
 
@@ -184,6 +185,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	std::vector<mpz_class> t(NumOfVar);
 	for(int i = 0; i < t.size(); i++)
 		mpz_urandomm(t[i].get_mpz_t(), r_state, p.get_mpz_t());
+	coeffs.push_back(r_f);
 	for(int i = 0; i < NumOfVar; i++){
 		if(i == NumOfVar / 2 - 1){
 			mpz_class tmp1 = coeffs[2 * NumOfVar + 1];
@@ -244,6 +246,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 			coeffs[i] += p;
 	//vector<Ec1> pub_pre(2 * NumOfVar + 1);
 	//cout << "ans = " << ans << endl;
+	ans = 0;
 	for(int i = 0; i < NumOfVar; i++){
 		if(i == NumOfVar / 2 - 1){
 			mpz_class tmp = coeffs[2 * NumOfVar + 1];
@@ -252,7 +255,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 			tmp = (tmp * r[i] + coeffs[2 * i]) % p;
 			tmp = (tmp * r[i] + coeffs[2 * i + 1]) % p;
 			tmp = (tmp * r[i]) % p;
-			ans = ans + tmp;
+			ans = (ans + tmp) % p;
 		}
 		if(i == NumOfVar - 2){
 			mpz_class tmp = coeffs[2 * NumOfVar + 4];
@@ -261,16 +264,16 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 			tmp = (tmp * r[i] + coeffs[2 * i]) % p;
 			tmp = (tmp * r[i] + coeffs[2 * i + 1]) % p;
 			tmp = (tmp * r[i]) % p;
-			ans = ans + tmp;
+			ans = (ans + tmp) % p;
 		}
 		if(i != NumOfVar / 2 - 1 && i != NumOfVar - 2){
-			ans = ans + coeffs[2 * i] * r[i] * r[i];
+			ans = (ans + coeffs[2 * i] * r[i] * r[i]) % p;
 			//cout << "ans = " << ans << endl;
-			ans = ans + coeffs[2 * i + 1] * r[i];
+			ans = (ans + coeffs[2 * i + 1] * r[i]) % p;
 		}
 		//cout << "ans = " << ans << endl;
 	}
-	ans = ans + coeffs[2 * NumOfVar];
+	ans = (ans + coeffs[2 * NumOfVar]) % p;
 	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 

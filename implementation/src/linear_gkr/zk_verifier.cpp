@@ -202,11 +202,22 @@ bool zk_verifier::verify()
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-//	for(int i = 0; i < (1 << C.circuit[C.total_depth - 1].bit_length); ++i)
-//	{
-//		fprintf(stderr, "%d %s\n", i, result[i].to_string(10).c_str());
-//	}
-//	fprintf(stderr, "\n");
+
+	prime_field::field_element *input;
+	input = new prime_field::field_element[(1 << C.circuit[0].bit_length)];
+
+	for(int i = 0; i < (1 << C.circuit[0].bit_length); ++i)
+	{
+		int g = i;
+		if(C.circuit[0].gates[g].ty == 3)
+		{
+			input[g] = prime_field::field_element(C.circuit[0].gates[g].u);
+		}
+		else
+			assert(false);
+	}
+
+	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length);
 
 	prime_field::field_element alpha, beta;
 	alpha.value = 1;
@@ -238,36 +249,28 @@ bool zk_verifier::verify()
 	prime_field::field_element alpha_beta_sum = a_0; //+ a_1
 
 	for(int i = C.total_depth - 1; i >= 1; --i)
-	{	
-		//std::cout << "alpha = " << alpha.to_string() << std::endl;
-		//std::cout << "beta = " << beta.to_string() << std::endl;
+	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 		std::cerr << "Bound u start" << std::endl;
 		auto rho = prime_field::random();
-		std::vector<bn::Ec1> digest_mask, digest_R;
+		std::vector<bn::Ec1> digest_mask;
 
+		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		p -> rho = rho;
 		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
-		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		bool r_verify_cc = vpdR::check_commit(digest_maskR[0], digest_maskR[1]);
+		bool msk_poly_cc = vpd_test::check_commit(digest_mask[0], digest_mask[1]);
 		
 		//add maskpoly
-		//std::cout << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
 
 		alpha_beta_sum.value = (alpha_beta_sum.value + p->maskpoly_sumc.value) % prime_field::mod;
-
-		//std::cout << "maskpoly_sumc = " << p->maskpoly_sumc.to_string() << std::endl;
-
-		//std::cout << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
 
 		p -> sumcheck_phase1_init();
 		prime_field::field_element previous_random = prime_field::field_element(0);
 		//next level random
 		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
-		//std::cout << "Zu = " << (t - r_u[2]).to_string() << std::endl;
 		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
-		//std::cout << "r_v[2] = " << r_v[2].to_string() << std::endl;
 
 		auto r_c = generate_randomness(1);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
@@ -279,8 +282,6 @@ bool zk_verifier::verify()
 			one_minus_r_u[j] = prime_field::field_element(1) - r_u[j];
 			one_minus_r_v[j] = prime_field::field_element(1) - r_v[j];
 		}
-
-		//std::cout << "get into " << std::endl;
 
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{	
@@ -297,30 +298,26 @@ bool zk_verifier::verify()
 				}
 				else
 				{
-				//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+					
 				}
 				alpha_beta_sum = poly.eval(r_u[j]);
 			}
 
 			else{
-				//std::cout << "j = " << j << std::endl;
 				quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
 		
 				previous_random = r_u[j];
-
-				//std::cout << "poly.eval(0) = " << poly.eval(0).value << " " << "poly.eval(1) = " << poly.eval(1).value << " " << "alpha_beta_sum = " << alpha_beta_sum.value << std::endl;
 			
 
 				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
-				{ 
-					//std::cout << "why" << std::endl;
+				{
 					std::cout << "round j = " << j << std::endl;
 					fprintf(stderr, "Verification fail, phase1, circuit %d, current bit %d\n", i, j);
 					return false;
 				}
 				else
 				{
-				//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
+					
 				}
 				alpha_beta_sum = poly.eval(r_u[j]);
 			}
@@ -346,7 +343,7 @@ bool zk_verifier::verify()
 				}
 				else
 				{
-				//	fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
+					
 				}
 				alpha_beta_sum = poly.eval(r_v[j]);
 			}
@@ -362,7 +359,7 @@ bool zk_verifier::verify()
 				}
 				else
 				{
-			//	fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
+					
 				}
 				alpha_beta_sum = poly.eval(r_v[j]);
 			}
@@ -373,31 +370,17 @@ bool zk_verifier::verify()
 		t1 = std::chrono::high_resolution_clock::now();
 		time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 		std::cerr << "	Time: " << time_span.count() << std::endl;
-		//std::cout << "right previous_random = " << previous_random.to_string() << std::endl;
+		
 		auto final_claims = p -> sumcheck_finalize(previous_random);
 		prime_field::field_element ttt = prime_field::field_element(1);
-		//std::cout << "Iuv = " << (ttt - r_u[0]).to_string() << std::endl;
-
-		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1])).to_string() << std::endl;
-		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2])).to_string() << std::endl;
-		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2]) * (ttt - r_v[0]) ).to_string() << std::endl;
-		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2]) * (ttt - r_v[0]) * (ttt - r_v[1])).to_string() << std::endl;
-
-		//std::cout << "Iuv = " << ((ttt - r_u[0]) * (ttt - r_u[1]) * (ttt - r_u[2]) * (ttt - r_v[0]) * (ttt - r_v[1]) * (ttt - r_v[2])).to_string() << std::endl;
-		//std::cout << "Zv = " << (r_v[0] * r_v[1] * r_v[2] * (ttt - r_v[0]) * (ttt - r_v[1]) * (ttt - r_v[2])).to_string() << std::endl;
-
+		
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;
-//		std::cout << "v_u = " << v_u.to_string(10) << std::endl;
-//		std::cout << "v_v = " << v_v.to_string(10) << std::endl;
-
-//		std::cout << "alpha = " << alpha.to_string(10) << std::endl;
-//		std::cout << "beta = " << beta.to_string(10) << std::endl;
+		
 		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
 		auto mult_value = mult(i);
 		auto add_value = add(i);
-//		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
-//		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
+		
 		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
 
 		if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
@@ -408,9 +391,6 @@ bool zk_verifier::verify()
 		//previous_random = r_c[0];
 		alpha_beta_sum = poly.eval(r_c[0]);
 
-		prime_field::field_element maskpoly_value = p->query(r_u, r_v, r_c[0]);
-		prime_field::field_element maskRg1_value = p->queryRg1(r_c[0]);
-		prime_field::field_element maskRg2_value = p->queryRg2(r_c[0]);
 		mpz_class maskRg1_value_mpz, maskRg2_value_mpz;
 		std::vector<mpz_class> r;
 		r.resize(2);
@@ -433,10 +413,34 @@ bool zk_verifier::verify()
 			return false;
 		}
 
-		//std::cout << "maskRg1_value = " << maskRg1_value.to_string() << std::endl;
-		//std::cout << "maskRg2_value = " << maskRg2_value.to_string() << std::endl;
+		r.clear();
+		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
+			r.push_back(r_u[j].to_gmp_class());
+		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
+			r.push_back(r_v[j].to_gmp_class());
+		r.push_back(r_c[0].to_gmp_class());
+		mpz_class maskpoly_value_mpz = 0;
+		witnesses = p -> prove_mask(r, maskpoly_value_mpz);
+		auto msk_poly_verify = vpd_test::verify(r, digest_mask[0], maskpoly_value_mpz, witnesses.first, witnesses.second);
+		
 
-		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + maskRg1_value + maskRg2_value + maskpoly_value)
+		if(msk_poly_cc & msk_poly_verify)
+		{
+			fprintf(stderr, "VPD mask pass\n");
+		}
+		else
+		{
+			fprintf(stderr, "VPD mask fail\n");
+			return false;
+		}
+		
+		prime_field::field_element maskpoly_value;
+		prime_field::field_element maskRg1_value;
+		prime_field::field_element maskRg2_value;
+		maskpoly_value.value = prime_field::u512b(maskpoly_value_mpz.get_str().c_str(), maskpoly_value_mpz.get_str().length(), 10);
+		maskRg1_value.value = prime_field::u512b(maskRg1_value_mpz.get_str().c_str(), maskRg1_value_mpz.get_str().length(), 10);
+		maskRg2_value.value = prime_field::u512b(maskRg2_value_mpz.get_str().c_str(), maskRg2_value_mpz.get_str().length(), 10);
+		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
@@ -467,21 +471,31 @@ bool zk_verifier::verify()
 	}
 
 	//post sumcheck
-	prime_field::field_element* input;
-	input = new prime_field::field_element[(1 << C.circuit[0].bit_length)];
 
-	for(int i = 0; i < (1 << C.circuit[0].bit_length); ++i)
-	{
-		int g = i;
-		if(C.circuit[0].gates[g].ty == 3)
-		{
-			input[g] = prime_field::field_element(C.circuit[0].gates[g].u);
-		}
-		else
-			assert(false);
-	}
 	auto input_0 = V_in(r_0, one_minus_r_0, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length)), 
 		 input_1 = V_in(r_1, one_minus_r_1, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
+	
+	std::vector<mpz_class> r_0_mpz, r_1_mpz;
+	for(int i = 0; i< C.circuit[0].bit_length; ++i)
+		r_0_mpz.push_back(r_0[i].to_gmp_class());
+	for(int i = 0; i< C.circuit[0].bit_length; ++i)
+		r_1_mpz.push_back(r_1[i].to_gmp_class());
+	
+	mpz_class input_0_mpz, input_1_mpz;
+
+	input_0_mpz = 0, input_1_mpz = 0;
+	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz);
+	auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz);
+	cout << input_0_mpz << endl;
+	cout << input_0.to_gmp_class() << endl;
+
+	cout << input_1_mpz << endl;
+	cout << input_1.to_gmp_class() << endl;
+
+	bool input_0_verify = input_vpd::verify(r_0_mpz, digest_input[0], input_0_mpz, witnesses_0.first, witnesses_0.second);
+	bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input[0], input_1_mpz, witnesses_1.first, witnesses_1.second);
+	cout << "Verify result: " << input_0_verify << " " << input_1_verify << endl;
+
 	input_0 = input_0 + p->Zu * p->sumRc.eval(p->preu1);
 	input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
 

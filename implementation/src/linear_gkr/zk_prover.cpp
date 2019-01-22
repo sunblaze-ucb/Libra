@@ -19,6 +19,7 @@ void zk_prover::get_circuit(const layered_circuit &from_verifier)
 {
 	vpdR::environment_init();
 	vpd_test::environment_init();
+	input_vpd::environment_init();
 	C = from_verifier;
 	inv_2 = from_string("8399054365507916142470402071115866954879789801702376374514189432082785107975");
 	//std::cout << "test inv_2 = " << inv_2.to_string() << std::endl;
@@ -128,13 +129,39 @@ vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree)
 	vector<bn::Ec1> ret;
 	ret.resize(2);
 
-	vector<mpz_class> maskpoly_gmp;
 	maskpoly_gmp.resize(length * degree + 1 + 6);
 	for(int i = 0; i < length * degree + 7; ++i)
 		maskpoly_gmp[i] = maskpoly[i].to_gmp_class();
 
 	r_f_mask_poly = vpd_test::commit(ret[0], ret[1], maskpoly_gmp);
 	return ret;
+}
+
+std::vector<bn::Ec1> zk_prover::keygen_and_commit(int input_bit_length)
+{
+	input_vpd::KeyGen(input_bit_length);
+	std::vector<bn::Ec1> ret;
+	ret.resize(2);
+	input_mpz.resize((1 << input_bit_length));
+	for(int i = 0; i < (1 << input_bit_length); ++i)
+	{
+		int g = i;
+		if(C.circuit[0].gates[g].ty == 3)
+		{
+			input_mpz[g] = prime_field::field_element(C.circuit[0].gates[g].u).to_gmp_class();
+		}
+		else
+			assert(false);
+	}
+	r_f_input = input_vpd::commit(ret[0], ret[1], input_mpz);
+	return ret;
+}
+
+std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_input(std::vector<mpz_class> R, mpz_class &ans)
+{
+	std::vector<bn::Ec1> witness, witnessa;
+	input_vpd::prove(R, ans, input_mpz, witness, witnessa, r_f_input);
+	return std::make_pair(witness, witnessa);
 }
 
 void zk_prover::generate_maskpoly_after_rho(int length, int degree)
@@ -220,6 +247,13 @@ std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_R(std::v
 	for(int i = 0; i < 6; ++i)
 		input.push_back(preR[i].to_gmp_class());
 	vpdR::prove(R, ans, input, witness, witnessa, r_f_R);
+	return std::make_pair(witness, witnessa);
+}
+
+std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_mask(std::vector<mpz_class> R, mpz_class &ans)
+{
+	std::vector<bn::Ec1> witness, witnessa;
+	vpd_test::prove(R, ans, maskpoly_gmp, witness, witnessa, r_f_mask_poly);
 	return std::make_pair(witness, witnessa);
 }
 

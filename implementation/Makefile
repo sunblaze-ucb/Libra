@@ -17,7 +17,7 @@ clean:
 	rm bin/main
 
 linear_gkr_zk_dbg: src/linear_gkr/main_zk.cpp
-	$(CC) $(CFLAGS) $(INCLUDE) -L $(LIB) -std=c++11 src/VPD/vpdR.cpp src/VPD/vpd_test.cpp src/linear_gkr/zk_verifier.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/zk_prover.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_zk.cpp -g -o bin/main_zk -lgmp -lgmpxx -lzm
+	$(CC) $(CFLAGS) $(INCLUDE) -L $(LIB) -std=c++11 src/VPD/inputvpd.cpp src/VPD/vpdR.cpp src/VPD/vpd_test.cpp src/linear_gkr/zk_verifier.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/zk_prover.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_zk.cpp -g -o bin/main_zk -lgmp -lgmpxx -lzm
 
 
 vpd_test:

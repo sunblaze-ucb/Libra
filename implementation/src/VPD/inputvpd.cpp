@@ -1,21 +1,10 @@
-#include <cstdlib>
-#include <iostream>
-#include <time.h>
-#include <stdlib.h>
-#include <vector>
-#include <fstream>
-#include <algorithm>
-#include <gmp.h>
-#include <gmpxx.h>
-#include <math.h>
-#include <string>
-
-#include "test_point.hpp"
-#include "bn.h"
+#include "VPD/input_vpd.h"
 
 using namespace std;
 using namespace bn;
 
+namespace input_vpd
+{
 #define P 512
 const int multi_scalar_w = 2;
 
@@ -51,7 +40,7 @@ std::vector<mpz_class> pre_input(std::vector<mpz_class>& input){
 	result[0].resize(total);
 	result[1].resize(total);
 	for(int i = 0; i < total; ++i)
-		result[0][i] = input[i] % p;
+		result[0][i] = input[total - i - 1] % p;
 	int current;
 	int nxt;
 	for(int i = 0; i < NumOfVar; ++i)
@@ -72,16 +61,6 @@ std::vector<mpz_class> pre_input(std::vector<mpz_class>& input){
 	}
 	return result[nxt];
 }
-
-void test(int l){
-	clock_t preinput_t = clock();
-	NumOfVar = l;
-	std::vector<mpz_class> test(pow(2, l));
-	for(int i = 0; i < pow(2, l); i++)
-		test[i] = rand();
-	std::vector<mpz_class> res = pre_input(test);
-	return;
-}	
 
 void precompute_g1(){
 	g1_pre.resize(P);
@@ -226,9 +205,14 @@ Ec1 multi_scalar_calc(int index, const vector<mpz_class> &scalar_pow)
 	return ret;
 }
 
-void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
-	
+mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
+
+	mpz_class r_f;
+	digest = g1 * 0;
+	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
+	input = pre_input(input);
 	vector<mpz_class> coeffs = input;
+	coeffs.push_back(r_f);
 	
 	clock_t commit_t = clock();
 	
@@ -260,7 +244,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 		digest = digest + multi_scalar_calc(i, scalar_pow);
 	} 
 
-	mie::Vuint temp(input[1 << NumOfVar].get_str().c_str());
+	mie::Vuint temp(coeffs[1 << NumOfVar].get_str().c_str());
 	digest += pub_g1[1 << NumOfVar] * temp;
 	const mie::Vuint tempa(a.get_str().c_str());
 
@@ -268,7 +252,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 
 	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
-	return;
+	return r_f;
 	
 }
 
@@ -282,7 +266,7 @@ bool check_commit(Ec1 digest, Ec1 digesta){
 	return (ea1 == ea2);
 }
 
-void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa){
+void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa, mpz_class r_f){
 	vector<mpz_class> coeffs = input;
 	clock_t prove_t = clock();
 
@@ -293,6 +277,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	for(int i = 0; i < coeffs.size(); i++)
 		if(coeffs[i] < 0)
 			coeffs[i] += p;
+	coeffs.push_back(r_f);
 	//vector<Ec1> pub_pre(2 * NumOfVar + 1);
 	//cout << "ans = " << ans << endl;
 	std::vector<mpz_class> ans_pre;
@@ -480,10 +465,31 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 	
 }
 
+void environment_init()
+{
+	p.set_str("16798108731015832284940804142231733909759579603404752749028378864165570215949",10);
+	seed = rand();
+    gmp_randinit_default(r_state);
+    gmp_randseed_ui(r_state, seed);
+	
+	
+	//bilinear g1 g2
+	bn::CurveParam cp = bn::CurveFp254BNb;
+	Param::init(cp);
+	const Point& pt = selectPoint(cp);
+	g2 = Ec2(
+		Fp2(Fp(pt.g2.aa), Fp(pt.g2.ab)),
+		Fp2(Fp(pt.g2.ba), Fp(pt.g2.bb))
+	);
+	g1 = Ec1(pt.g1.a, pt.g1.b);
+}
+
+}
+/*
 
 int main(int argc, char** argv){
 	p.set_str("16798108731015832284940804142231733909759579603404752749028378864165570215949",10);
-	test(atoi(argv[1]));
+	test(10);
 	seed = rand();
     gmp_randinit_default(r_state);
     gmp_randseed_ui(r_state, seed);
@@ -532,3 +538,4 @@ int main(int argc, char** argv){
 
 	return 0;
 }
+*/
