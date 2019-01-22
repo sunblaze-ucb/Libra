@@ -5,6 +5,8 @@
 #include "linear_gkr/circuit_fast_track.h"
 #include "linear_gkr/zk_prover.h"
 #include "linear_gkr/polynomial.h"
+#include "VPD/vpdR.h"
+#include "VPD/vpd_test.h"
 #include <utility>
 
 class zk_verifier

@@ -17,6 +17,9 @@ using namespace bn;
 
 #define P 512
 
+namespace vpd_test
+{
+
 unsigned long int seed;
 int NumOfVar;
 gmp_randstate_t r_state;  
@@ -73,20 +76,21 @@ void KeyGen(int d){
 	//cout << "g1 = " << g1 * 2 - g1 << endl;
 	//vector<mpz_class> s(NumOfVar);
 	s.resize(NumOfVar + 1);
-	for(int i = 0; i < NumOfVar; i++)
-		mpz_urandomm(s[i].get_mpz_t(), r_state, p.get_mpz_t());
+	for(int i = 0; i < NumOfVar + 1; i++)
+		mpz_urandomm(s.at(i).get_mpz_t(), r_state, p.get_mpz_t());
+	//s[NumOfVar] = 0;
 	//+6 for s_{un}^5, s_{un}^4, s_{un}^3 and s_{vn}^5, s_{vn}^4, s_{vn}^3
-	pub_g1.resize(d * 2 + 1 + 6);
-	pub_g2.resize(d * 2 + 1 + 6);
+	pub_g1.resize(d * 2 + 1 + 6 + 1);
+	pub_g2.resize(d * 2 + 1 + 6 + 1);
 	for(int i = 0; i < d; i++){
 	
-		pub_g1[2 * i + 1] = pre_exp(g1_pre, s[i]);
+		pub_g1.at(2 * i + 1) = pre_exp(g1_pre, s.at(i));
 		//pub_g2[2 * i + 1] = g2 * temp2;
-		pub_g2[2 * i + 1] = pre_exp(g2_pre, s[i]);
-		mpz_class square = (s[i] * s[i]) % p;
+		pub_g2.at(2 * i + 1) = pre_exp(g2_pre, s.at(i));
+		mpz_class square = (s.at(i) * s.at(i)) % p;
 		//mie::Vuint temp1(square.get_str().c_str());
 		//pub_g1[2 * i] = g1 * temp1; 
-		pub_g1[2 * i] = pre_exp(g1_pre, square);
+		pub_g1.at(2 * i) = pre_exp(g1_pre, square);
 	
 		//pub_g2[2 * i] = g2 * temp1; 
 		//pub_g2[2 * i] = pre_exp(g2_pre, square); 
@@ -95,9 +99,9 @@ void KeyGen(int d){
 			mpz_class cubic = (square * s[i]) % p;
 			mpz_class qudruple = (cubic * s[i]) % p;
 			mpz_class quintuple = (qudruple * s[i]) % p;
-			pub_g1[2 * d + 1] = pre_exp(g1_pre, quintuple);
-			pub_g1[2 * d + 2] = pre_exp(g1_pre, qudruple);
-			pub_g1[2 * d + 3] = pre_exp(g1_pre, cubic);
+			pub_g1.at(2 * d + 1) = pre_exp(g1_pre, quintuple);
+			pub_g1.at(2 * d + 2) = pre_exp(g1_pre, qudruple);
+			pub_g1.at(2 * d + 3) = pre_exp(g1_pre, cubic);
 			//pub_g2[2 * d + 1] = pre_exp(g2_pre, quintuple);
 			//pub_g2[2 * d + 2] = pre_exp(g2_pre, qudruple);
 			//pub_g2[2 * d + 3] = pre_exp(g2_pre, cubic);
@@ -107,27 +111,31 @@ void KeyGen(int d){
 			mpz_class cubic = (square * s[i]) % p;
 			mpz_class qudruple = (cubic * s[i]) % p;
 			mpz_class quintuple = (qudruple * s[i]) % p;
-			pub_g1[2 * d + 4] = pre_exp(g1_pre, quintuple);
-			pub_g1[2 * d + 5] = pre_exp(g1_pre, qudruple);
-			pub_g1[2 * d + 6] = pre_exp(g1_pre, cubic);
+			pub_g1.at(2 * d + 4) = pre_exp(g1_pre, quintuple);
+			pub_g1.at(2 * d + 5) = pre_exp(g1_pre, qudruple);
+			pub_g1.at(2 * d + 6) = pre_exp(g1_pre, cubic);
 			//pub_g2[2 * d + 4] = pre_exp(g2_pre, quintuple);
 			//pub_g2[2 * d + 5] = pre_exp(g2_pre, qudruple);
 			//pub_g2[2 * d + 6] = pre_exp(g2_pre, cubic);
 		}
 	}
-	pub_g1[2 * d] = g1;
-	pub_g2[2 * d] = g2;
-	pub_g1[2 * d + 7] = pre_exp(g1_pre, s[d]);
-	pub_g2[2 * d + 1] = pre_exp(g2_pre, s[d]);
+	pub_g1.at(2 * d) = g1;
+	pub_g2.at(2 * d) = g2;
+	pub_g1.at(2 * d + 7) = pre_exp(g1_pre, s[d]);
+	std::cout << "pub_g1[2 * d + 7] = " << pub_g1[2 * d + 7] << std::endl;
+	pub_g2.at(2 * d + 1) = pre_exp(g2_pre, s[d]);
 
 	cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
 
-void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
+mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	//cout << "digest = " << digest << endl; 
+	mpz_class r_f;
+	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
 	vector<mpz_class> coeffs = input;
+	coeffs.push_back(r_f);
 	
 	//int d = ceil(log2(input.size()));
 	
@@ -141,8 +149,8 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	//vector<Ec1> pub_pre(2 * NumOfVar + 1 + 6);
 	mpz_class ans = 0;
 	for(int i = 0; i < 2 * NumOfVar + 1 + 6 + 1; i++){
-		mie::Vuint temp(coeffs[i].get_str().c_str());
-		digest = digest + (pub_g1[i] * temp);
+		mie::Vuint temp(coeffs.at(i).get_str().c_str());
+		digest = digest + (pub_g1.at(i) * temp);
 	} 
 
 	mie::Vuint temp1(a.get_str().c_str());
@@ -153,7 +161,7 @@ void commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	
 	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
-	return;
+	return r_f;
 	
 }
 
@@ -225,7 +233,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	clock_t zkt = clock();
 	for(int i = 0; i < NumOfVar; i++){
 		mie::Vuint tempti(t[i].get_str().c_str());
-		witness[NumOfVar] -= pub_g1[2 * i] * tempti;
+		witness[NumOfVar] -= pub_g1[2 * i + 1] * tempti;
 	}
 	mie::Vuint tempa(a.get_str().c_str());
 	witnessa[NumOfVar] = witness[NumOfVar] * tempa;
@@ -317,9 +325,9 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 	
 }
 
-
-
-int main(int argc, char** argv){
+void environment_init()
+{
+	cout << "vpd_test initialized" << endl;
 	seed = rand();
     gmp_randinit_default(r_state);
     gmp_randseed_ui(r_state, seed);
@@ -335,42 +343,6 @@ int main(int argc, char** argv){
 		Fp2(Fp(pt.g2.ba), Fp(pt.g2.bb))
 	);
 	g1 = Ec1(pt.g1.a, pt.g1.b);
-	
-	int length_u = atoi(argv[1]);	
-
-	int d = 2 * length_u + 1;
-	
-//	cout << "d = " << d << endl;
-
-	KeyGen(d);
-	
-	int N = NumOfVar * 2 + 1 + 6 + 1;
-	vector<mpz_class> input(N);
-	for(int i = 0; i < input.size(); i++){
-		input[i] = rand();
-	}
-	
-	
-	
-	Ec1 digest, digesta;
-	digest = g1 * 0;
-	
-	commit(digest,digesta,input);
-	cout << "check commit: " << check_commit(digest, digesta) << endl;
-	
-	vector<Ec1> proof, proofa;
-	vector<mpz_class> r(d);
-	mpz_class ans;
-	
-	for(int i = 0; i < r.size(); i++)
-		mpz_urandomm(r[i].get_mpz_t(), r_state, p.get_mpz_t());
-	
-	prove(r, ans, input, proof, proofa);
-	
-	bool tf = verify(r, digest, ans, proof, proofa);
-	cout<< "verify: " << tf <<endl;
-	return 0;
 }
 
-
-
+}

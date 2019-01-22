@@ -6,6 +6,8 @@
 //#include <boost/random.hpp>
 #include <cassert>
 #include <string>
+#include <gmp.h>
+#include <gmpxx.h>
 
 //using namespace boost::multiprecision;
 //using namespace boost::random;
@@ -102,6 +104,7 @@ namespace prime_field
 		int bitLen();
 		bool operator != (const field_element &b) const;
 		int testBit(int i);
+		mpz_class to_gmp_class();
 	};
 	field_element random();
 }
