@@ -74,13 +74,13 @@ public:
 	void generate_maskpoly_after_rho(int, int);
 	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > prove_R(std::vector<mpz_class> R, mpz_class &ans);
 	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > prove_mask(std::vector<mpz_class> R, mpz_class &ans);
-	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > prove_input(std::vector<mpz_class> R, mpz_class &ans);
+	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > prove_input(std::vector<mpz_class> R, mpz_class &ans, mpz_class Z);
 	prime_field::field_element query(prime_field::field_element*, prime_field::field_element*, prime_field::field_element);
 	prime_field::field_element queryRg1(prime_field::field_element);
 	prime_field::field_element queryRg2(prime_field::field_element);
 
 	prime_field::field_element maskR[6], preR[6];
-	mpz_class r_f_R, r_f_mask_poly, r_f_input;
+	mpz_class r_f_R, r_f_mask_poly, r_f_input, r_f_input2;
 	prime_field::field_element maskR_sumcu, maskR_sumcv, preZu, preZv, Zu, Zv, preu1, prev1, Iuv, prepreu1, preprev1;
 	quadratic_poly Rg1, Rg2, sumRc;
 	std::vector<bn::Ec1> generate_maskR(int);
@@ -88,8 +88,9 @@ public:
 	//prime_field::field_element preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
 
 	void sumcheck_maskpoly_init();
-	std::vector<mpz_class> input_mpz;
-	std::vector<bn::Ec1> keygen_and_commit(int input_bit_length);
+	std::vector<mpz_class> input_mpz, maskr_mpz;
+	std::vector<prime_field::field_element> maskr;
+	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > keygen_and_commit(int input_bit_length);
 	//prime_field::field_element *maskpoly_partialsum;
 	//prime_field::field_element inv_2 = from_string("8399054365507916142470402071115866954879789801702376374514189432082785107975");
 

@@ -205,7 +205,7 @@ Ec1 multi_scalar_calc(int index, const vector<mpz_class> &scalar_pow)
 	return ret;
 }
 
-mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
+std::pair<mpz_class, mpz_class> commit(Ec1& digest, Ec1& digesta, Ec1& digest2, Ec1& digest2a, vector<mpz_class>& input, vector<mpz_class>& input2){
 
 	mpz_class r_f;
 	digest = g1 * 0;
@@ -243,41 +243,65 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 		//cout << "pub_g1[i] * temp = " << pub_g1[i] * temp << endl;
 		digest = digest + multi_scalar_calc(i, scalar_pow);
 	} 
-
 	mie::Vuint temp(coeffs[1 << NumOfVar].get_str().c_str());
 	digest += pub_g1[1 << NumOfVar] * temp;
+
+	mpz_class r_f2;
+	digest2 = g1 * 0;
+	mpz_urandomm(r_f2.get_mpz_t(), r_state, p.get_mpz_t());
+
+	vector<mpz_class> coeffs2 = input2;
+	coeffs2.push_back(r_f2);
+	for(int i = 0; i < coeffs.size(); i++)
+		if(coeffs[i] < 0)
+			coeffs[i] += p;
+	mie::Vuint temp0(coeffs2[0].get_str().c_str());
+	mie::Vuint temp1(coeffs2[1].get_str().c_str());
+	mie::Vuint temprf2(coeffs2[2].get_str().c_str());
+	digest2 = pub_g1[0] * temp0 + pub_g1[1 << (NumOfVar - 1)] * temp1 + pub_g1[1 << NumOfVar] * temprf2; 
+
 	const mie::Vuint tempa(a.get_str().c_str());
 
 	digesta = digest * tempa;
+	digest2a = digest2 * tempa;
 
 	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
-	return r_f;
+	return make_pair(r_f, r_f2);
 	
 }
 
-bool check_commit(Ec1 digest, Ec1 digesta){
+bool check_commit(Ec1 digest, Ec1 digesta, Ec1 digest2, Ec1 digest2a){
 	Fp12 ea1, ea2;
 	
 	opt_atePairing(ea1, g2, digesta);
 	opt_atePairing(ea2, g2a, digest);
+
+	Fp12 ea3, ea4;
 	
+	opt_atePairing(ea3, g2, digest2a);
+	opt_atePairing(ea4, g2a, digest2);
 	
-	return (ea1 == ea2);
+	return (ea1 == ea2) && (ea3 == ea4);
 }
 
-void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<Ec1>& witness, vector<Ec1>& witnessa, mpz_class r_f){
+void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector<mpz_class> &input2, vector<Ec1>& witness, vector<Ec1>& witnessa, mpz_class r_f, mpz_class r_f2, mpz_class Z){
 	vector<mpz_class> coeffs = input;
+	coeffs[0] = (coeffs[0] + (Z * input2[0]) % p) % p;
+	coeffs[1 << (NumOfVar - 1)] = (coeffs[1 << (NumOfVar - 1)] + (Z * input2[1]) % p) % p;
+
 	clock_t prove_t = clock();
 
 	std::vector<mpz_class> t(NumOfVar);
 	for(int i = 0; i < t.size(); i++)
 		mpz_urandomm(t[i].get_mpz_t(), r_state, p.get_mpz_t());
+	
+	coeffs.push_back((r_f + Z * r_f2) % p);
+
 
 	for(int i = 0; i < coeffs.size(); i++)
 		if(coeffs[i] < 0)
 			coeffs[i] += p;
-	coeffs.push_back(r_f);
 	//vector<Ec1> pub_pre(2 * NumOfVar + 1);
 	//cout << "ans = " << ans << endl;
 	std::vector<mpz_class> ans_pre;
@@ -408,7 +432,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
-bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
+bool verify(vector<mpz_class> r, Ec1 digest, Ec1 digest2, mpz_class Z, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
 	clock_t verify_t = clock();	
 
 	Fp12 ea1, ea2;
@@ -435,9 +459,10 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 	//cout << "testans = " << ans << endl;
 
 	//Ec1 temp2 = g1 * temp1;
+	mie::Vuint tempz(Z.get_str().c_str());
 	Ec1 temp2 = pre_exp(g1_pre, ans);
 
-	opt_atePairing(ea3, g2, digest - temp2);
+	opt_atePairing(ea3, g2, digest + digest2 * tempz - temp2);
 
 	for(int i = 0; i < r.size() + 1; i++){
 		if(i == r.size()){

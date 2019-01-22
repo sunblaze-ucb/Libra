@@ -137,11 +137,12 @@ vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree)
 	return ret;
 }
 
-std::vector<bn::Ec1> zk_prover::keygen_and_commit(int input_bit_length)
+std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_commit(int input_bit_length)
 {
 	input_vpd::KeyGen(input_bit_length);
-	std::vector<bn::Ec1> ret;
+	std::vector<bn::Ec1> ret, ret2;
 	ret.resize(2);
+	ret2.resize(2);
 	input_mpz.resize((1 << input_bit_length));
 	for(int i = 0; i < (1 << input_bit_length); ++i)
 	{
@@ -153,14 +154,22 @@ std::vector<bn::Ec1> zk_prover::keygen_and_commit(int input_bit_length)
 		else
 			assert(false);
 	}
-	r_f_input = input_vpd::commit(ret[0], ret[1], input_mpz);
-	return ret;
+	maskr.resize(2);
+	maskr[0] = prime_field::random();
+	maskr[1] = prime_field::random();
+	maskr_mpz.resize(2);
+	for(int i = 0; i < 2; ++i)
+		maskr_mpz[i] = maskr[i].to_gmp_class();
+	auto tmp_pair = input_vpd::commit(ret[0], ret[1], ret2[0], ret2[1], input_mpz, maskr_mpz);
+	r_f_input = tmp_pair.first;
+	r_f_input2 = tmp_pair.second;
+	return std::make_pair(ret, ret2);
 }
 
-std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_input(std::vector<mpz_class> R, mpz_class &ans)
+std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_input(std::vector<mpz_class> R, mpz_class &ans, mpz_class Z)
 {
 	std::vector<bn::Ec1> witness, witnessa;
-	input_vpd::prove(R, ans, input_mpz, witness, witnessa, r_f_input);
+	input_vpd::prove(R, ans, input_mpz, maskr_mpz, witness, witnessa, r_f_input, r_f_input2, Z);
 	return std::make_pair(witness, witnessa);
 }
 
@@ -230,8 +239,8 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 		sumRc.c = maskR[0] + maskR[0] + maskR[3] + maskR[4];
 	} 
 	if(layer_id == 1){
-		maskR[0] = prime_field::random();
-		maskR[1] = prime_field::random();
+		maskR[0] = maskr[0];
+		maskR[1] = maskr[1];
 		sumRc.a = prime_field::field_element(0);
 		sumRc.b = maskR[1];
 		sumRc.c = maskR[0];

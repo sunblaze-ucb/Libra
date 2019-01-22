@@ -484,20 +484,23 @@ bool zk_verifier::verify()
 	mpz_class input_0_mpz, input_1_mpz;
 
 	input_0_mpz = 0, input_1_mpz = 0;
-	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz);
-	auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz);
+	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
+	auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz, p -> Zv.to_gmp_class());
 	cout << input_0_mpz << endl;
 	cout << input_0.to_gmp_class() << endl;
 
 	cout << input_1_mpz << endl;
 	cout << input_1.to_gmp_class() << endl;
 
-	bool input_0_verify = input_vpd::verify(r_0_mpz, digest_input[0], input_0_mpz, witnesses_0.first, witnesses_0.second);
-	bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input[0], input_1_mpz, witnesses_1.first, witnesses_1.second);
+	bool input_0_verify = input_vpd::verify(r_0_mpz, digest_input.first[0], digest_input.second[0], p -> Zu.to_gmp_class(), input_0_mpz, witnesses_0.first, witnesses_0.second);
+	bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input.first[0], digest_input.second[0], p -> Zv.to_gmp_class(), input_1_mpz, witnesses_1.first, witnesses_1.second);
 	cout << "Verify result: " << input_0_verify << " " << input_1_verify << endl;
 
 	input_0 = input_0 + p->Zu * p->sumRc.eval(p->preu1);
 	input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
+
+	cout << input_0_mpz << endl;
+	cout << input_0.to_gmp_class() << endl;
 
 	delete[] input;
 	delete[] r_0;
