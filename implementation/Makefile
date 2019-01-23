@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=
+CFLAGS= -Wall
 CDBG_FLAGS=-g
 INCLUDE=-I include -I include/ate-pairing/include
 LIB=include/ate-pairing/lib

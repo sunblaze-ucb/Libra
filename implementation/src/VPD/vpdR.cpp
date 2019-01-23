@@ -28,8 +28,6 @@ Ec2 g2, g2a;
 vector<Ec1> pub_g1, g1_pre;
 vector<Ec2> pub_g2, g2_pre;
 
-//mpz_class globalright, globalleft;
-
 std::vector<mpz_class> s;
 
 void precompute_g1(mpz_class a){
@@ -47,16 +45,11 @@ template< class T >
 T pre_exp(vector<T>& pre, mpz_class n){
 	T temp = pre[0] * 0;
 	int length = mpz_sizeinbase(n.get_mpz_t(), 2);
-	//cout << "length = " << length << endl;
 	for(int i = 0; i < length; i++){
-		//cout << "hello world i = " << i << endl;
 		if(mpz_tstbit(n.get_mpz_t(), i) == 1){
-			//cout << "i = " << i << endl; 
-			temp = temp + pre[i];
-			//cout << "i = " << i << endl;		
+			temp = temp + pre[i];	
 		}
 	}
-	//cout << "get out" << endl;
 	return temp;
 }
 
@@ -68,12 +61,8 @@ void KeyGen(int d){
 	mpz_urandomm(a.get_mpz_t(), r_state, p.get_mpz_t());
 	precompute_g1(a);
 	mie::Vuint temp(a.get_str().c_str());
-	//cout << "a = " << a << " " << "tmep = " << temp << endl; 
 	g1a = g1 * temp;
 	g2a = g2 * temp;
-	//cout << "g1 = " << g1 << endl;
-	//cout << "g1 = " << g1 * 2 - g1 << endl;
-	//vector<mpz_class> s(NumOfVar);
 	s.resize(NumOfVar + 1);
 	for(int i = 0; i < NumOfVar + 1; i++)
 		mpz_urandomm(s[i].get_mpz_t(), r_state, p.get_mpz_t());
@@ -82,20 +71,12 @@ void KeyGen(int d){
 	mpz_class square1 = (s[1] * s[1]) % p;
 
 	pub_g1.resize(6 + 1);
-	//pub_g2.resize(9);
 	pub_g1[0] = g1;
-	//pub_g2[0] = g2;
 	pub_g1[1] = pre_exp(g1_pre, s[0]);
-	//pub_g2[1] = pre_exp(g2_pre, s[0]);
 	pub_g1[2] = pre_exp(g1_pre, square0);
-	//pub_g2[2] = pre_exp(g2_pre, square0);
 	pub_g1[3] = pre_exp(g1_pre, s[1]);
-	//pub_g2[3] = pre_exp(g2_pre, s[1]);
 	pub_g1[4] = pre_exp(g1_pre, square1);
-	//pub_g2[4] = pre_exp(g2_pre, square1);
 	pub_g1[5] = pre_exp(g1_pre, (s[0] * s[1]) % p);
-	//cout << "hello world" << endl;
-	//pub_g2[5] = pre_exp(g2_pre, (s[0] * s[1]) % p);
 	pub_g1[6] = pre_exp(g1_pre, s[2]);
 
 	pub_g2.resize(2 + 1);
@@ -113,11 +94,8 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	mpz_class r_f;
 	digest = g1 * 0;
 	mpz_urandomm(r_f.get_mpz_t(), r_state, p.get_mpz_t());
-	//cout << "digest = " << digest << endl; 
 	vector<mpz_class> coeffs = input;
 	coeffs.push_back(r_f);
-	
-	//int d = ceil(log2(input.size()));
 	
 	clock_t commit_t = clock();
 	
@@ -129,7 +107,6 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 
 	mpz_class ans = 0;
 	for(int i = 0; i < coeffs.size(); i++){
-		//cout << "i = " << i << endl;
 		mie::Vuint temp(coeffs[i].get_str().c_str());
 		digest = digest + (pub_g1[i] * temp);
 	} 
@@ -137,8 +114,6 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	mie::Vuint temp1(a.get_str().c_str());
 
 	digesta = digest * temp1;
-	
-	//result = digest;
 	
 	cout << "VPD R commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
@@ -220,19 +195,16 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class ans, vector<Ec1>& witness
 	Fp12 ea3, ea4 = 1;
 
 	std::vector<Fp12> temp(r.size() + 1);
-	//ans = ans % p;
 	Ec1 temp2 = pre_exp(g1_pre, ans);
 
 	opt_atePairing(ea3, g2, digest - temp2);
 
 	for(int i = 0; i < r.size() + 1; i++){
-		//cout << "i = " << i << endl;
 		if(i < r.size()){
 			Ec2 temp3 = pub_g2[i] - pre_exp(g2_pre, r[i]);	
 			opt_atePairing(temp[i], temp3, witness[i]);
 		}
 		if(i == r.size()){
-			//cout << "i = " << i << endl;
 			opt_atePairing(temp[i], pub_g2[i], witness[i]);
 		}
 		ea4 *= temp[i];
@@ -271,59 +243,3 @@ void environment_init()
 	g1 = Ec1(pt.g1.a, pt.g1.b);
 }
 }
-/*
-
-int main(int argc, char** argv){
-	seed = rand();
-    gmp_randinit_default(r_state);
-    gmp_randseed_ui(r_state, seed);
-	p.set_str("16798108731015832284940804142231733909759579603404752749028378864165570215949",10);
-	
-	
-	//bilinear g1 g2
-	bn::CurveParam cp = bn::CurveFp254BNb;
-	Param::init(cp);
-	const Point& pt = selectPoint(cp);
-	g2 = Ec2(
-		Fp2(Fp(pt.g2.aa), Fp(pt.g2.ab)),
-		Fp2(Fp(pt.g2.ba), Fp(pt.g2.bb))
-	);
-	g1 = Ec1(pt.g1.a, pt.g1.b);
-
-	int d = 2;
-	
-//	cout << "d = " << d << endl;
-
-	KeyGen(d);
-	
-	int N = 2;
-	vector<mpz_class> input(6 + 1);
-	for(int i = 0; i < input.size(); i++){
-		input[i] = rand();
-	}
-	
-	
-	
-	Ec1 digest, digesta;
-	digest = g1 * 0;
-	
-	commit(digest, digesta, input);
-	cout << "check commit: " << check_commit(digest, digesta) << endl;
-	
-	vector<Ec1> proof, proofa;
-	vector<mpz_class> r(d);
-	mpz_class ans;
-	
-	for(int i = 0; i < r.size(); i++)
-		mpz_urandomm(r[i].get_mpz_t(), r_state, p.get_mpz_t());
-	
-	prove(r, ans, input, proof, proofa);
-	
-	bool tf = verify(r, digest, ans, proof, proofa);
-	cout<< "verify: " << tf <<endl;
-	return 0;
-}
-
-
-
-*/

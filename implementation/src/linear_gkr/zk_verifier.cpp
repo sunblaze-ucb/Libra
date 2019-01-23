@@ -15,7 +15,6 @@ void zk_verifier::get_prover(zk_prover *pp)
 void zk_verifier::read_circuit(const char *path)
 {
 	int d;
-	static char str[300];
 	FILE *circuit_in;
 	circuit_in = fopen(path, "r");
 
@@ -182,8 +181,6 @@ prime_field::field_element zk_verifier::V_in(const prime_field::field_element* r
 		output[i] = output_raw[i];
 	for(int i = 0; i < r_0_size; ++i)
 	{
-		int last_gate;
-		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
 			output[j] = output[j << 1] * (one_minus_r_0[i]) + output[j << 1 | 1] * (r_0[i]);
 		output_size >>= 1;
@@ -202,20 +199,6 @@ bool zk_verifier::verify()
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-
-	prime_field::field_element *input;
-	input = new prime_field::field_element[(1 << C.circuit[0].bit_length)];
-
-	for(int i = 0; i < (1 << C.circuit[0].bit_length); ++i)
-	{
-		int g = i;
-		if(C.circuit[0].gates[g].ty == 3)
-		{
-			input[g] = prime_field::field_element(C.circuit[0].gates[g].u);
-		}
-		else
-			assert(false);
-	}
 
 	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length);
 
@@ -244,7 +227,6 @@ bool zk_verifier::verify()
 	std::chrono::duration<double> ts = std::chrono::duration_cast<std::chrono::duration<double>>(t_b - t_a);
 	std::cerr << "	Time: " << ts.count() << std::endl;
 	a_0 = alpha * a_0;
-	prime_field::field_element a_1 = prime_field::field_element(0); //* beta
 
 	prime_field::field_element alpha_beta_sum = a_0; //+ a_1
 
@@ -372,7 +354,6 @@ bool zk_verifier::verify()
 		std::cerr << "	Time: " << time_span.count() << std::endl;
 		
 		auto final_claims = p -> sumcheck_finalize(previous_random);
-		prime_field::field_element ttt = prime_field::field_element(1);
 		
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;
@@ -388,7 +369,6 @@ bool zk_verifier::verify()
 			fprintf(stderr, "Verification fail, phase2, lastbit for c\n");
 			return false;
 		}
-		//previous_random = r_c[0];
 		alpha_beta_sum = poly.eval(r_c[0]);
 
 		mpz_class maskRg1_value_mpz, maskRg2_value_mpz;
@@ -454,10 +434,7 @@ bool zk_verifier::verify()
 		beta = tmp_beta[0];
 		delete[] tmp_alpha;
 		delete[] tmp_beta;
-		//v_u = v_u - p->Zu * p->sumRc.eval(p->preu1);
-		//v_v = v_v - p->Zv * p->sumRc.eval(p->prev1);
 
-		//std::cout << "test = " << alpha * p->Zu * p->sumRc.eval(p->preu1).to_string() << std::endl;  
 		alpha_beta_sum = alpha * v_u + beta * v_v;
 
 		delete[] r_0;
@@ -501,7 +478,6 @@ bool zk_verifier::verify()
 	input_0.value = prime_field::u512b(is0.c_str(), is0.length(), 10);
 	input_1.value = prime_field::u512b(is1.c_str(), is1.length(), 10);
 
-	delete[] input;
 	delete[] r_0;
 	delete[] r_1;
 	delete[] one_minus_r_0;
@@ -527,7 +503,6 @@ void zk_verifier::delete_self()
 	delete[] beta_g_r1;
 	delete[] beta_u;
 	delete[] beta_v;
-	//std::cout << "come here!" << std::endl;
 	for(int i = 0; i < C.total_depth; ++i)
 	{
 		delete[] C.circuit[i].gates;

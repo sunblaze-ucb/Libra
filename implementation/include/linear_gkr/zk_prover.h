@@ -85,14 +85,10 @@ public:
 	quadratic_poly Rg1, Rg2, sumRc;
 	std::vector<bn::Ec1> generate_maskR(int);
 
-	//prime_field::field_element preZu, preZv, Zu, Zv, preu1, prev1, ZuR, ZvR, Iuv;
-
 	void sumcheck_maskpoly_init();
 	std::vector<mpz_class> input_mpz, maskr_mpz;
 	std::vector<prime_field::field_element> maskr;
 	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > keygen_and_commit(int input_bit_length);
-	//prime_field::field_element *maskpoly_partialsum;
-	//prime_field::field_element inv_2 = from_string("8399054365507916142470402071115866954879789801702376374514189432082785107975");
 
 };
 

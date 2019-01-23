@@ -81,23 +81,6 @@ namespace prime_field
 				 (__uint128_t)mid * (__uint128_t)x.mid + (((__uint128_t)mid * (__uint128_t)x.hi + (__uint128_t)hi * (__uint128_t)x.mid) << 64) + carry2;
 		return ret;
 	}
-	/*
-	inline u256b u256b::operator << (const int &x) const{
-		u256b ret;
-		for(int i = 0; i < x; i++)
-			ret << 1;
-		ret = ret % prime_field::mod;
-		return ret;
-	}
-
-	inline u256b u256b::operator >> (const int &x) const{
-		u256b ret;
-		for(int i = 0; i < x; i++)
-			ret >> 1;
-		ret = ret % prime_field::mod;
-		return ret;
-	}
-	*/
 	inline u256b u256b::left_128()
 	{
 		u256b ret;
@@ -330,9 +313,6 @@ namespace prime_field
 		u256b lohi2 = (u256b)hi * (u256b)x.lo;
 		u256b midmid = (u256b)mid * (u256b)x.mid;
 		
-		//u256b midhi1 = (u256b)mid * (u256b)x.hi;
-		//u256b midhi2 = (u256b)hi * (u256b)x.mid;
-		
 		u256b midhi1 = midhi_mul(mid, x.hi);
 		u256b midhi2 = midhi_mul(hi, x.mid);
 		
@@ -453,7 +433,6 @@ namespace prime_field
 
 	u256b mod;
 	bool initialized = false;
-	//independent_bits_engine<mt19937, 256, cpp_int> gen;
 
 	void init(std::string s, int base)
 	{
@@ -560,19 +539,6 @@ namespace prime_field
 				return 128 - __builtin_clzll(hi);
 			return 64 - __builtin_clzll(lo);
 		}
-	}
-	field_element field_element::shr15() const
-	{
-		field_element ret;
-		ret.value.lo = value.lo >> 15;
-		ret.value.lo = ret.value.lo | ((value.mid & ((1 << 15) - 1)) << 15);
-		ret.value.mid = value.mid >> 15;
-		ret.value.mid = ret.value.lo | ((value.hi.lo & ((1 << 15) - 1)) << 15);
-		ret.value.hi.lo = value.hi.lo >> 15;
-		ret.value.hi.lo = ret.value.hi.lo | ((ret.value.hi.mid & ((1 << 15) - 1)) << 15);
-		ret.value.hi.mid = value.hi.mid >> 15;
-		ret.value.hi.mid = ret.value.hi.mid | ((ret.value.hi.hi & ((1 << 15) - 1)) << 15);
-		ret.value.hi.hi = value.hi.hi >> 15;
 	}
 	int field_element::testBit(int i)
 	{
