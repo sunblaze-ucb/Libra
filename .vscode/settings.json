@@ -37,6 +37,24 @@
         "unordered_map": "cpp",
         "utility": "cpp",
         "chrono": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "csignal": "cpp",
+        "array": "cpp",
+        "atomic": "cpp",
+        "strstream": "cpp",
+        "bitset": "cpp",
+        "condition_variable": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "unordered_set": "cpp",
+        "functional": "cpp",
+        "mutex": "cpp",
+        "system_error": "cpp",
+        "thread": "cpp",
+        "cinttypes": "cpp",
+        "tuple": "cpp",
+        "typeindex": "cpp",
+        "optional": "cpp",
+        "string_view": "cpp"
     }
 }

@@ -122,10 +122,9 @@ void KeyGen(int d){
 	pub_g1.at(2 * d) = g1;
 	pub_g2.at(2 * d) = g2;
 	pub_g1.at(2 * d + 7) = pre_exp(g1_pre, s[d]);
-	std::cout << "pub_g1[2 * d + 7] = " << pub_g1[2 * d + 7] << std::endl;
 	pub_g2.at(2 * d + 1) = pre_exp(g2_pre, s[d]);
 
-	cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
+	cout << "VPD Test KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
@@ -160,7 +159,7 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 	
 	//result = digest;
 	
-	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
+	cout << "VPD test commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return r_f;
 	
@@ -238,8 +237,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		witness[NumOfVar] -= pub_g1[2 * i + 1] * tempti;
 	}
 	mie::Vuint tempa(a.get_str().c_str());
-	witnessa[NumOfVar] = witness[NumOfVar] * tempa;
-	cout << "zkt time: " << (double)(clock() - zkt) / CLOCKS_PER_SEC << endl;	
+	witnessa[NumOfVar] = witness[NumOfVar] * tempa;	
 
 	for(int i = 0; i < coeffs.size(); i++)
 		if(coeffs[i] < 0)
@@ -274,7 +272,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		//cout << "ans = " << ans << endl;
 	}
 	ans = (ans + coeffs[2 * NumOfVar]) % p;
-	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
+	cout << "VPD test prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
 bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
@@ -323,14 +321,13 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 		flag = 0;
 	}
 
-	cout << "verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
+	cout << "VPD test verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
 	return flag;
 	
 }
 
 void environment_init()
 {
-	cout << "vpd_test initialized" << endl;
 	seed = rand();
     gmp_randinit_default(r_state);
     gmp_randseed_ui(r_state, seed);

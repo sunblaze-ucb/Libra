@@ -32,7 +32,6 @@ std::vector<mpz_class> pub_g1_exp;
 vector<mpz_class> s;
 
 std::vector<mpz_class> pre_input(std::vector<mpz_class>& input){
-	cout << "inputsize = " << input.size() << endl; 
 	int total = 1 << NumOfVar;
 	
 	std::vector<mpz_class> result[2];
@@ -182,7 +181,7 @@ void KeyGen(int d){
 	{
 		pub_g2[i] = pre_exp(g2_pre, s[i]);
 	}
-	cout << "KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
+	cout << "Input VPD KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
@@ -265,7 +264,7 @@ std::pair<mpz_class, mpz_class> commit(Ec1& digest, Ec1& digesta, Ec1& digest2, 
 	digesta = digest * tempa;
 	digest2a = digest2 * tempa;
 
-	cout << "commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
+	cout << "Input VPD commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return make_pair(r_f, r_f2);
 	
@@ -413,7 +412,6 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		witnessa[k] = witness[k] * tempa;
 	}
 
-	cout << "multiscalar time: " << (double)(clock() - multi_t0) / CLOCKS_PER_SEC << endl;	
 
 	mpz_class tmp = coeffs[1 << NumOfVar];
 	for(int i = 0; i < NumOfVar; i++)
@@ -427,9 +425,8 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	}
 	//mie::Vuint tempa(a.get_str().c_str());
 	witnessa[NumOfVar] = witness[NumOfVar] * tempa;
-	cout << "zkt time: " << (double)(clock() - zkt) / CLOCKS_PER_SEC << endl;
 
-	cout << "prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
+	cout << "Input VPD prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
 bool verify(vector<mpz_class> r, Ec1 digest, Ec1 digest2, mpz_class Z, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
@@ -485,7 +482,7 @@ bool verify(vector<mpz_class> r, Ec1 digest, Ec1 digest2, mpz_class Z, mpz_class
 		flag = 0;
 	}
 
-	cout << "verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
+	cout << "Input VPD verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
 	return flag;
 	
 }

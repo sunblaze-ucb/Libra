@@ -206,8 +206,6 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 	preprev1 = prev1;
 	r_f_R = vpdR::commit(ret[0], ret[1], maskR_gmp);
 
-	cout << "fuck " << vpdR::check_commit(ret[0], ret[1]) << endl;
-
 	for(int i = 0; i < 6; i++)
 		preR[i] = maskR[i];
 	Rg1.a = maskR[4];
@@ -239,6 +237,7 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 		sumRc.c = maskR[0] + maskR[0] + maskR[3] + maskR[4];
 	} 
 	if(layer_id == 1){
+		//a + bx;
 		maskR[0] = maskr[0];
 		maskR[1] = maskr[1];
 		sumRc.a = prime_field::field_element(0);
