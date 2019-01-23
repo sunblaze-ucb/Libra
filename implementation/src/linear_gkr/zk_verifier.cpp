@@ -472,8 +472,7 @@ bool zk_verifier::verify()
 
 	//post sumcheck
 
-	auto input_0 = V_in(r_0, one_minus_r_0, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length)), 
-		 input_1 = V_in(r_1, one_minus_r_1, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
+	prime_field::field_element input_0, input_1;
 	
 	std::vector<mpz_class> r_0_mpz, r_1_mpz;
 	for(int i = 0; i< C.circuit[0].bit_length; ++i)
@@ -486,21 +485,21 @@ bool zk_verifier::verify()
 	input_0_mpz = 0, input_1_mpz = 0;
 	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
 	auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz, p -> Zv.to_gmp_class());
-	cout << input_0_mpz << endl;
-	cout << input_0.to_gmp_class() << endl;
-
-	cout << input_1_mpz << endl;
-	cout << input_1.to_gmp_class() << endl;
 
 	bool input_0_verify = input_vpd::verify(r_0_mpz, digest_input.first[0], digest_input.second[0], p -> Zu.to_gmp_class(), input_0_mpz, witnesses_0.first, witnesses_0.second);
 	bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input.first[0], digest_input.second[0], p -> Zv.to_gmp_class(), input_1_mpz, witnesses_1.first, witnesses_1.second);
-	cout << "Verify result: " << input_0_verify << " " << input_1_verify << endl;
+	if(!(input_0_verify & input_1_verify))
+	{
+		fprintf(stderr, "Verification fail, input vpd.\n");
+		return false;
+	}
 
 	input_0 = input_0 + p->Zu * p->sumRc.eval(p->preu1);
 	input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
 
-	cout << input_0_mpz << endl;
-	cout << input_0.to_gmp_class() << endl;
+	auto is0 = input_0_mpz.get_str(), is1 = input_1_mpz.get_str();
+	input_0.value = prime_field::u512b(is0.c_str(), is0.length(), 10);
+	input_1.value = prime_field::u512b(is1.c_str(), is1.length(), 10);
 
 	delete[] input;
 	delete[] r_0;
