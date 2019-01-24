@@ -3,94 +3,79 @@
 \subsection{Zero-Knowledge Verifiable Polynomial Delegation Scheme}
 \label{subsec::zkvpd}
 
-\yupeng{At this point, I think it suffices to only give a definition of ZKVPD here.}
+Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that \yupeng{Can be moved to Appendix. Check the definitions, add a statement for ZK.}
 
-
-\ignore{
-Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for short) is a important building block for our zero knowledge construction. We will use the construction from Zhang et al. \cite{zkvpd}.
-
-
-
-\subsubsection{Scheme Description}
-
-\begin{theorem} 
-\label{thm:zkvpd}
-Zhang et al.'s construction \cite{zkvpd} is a zero knowledge extractable verifiable polynomial-delegation protocol. For a variable-degree-$d$ $l$-variate polynomial $f \in \mathcal{F}$ with $m$ monomials, algorithm \textnormal{KeyGen} runs in time $O(\binom{ld+l}{ld})$, \textnormal{CommitPoly} in time $O(m)$, \textnormal{CommitValue} in time $O(ldm)$, \textnormal{Ver} in time $O(l)$ and \textnormal{CheckCom} in time $O(1)$. The commitment produced by \textnormal{CommitPoly} consists of $O(1)$ group elements and the proof produced by \textnormal{CommitPoly} consists of $O(l)$ group elements.
-\end{theorem}
-
-\newpage
-{
 \begin{framed}
 	\centering
-	\begin{definition}
-		\label{def::zkvpd}
-		Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $l$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. \textnormal{(KeyGen, Commit, Evaluate, CheckCom, Ver)} consititue a \textnormal{zero-knowledge verifiable polynomial-delegation} protocol for $\mathcal{F}$ if:
-		\begin{enumerate}
+	\begin{enumerate}
 			\item \textbf{Perfect Completeness}
 				For any polynomial $f \in \mathcal{F}$ and value $t$,
-				{\fontsize{10}{10}{\[\Pr_{r_f, r_y}\left[
+				{\fontsize{10}{10}{\[\Pr_{r_f}\left[
 					\begin{aligned}
-						(pp, vp) \leftarrow \textnormal{KeyGen}(1^\lambda, l, d) && \\
-						com_f \leftarrow \textnormal{CommitPoly}(f, r_f, pp) &:&  \textnormal{CheckCom}(com_f, vp)=accept \hspace*{5pt}\land \\
-						(com_y, \pi) \leftarrow \textnormal{CommitValue}(f, t, f(t), r_f, r_y, pp) && \hspace*{10pt}\textnormal{Ver}(com_f, t, com_y, \pi, vp)=accept\\
+						(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \\
+						\comm \leftarrow \Commit(f, r_f, \pp) &:&  \CheckComm(\comm, \vp)=\accept \hspace*{5pt}\land \\
+						(y, \pi) \leftarrow \Open(f, t, r_f, \pp) && \hspace*{10pt}\Verify(\comm, t, y, \pi, \vp)=\accept\\
 					\end{aligned}
 				\right]=1\]}}
 			\item \textbf{Binding}
 			For any PPT adversary $\mathcal{A}$ and benign auxilary input $z_1, z_2$ the following holds:
 			{\fontsize{9}{9}\[\Pr \left[
 				\begin{aligned}
-					(pp,vp) \leftarrow \textnormal{KeyGen}(1^\lambda, l, d) && \textnormal{CheckCom}(com_f^*, vp) = accept \hspace*{5pt}\land\\
-					(\pi^*, com_f^*, com_y^*, state) \leftarrow \mathcal{A}(1^\lambda, z_1, pp) &:& \textnormal{Ver}(com_f^*, t^*, com_y^*, \pi^*, vp)=accept \hspace*{5pt} \land\\
-					(f^*, t^*, y^*, r_f^*, r_y^*) \leftarrow \mathcal{A}(1^\lambda, z_2, state, pp) && com_f^*=\textnormal{CommitPoly}(f^*, r_f^*, pp) \hspace*{5pt} \land\\
-					&& (com_y^*, \pi) = \textnormal{CommitValue}(f^*, t^*, y^*, r_f^*, r_y^*, pp) \hspace*{5pt} \land \\
+					(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \{\accept,\reject\}\leftarrow\CheckComm(\comm^*, \vp) \hspace*{5pt}\land\\
+					(\pi^*, \comm*, y^*, state) \leftarrow \mathcal{A}(1^\lambda, z_1, \pp) &:& \Verify(\comm^*, t^*, y^*, \pi^*, \vp)=\accept \hspace*{5pt} \land\\
+					(f^*, t^*, y^*, r_f^*) \leftarrow \mathcal{A}(1^\lambda, z_2, state, \pp) && \comm^*=\Commit(f^*, r_f^*, \pp) \hspace*{5pt} \land\\
+					&& (y^*, \pi^*) = \Open(f^*, t^*, r_f^*, \pp) \hspace*{5pt} \land \\
 					&& f^*(t^*) \neq y^*\\
 				\end{aligned}
 			\right]\le \negl{(\lambda)}\]}
 			\item \textbf{Zero Knowledge} For security parameter $\lambda$, polynomial $f$, advserary $\mathcal{A}$, and simulator Sim, consider the following two experiments:
 				\begin{align*}
 					\begin{minipage}{.5\linewidth}
-						$\textnormal{Real}_{\mathcal{A}, f}(1^\lambda)$:
+						$\mathsf{Real}_{\A, f}(1^\lambda)$:
 						\begin{enumerate}
-							\item $(pp, vp) \leftarrow \textnormal{KeyGen}(1^\lambda, l, d)$
-							\item \textit{Generate $r_f$ uniformly at random}
-							\item $com_f \leftarrow CommitPoly(f, r_f, pp)$
-							\item $k\leftarrow \mathcal{A}(1^\lambda, com_f, vp)$
-							\item \textit{For $i=1,...,k$ repeat}
+							\item $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$
+							%\item \text{Generate $r_f$ uniformly at random}
+							\item $\comm \leftarrow \Commit(f, r_f, \pp)$
+							\item $k\leftarrow \mathcal{A}(1^\lambda, \comm, \vp)$
+							\item \text{For $i=1,...,k$ repeat}
 							\begin{enumerate}
-								\item \textit{Generate $r_i$ uniformly at random}
-								\item $t_i \leftarrow \mathcal{A}(1^\lambda, com_f, com_{y_1}, ..., com_{y_{i-1}}, \pi_1,\\ ..., \pi_{i-1}, vp)$
-								\item $(com_y, \pi_i) \leftarrow \textnormal{CommitValue}(f, t_i, f(t_i), r_f, r_i, pp)$
+								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1, ..., y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
+								\item $(y_i, \pi_i) \leftarrow \Open(f, t_i, r_f, \pp)$
 							\end{enumerate}
-							\item $b \leftarrow \mathcal{A}(1^\lambda, com_f, (com_{y_1}, ..., com_{y_k}, \pi_1,\\ ..., \pi_k), vp)$
-							\item \textit{Output b}
+							\item $b \leftarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
+							\item \text{Output b}
 						\end{enumerate}
 					\end{minipage}
 					\hspace*{10pt}\vline \hspace*{10pt}
 					\begin{minipage}{.5\linewidth}
-						$\textnormal{Ideal}_{\mathcal{A}, Sim}(1^\lambda)$:
+						$\mathsf{Ideal}_{\A, Sim}(1^\lambda)$:
 						\begin{enumerate}
-							\item $(com_f, pp, vp, \sigma) \leftarrow \textnormal{Sim}(1^\lambda, l, d)$
-							\item $k \leftarrow \mathcal{A}(1^\lambda, com_f, vp)$
-							\item \textit{For $i=1,...,k$ repeat}:
+							\item $(\comm, \pp, \vp, \sigma) \leftarrow \mathsf{Sim}(1^\lambda, \ell, d)$
+							\item $k \leftarrow \A(1^\lambda, \comm, \vp)$
+							\item \text{For $i=1,...,k$ repeat}:
 							\begin{enumerate}
-								\item $t_i \leftarrow \mathcal{A}(1^\lambda, com_f, com_{y_1}, ..., com_{y_{i-1}}, \pi_1,\\ ..., \pi_{i-1}, vp)$
-								\item $(com_y, \pi_i, \sigma) \leftarrow \textnormal{Sim}(t_i, \sigma, pp)$
+								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1, ..., y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
+								\item $(y_i, \pi_i, \sigma) \leftarrow \mathsf{Sim}(t_i, \sigma, \pp)$
 							\end{enumerate}
-							\item $b \leftarrow \mathcal{A}(1^\lambda, com_f, (com_{y_1}, ..., com_{y_k}, \pi_1,\\ ..., \pi_k), vp)$
-							\item \textit{Output b}
+							\item $b \leftarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
+							\item \text{Output b}
 						\end{enumerate}
 					\end{minipage}
 				\end{align*}
-		%	\item \textbf{Polynomial Extractability}
-		%	\item \textbf{Evaluation Extractability}
 		\end{enumerate}
-	%%%
-		%\begin{figure}
-		%	\begin{minipage}
-		%	\end{minipage}
-		%\end{figure}
-	%%%
-	\end{definition}
 \end{framed}
-}
+
+
+
+\ignore{
+	Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for short) is a important building block for our zero knowledge construction. We will use the construction from Zhang et al. \cite{zkvpd}.
+	
+	
+	
+	\subsubsection{Scheme Description}
+	
+	\begin{theorem} 
+		\label{thm:zkvpd}
+		Zhang et al.'s construction \cite{zkvpd} is a zero knowledge extractable verifiable polynomial-delegation protocol. For a variable-degree-$d$ $l$-variate polynomial $f \in \mathcal{F}$ with $m$ monomials, algorithm \textnormal{KeyGen} runs in time $O(\binom{ld+l}{ld})$, \textnormal{CommitPoly} in time $O(m)$, \textnormal{CommitValue} in time $O(ldm)$, \textnormal{Ver} in time $O(l)$ and \textnormal{CheckCom} in time $O(1)$. The commitment produced by \textnormal{CommitPoly} consists of $O(1)$ group elements and the proof produced by \textnormal{CommitPoly} consists of $O(l)$ group elements.
+	\end{theorem}
 }
