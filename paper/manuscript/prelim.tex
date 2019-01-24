@@ -44,7 +44,7 @@ The second assumption is a generalization of the $q$-PKE assumption~\cite{groth2
 \paragraph{Interactive proof.} Traditional proof involves two static objects: a prover $\mathcal{P}$ and a verifier $\mathcal{V}$. The prover $\mathcal{P}$ takes a statement $x$ as input and generate a string $\pi$ as proof, then the verifier $\mathcal{V}$ checks if the statement $x$ and the proof $\pi$ are correct. An interactive proof is a stronger notion of proof, it allows the prover $\mathcal{P}$ to convince the verifier $\mathcal{V}$ of the validity of some statement. The interactive proof runs in several rounds, allowing the verifier to ask questions in each round based on prover's answers of previous rounds. We phrase this in terms of $\mathcal{P}$ trying to convince $\mathcal{V}$ that $f(x)=1$. The proof system is interesting if and only if the running time of $\mathcal{V}$ is less than the time of directly computing the function $f$.
 
 We formalize the "interactive proof" in the following:	
-\begin{definition}
+\begin{definition}\label{def:ip}
 	Let $f$ be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for $f$ with soundness $\epsilon$ if the following holds:
 	\begin{itemize}
 		\item {\bf Completeness.} For every $x$ such that $f(x) = 1$ it holds that $\Pr[\langle\mathcal{P}, \mathcal{V}\rangle(x)=accept]=1$.

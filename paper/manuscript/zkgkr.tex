@@ -34,7 +34,7 @@ $$H + \rho G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}(f(x_1, x_2, \c
 
 The completeness of the protocol holds obviously. The soundness of the protocol follows the soundness of the sumcheck protocol and the random linear combination in step 2 and 3, as proven in~\cite{zksumcheck}. We give a proof of zero-knowledge here.
 
-\begin{theorem}\label{thm:zksc}
+\begin{theorem}[Zero knowledge]\label{thm:zksc}
 	For every verifier $\V^*$ and every $\ell$-variate polynomial $f:\F^\ell\rightarrow\F$ with variable degree $d$, there exists a simulator $\S$ such that given access to $H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-4 of Protocol~\ref{??}. 
 \end{theorem}
 
@@ -98,42 +98,62 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 
 \medskip\noindent\textbf{Protocol.}
 \begin{enumerate} 
-\item The prover $\mathcal{P}$ gives $\text{Output}$ of the circuit $\dot{V}_0(0)$ to the verifier $\mathcal{V}$. 
-\item $\mathcal{P}$ samples $R_1(X, Y), R_2(X, Y), \cdots, R_d(X, Y)$ randomly from $\mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$
-\item $\mathcal{P}$ and $\mathcal{V}$ run the zero knowledge sumcheck protocol on the claim:
-$$\dot{V}_0(0) = \sum_{u, v\in \{0,1\}^{s_1}}\tilde{mult}(0, u, v)(\dot{V}_1(u)\dot{V}_1(v))+\tilde{add}(0,u,v)(\dot{V}_1(u)+\dot{V}_1(v))$$
+\item On a layered arithmetic circuit $C$ with $d$ layers and input $\mathsf{in}$, the prover $\P$ sends the output of the circuit $\mathsf{out}$ to the verifier $\V$.
 
-At the end of the sumcheck protocol, $\mathcal{P}$ sends $\dot{V}_1(r)$ and $\dot{V}_1(s)$ to $\mathcal{V}$ if $r_1 \neq s_1$, where $r, s$ are randomly chosen by $\mathcal{V}$, If $r_1 = s_1$ $\mathcal{P}$ aborts. If it does not pass the sum check protocol, $\mathcal{V}$ rejects. 
+\item $\P$ randomly selects polynomials $R_1(z_1, w), \ldots, R_d(z_1, w): \F^2\rightarrow \F$ with variable degree 2. $\P$ commits to these polynomials by sending $\comm_i\leftarrow\Commit(R_i)$ to $\V$ for $i\in[1,d]$.
 
-\item For layer $i(1 \leq i \leq d - 1)$:
-	\begin{itemize}
-	\item $\mathcal{V}$ samples $\alpha_1, \alpha_2$ at random and sends them to $\mathcal{P}$.
-	\item $\mathcal{V}$ and $\mathcal{P}$ run the zero knowledge sumcheck on the claim
-	$$\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$$
-	Let $z^{(1)} = r$ and $z^{(2)} = s$.
-	\item At the end of the sumcheck protocol, $\mathcal{P}$ receives the random vector $r, s, p$ with $r, s \in (\mathbb{F} - \{0, 1\})^{s_{i+1}}$ and $p \in \mathbb{F}$. 
+\item $\V$ defines $\dot{V}_0(z)= \tV_0(z)$, where $\tV_0(z)$ is the multilinear extension of $\mathsf{out}$. $\dot{V}_0(z)$ can be viewed as a special case with $R_0(z_1,w)$ being the 0 polynomial.
+ 
+\item $\P$ and $\V$ execute the zero knowledge sumcheck protocol presented in Protocol~\ref{??} on Equation~\ref{eq:zkGKR} with $i=0$. At the end of the protocol, $\V$ receives $\dot{V}_1(u^{(1)})$ and $\dot{V}_1(v^{(1)})$.
+
+\item For layer $i=1,\ldots, d-1$:
+	\begin{enumerate}
+	\item $\V$ randomly selects $\alpha^{(i)}, \beta^{(i)}\in\F$ and sends them to $\mathcal{P}$.
+	\item $\P$ and $\V$ run the zero knowledge sumcheck on the equation\\
+
+	$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
 	\begin{align*}
-		\sum_{j = 1, 2} \alpha_j (\tilde{mult}(z^{(j)}, r, s)(\dot{V}_{i+1}(r)\dot{V}_{i+1}(s))&+\tilde{add}(z^{(j)},r,s)(\dot{V}_{i+1}(r)+\dot{V}_{i+1}(s))\\
- 		&+ Z_i(z^{(j)})\sum\limits_{c \in \{0, 1\}}R_i(z^{(j)}_1, c))
+	\sum_{x, y\in \binary^{s_{i+1}},w \in \binary}&(I(\vec{0},w) \cdot (\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
+	&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber\\
+	&+ I((x, y), \vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, w)+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, w)))
 	\end{align*}
-	\item If $r_1 = s_1$, abort. 
-	\item $\mathcal{P}$ replies with the value $a_r = \dot{V}_{i+1}(r)$, $a_s = \dot{V}_{i+1}(s)$.
-	\item $\mathcal{V}$ queries the oracle to get $a = R_i(z^{(1)}_1, p)$ and $b = R_i(z^{(2)}_1, p)$. If $\mathcal{P}$ does not pass the sumcheck protocol, $\mathcal{V}$ rejects.
-	\end{itemize}
+	
+	
+	\item At the end of the zero-knowledge sumcheck protocol, $\P$ sends $\V$ $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$.
+	
+	\item $\V$ computes $a_{i+1} = \alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ and $b_{i+1} = \alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ locally. $\V$ computes $Z_i(u^{(i)}),Z_i(v^{(i)}),I(\vec{0},c^{(i)}), I((u^{(i+1)},v^{(i+1)}),\vec{0})$ locally.
+	\item $\P$ and $\V$ open $R_i$ at two points $R_i(u_1^{(i)},c^{(i)})$ and $R_i(v_1^{(i)},c^{(i)})$ using $\Open$ and $\Verify$.
+	\item $\V$ computes the following as the evaluation oracle and uses it to complete the last step of the zero-knowledge sumcheck.
+	\begin{align*}
+		I(\vec{0},c^{(i)})(a_{i+1}(\dot{V}_{i+1}(u^{(i+1)})\dot{V}_{i+1}(v^{(i+1)}))+b_{i+1}(\dot{V}_{i+1}(u^{(i+1)})+\dot{V}_{i+1}(v^{(i+1)})))\\
+		+I((u^{(i+1)},v^{(i+1)}),\vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, c^{(i)})+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, c^{(i)}))
+	\end{align*}
+	If all checks in the zero knowledge sumcheck and $\Verify$ passes, $\V$ uses $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
+	
+	\end{enumerate}
 
-\item For input layer $d$, $\mathcal{V}$ queries the oracle to verify the claim $\dot{V}_d(r) = \tilde{V}_d(r) + Z(r)\sum\limits_{c \in \{0, 1\}}R_d(r_1, c)$ and $\dot{V}_d(s) = \tilde{V}_d(s) + Z(s)\sum\limits_{c \in \{0, 1\}}R_d(s_1, c)$. $\mathcal{V}$ accepts if it passes the final verification. Otherwise, $\mathcal{V}$ rejects. 
+\item At the input layer $d$, $\V$ has two claims $\dot{V}_{d}(u^{(d)})$ and $\dot{V}_{d}(v^{(d)})$. $\V$ opens $R_d$ at 4 points $R_d(u_1^{(d)},0),R_d(u_1^{(d)},1),R_d(v_1^{(d)},0),R_d(v_1^{(d)},1)$ and checks that $\dot{V}_{d}(u^{(d)}) = \tV_d(u^{(d)})+Z_d(u^{(d)})\sum\limits_{w \in \binary}R_d(u_1^{(d)},w)$ and $\dot{V}_{d}(v^{(d)}) = \tV_d(v^{(d)})+Z_d(v^{(d)})\sum\limits_{w \in \binary}R_d(v_1^{(d)},w)$, given oracle access to two evaluates of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$. If the check passes, output $\accept$; otherwise, output $\reject$.
+
 \end{enumerate}
 
-\noindent
+\begin{theorem}
+	Protocol~\ref{??} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$.
+\end{theorem}
+
+\begin{proof}
 \textbf{Completeness}. The completeness property immediately follows from the construction of the protocol and the completeness of zero knowledge sumcheck. We now proceed to argue about the soundness.\\
 
 \noindent
 \textbf{Soundness}. Let $\mathcal{P}^*$ be an cheating prover which convinces $\mathcal{V}$ of a claim ``Output = C(Input)'' for some Input and C such that Output $\neq$ C(Input). That means $\dot{V_0(0)} \neq \text{Output}$ in the beginning of the protocol. Supoose that we omit the soundness of the oracle since all of them are negligible of $\lambda = \log |\mathbb{F}|$. We claim that if there exists $\dot{V}_i(r) \neq a_r$, then after this iteration with high probability either $(a)$ $\mathcal{V}$ rejects, or $(b)$ in the next iteration, $\dot{V}_{i+1}(r) \neq a_r$ or $\dot{V}_{i+1}(s) \neq a_s$. Since $\alpha_1$ and $\alpha_2$ are randomly chosen by $\mathcal{V}$, the probability that $\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$ is $1/|\mathbb{F}|$ if $\dot{V}_i(r) \neq a_r$. Besides, according to the soundness of sumcheck protobol, when we run the protocol on a false claim with $2s_{i+1} + 1 \leq 3 \log S$ variables and individual degree at most 2, the verifier $\mathcal{V}$ either rejects or passses the false claim to the next iteration with probability $1 - 6 \log S / (|\mathbb{F}| - 2)$.\\
 
-That is to say, if $C(\text{Input}) \neq \dot{V}_0(0)$, the verifier $\mathcal{V}$ will accept with probability at most $\mathcal{O}(d \log S / |\mathcal{F}|)$, where $d$ is the depth of $C$ and $S$ is the maximum number of gates in one layer of $C$. Hence, the total soundness of the zero knowledge GKR protocol is negligible of $\lambda$.\\
+That is to say, if $C(\text{Input}) \neq \dot{V}_0(0)$, the verifier $\mathcal{V}$ will accept with probability at most $\mathcal{O}(d \log S / |\mathcal{F}|)$, where $d$ is the depth of $C$ and $S$ is the maximum number of gates in one layer of $C$. Hence, the total soundness of the zero knowledge GKR protocol is negligible of $\lambda$.
+\end{proof}
 
-\noindent
-\textbf{Zero knowledge}. We prove that the protocol has perfect zero knowledge by exhibiting a polynomial-time simulator $\mathcal{S}$ with $\text{Ouptut}$ and the circuit $C$ that perfectly samples the view of any malicious verifier. 
+\begin{theorem}[Zero knowledge]\label{thm:zkgkr}
+	For every verifier $\V^*$ and every layered circuit $C$ with $d$ layers, input $\mathsf{in}$ and output $\mathsf{out}$, there exists a simulator $\S$ such that given oracle access to $\mathsf{out}$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-5 of Protocol~\ref{??}. 
+\end{theorem}
+
+\begin{proof} We prove that the protocol has perfect zero knowledge by exhibiting a polynomial-time simulator $\mathcal{S}$ with $\text{Ouptut}$ and the circuit $C$ that perfectly samples the view of any malicious verifier. 
 
 \begin{enumerate}
 
@@ -169,8 +189,7 @@ Therefore, we only need to claim that $R(x, p), R(y, p), \sum\limits_{c \in \{0,
 
 Other things are also distinguishable for the verifier $\mathcal{V^*}$ because of the zero knowledge oracle(ZK VPD) and the zero knowledge sumcheck protocol. So our entire protocol is zero knowledge, which completes our proof.\\
 
-\noindent
-\textbf{Complexity}. Consider the time complexity of zero knowledge GKR protocol. We would like to focus on the prover time. Since we have analyzed the prover time in our linear GKR protocol, we only need to think about the overhead complexity while maintaining zero knowledge for GKR protocol. For every layer of the circuit $C$, the prover samples $R_i(X, Y)$, runs the zeor knowledge sumcheck protocol for at most $3s_i$ variables with individual degree at most $2$ and run the zero knowledge oracle(ZK VPD) for $R(X, Y)$ on $2$ random points. The total complexity is $\mathcal{O}(s_i)$ since the size of $R_i(X, Y)$ is only constant. Suppose the depth of the circuit $C$ is $d$ and the maximum number of gates in one layer is $S$. The total complexity is $\mathcal{O}(d \log S)$. In addition, at the end of the protocol, the prover needs to run the zero knowledge oracle(ZK VPD) for $\dot{V}_d$ on $2$ random points. It needs $\mathcal{O}(S)$. So the total complexity is $\mathcal{O}(S \times d)$, which is linear of the circuit size and it is optimal as the prover must evaluate the circuit $C$. 
+\end{proof}
 
 \subsection{Zero knowledge VPD}\label{sec::zkvpd}
 In this section, we explain how to exemplify the oracles using the zero knowledge VPD protocol. In the preliminary, we have defined the general zero knowledge VPD. We could use it as an oracle to verify any polynomial evaluations. However, at the end of our zero knowledge GKR protocol, for the input layer, the verifier needs to verify $\tilde{V}_d(r) + Z(r)\sum\limits_{c \in \{0, 1\}}R_d(r_1, c)$ and $\tilde{V}_d(s) + Z(s)\sum\limits_{c \in \{0, 1\}}R_d(s_1, c)$, which are not multi-linear polynomials. Here we show that we only need to add several extra terms in the public key of the original zero-knowledge VPD for multi-linear polynomials proposed in~\cite{zkvpd}. The overhead for commit, prove and verification are also minimal.
@@ -206,7 +225,7 @@ For the masking polynomials $G(x)$ and $R_i(x,y)$ in each layer, we use the orig
 \end{theorem}
 
 
-
+\paragraph{Complexity}. Consider the time complexity of zero knowledge GKR protocol. We would like to focus on the prover time. Since we have analyzed the prover time in our linear GKR protocol, we only need to think about the overhead complexity while maintaining zero knowledge for GKR protocol. For every layer of the circuit $C$, the prover samples $R_i(X, Y)$, runs the zeor knowledge sumcheck protocol for at most $3s_i$ variables with individual degree at most $2$ and run the zero knowledge oracle(ZK VPD) for $R(X, Y)$ on $2$ random points. The total complexity is $\mathcal{O}(s_i)$ since the size of $R_i(X, Y)$ is only constant. Suppose the depth of the circuit $C$ is $d$ and the maximum number of gates in one layer is $S$. The total complexity is $\mathcal{O}(d \log S)$. In addition, at the end of the protocol, the prover needs to run the zero knowledge oracle(ZK VPD) for $\dot{V}_d$ on $2$ random points. It needs $\mathcal{O}(S)$. So the total complexity is $\mathcal{O}(S \times d)$, which is linear of the circuit size and it is optimal as the prover must evaluate the circuit $C$. 
 
 
 
