@@ -79,7 +79,6 @@ int main()
 	int[] w;
 	int i;
 	int j;
-	int k;
 	int s0;
 	int s1;
 
