@@ -78,10 +78,19 @@ void zk_verifier::read_circuit(const char *path)
 	}
 	p -> init_array(max_bit_length);
 
-	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
-	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
-	beta_v = new prime_field::field_element[(1 << max_bit_length)];
-	beta_u = new prime_field::field_element[(1 << max_bit_length)];
+//	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
+//	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
+//	beta_v = new prime_field::field_element[(1 << max_bit_length)];
+//	beta_u = new prime_field::field_element[(1 << max_bit_length)];
+	int first_half_len = max_bit_length / 2, second_half_len = max_bit_length - first_half_len;
+	beta_g_r0_first_half = new prime_field::field_element[(1 << first_half_len)];
+	beta_g_r0_second_half = new prime_field::field_element[(1 << second_half_len)];
+	beta_g_r1_first_half = new prime_field::field_element[(1 << first_half_len)];
+	beta_g_r1_second_half = new prime_field::field_element[(1 << second_half_len)];
+	beta_v_first_half = new prime_field::field_element[(1 << first_half_len)];
+	beta_v_second_half = new prime_field::field_element[(1 << second_half_len)];
+	beta_u_first_half = new prime_field::field_element[(1 << first_half_len)];
+	beta_u_second_half = new prime_field::field_element[(1 << second_half_len)];
 	fclose(circuit_in);
 }
 
@@ -89,13 +98,25 @@ prime_field::field_element zk_verifier::add(int depth)
 {
 	//brute force for sanity check
 	//it's slow
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 0)
 		{
-			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+		//	ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
 		}
 	}
 	ret.value = ret.value % prime_field::mod;
@@ -105,13 +126,25 @@ prime_field::field_element zk_verifier::add(int depth)
 }
 prime_field::field_element zk_verifier::mult(int depth)
 {
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 1)
 		{
-			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
+			//ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
 	ret.value = ret.value % prime_field::mod;
@@ -126,6 +159,7 @@ void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_f
 	const prime_field::field_element* one_minus_r_0, const prime_field::field_element* one_minus_r_1, 
 	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
 {
+/*
 	beta_g_r0[0] = alpha;
 	beta_g_r1[0] = beta;
 	for(int i = 0; i < C.circuit[depth].bit_length; ++i)
@@ -155,6 +189,76 @@ void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_f
 		{
 			beta_u[j] = beta_u[j] * one_minus_r_u[i];
 			beta_v[j] = beta_v[j] * one_minus_r_v[i];
+		}
+	}
+*/
+	beta_g_r0_first_half[0] = alpha;
+	beta_g_r1_first_half[0] = beta;
+	beta_g_r0_second_half[0] = prime_field::field_element(1);
+	beta_g_r1_second_half[0] = prime_field::field_element(1);
+	int first_half_len = C.circuit[depth].bit_length / 2;
+	int second_half_len = C.circuit[depth].bit_length - first_half_len;
+	for(int i = 0; i < first_half_len; ++i)
+	{
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_g_r0_first_half[j | (1 << i)].value = beta_g_r0_first_half[j].value * r_0[i].value % prime_field::mod;
+			beta_g_r1_first_half[j | (1 << i)].value = beta_g_r1_first_half[j].value * r_1[i].value % prime_field::mod;
+		}
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_g_r0_first_half[j].value = beta_g_r0_first_half[j].value * one_minus_r_0[i].value % prime_field::mod;
+			beta_g_r1_first_half[j].value = beta_g_r1_first_half[j].value * one_minus_r_1[i].value % prime_field::mod;
+		}
+	}
+	for(int i = 0; i < second_half_len; ++i)
+	{
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_g_r0_second_half[j | (1 << i)].value = beta_g_r0_second_half[j].value * r_0[i + first_half_len].value % prime_field::mod;
+			beta_g_r1_second_half[j | (1 << i)].value = beta_g_r1_second_half[j].value * r_1[i + first_half_len].value % prime_field::mod;
+		}
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_g_r0_second_half[j].value = beta_g_r0_second_half[j].value * one_minus_r_0[i + first_half_len].value % prime_field::mod;
+			beta_g_r1_second_half[j].value = beta_g_r1_second_half[j].value * one_minus_r_1[i + first_half_len].value % prime_field::mod;
+		}
+	}
+
+	beta_u_first_half[0] = prime_field::field_element(1);
+	beta_v_first_half[0] = prime_field::field_element(1);
+	beta_u_second_half[0] = prime_field::field_element(1);
+	beta_v_second_half[0] = prime_field::field_element(1);
+	first_half_len = C.circuit[depth - 1].bit_length / 2;
+	second_half_len = C.circuit[depth - 1].bit_length - first_half_len;
+
+	for(int i = 0; i < first_half_len; ++i)
+	{
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_u_first_half[j | (1 << i)] = beta_u_first_half[j] * r_u[i];
+			beta_v_first_half[j | (1 << i)] = beta_v_first_half[j] * r_v[i];
+		}
+			
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_u_first_half[j] = beta_u_first_half[j] * one_minus_r_u[i];
+			beta_v_first_half[j] = beta_v_first_half[j] * one_minus_r_v[i];
+		}
+	}
+
+	for(int i = 0; i < second_half_len; ++i)
+	{
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_u_second_half[j | (1 << i)] = beta_u_second_half[j] * r_u[i + first_half_len];
+			beta_v_second_half[j | (1 << i)] = beta_v_second_half[j] * r_v[i + first_half_len];
+		}
+			
+		for(int j = 0; j < (1 << i); ++j)
+		{
+			beta_u_second_half[j] = beta_u_second_half[j] * one_minus_r_u[i + first_half_len];
+			beta_v_second_half[j] = beta_v_second_half[j] * one_minus_r_v[i + first_half_len];
 		}
 	}
 }
@@ -499,10 +603,18 @@ bool zk_verifier::verify()
 
 void zk_verifier::delete_self()
 {
-	delete[] beta_g_r0;
-	delete[] beta_g_r1;
-	delete[] beta_u;
-	delete[] beta_v;
+	//delete[] beta_g_r0;
+	//delete[] beta_g_r1;
+	//delete[] beta_u;
+	//delete[] beta_v;
+	delete[] beta_g_r0_first_half;
+	delete[] beta_g_r0_second_half;
+	delete[] beta_g_r1_first_half;
+	delete[] beta_g_r1_second_half;
+	delete[] beta_u_first_half;
+	delete[] beta_u_second_half;
+	delete[] beta_v_first_half;
+	delete[] beta_v_second_half;
 	for(int i = 0; i < C.total_depth; ++i)
 	{
 		delete[] C.circuit[i].gates;

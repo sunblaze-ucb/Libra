@@ -12,7 +12,12 @@
 class zk_verifier
 {
 public:
-	prime_field::field_element *beta_g_r0, *beta_g_r1, *beta_u, *beta_v;
+	//prime_field::field_element *beta_g_r0, *beta_g_r1, *beta_u, *beta_v;
+	prime_field::field_element *beta_g_r0_first_half, *beta_g_r0_second_half;
+	prime_field::field_element *beta_g_r1_first_half, *beta_g_r1_second_half;
+	prime_field::field_element *beta_u_first_half, *beta_u_second_half;
+	prime_field::field_element *beta_v_first_half, *beta_v_second_half;
+
 	layered_circuit C;
 	zk_prover *p;
 	void beta_init(int depth, prime_field::field_element alpha, prime_field::field_element beta,
