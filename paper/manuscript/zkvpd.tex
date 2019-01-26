@@ -3,7 +3,7 @@
 \subsection{Zero-Knowledge Verifiable Polynomial Delegation Scheme}
 \label{subsec::zkvpd}
 
-Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that \yupeng{Can be moved to Appendix. Check the definitions, add a statement for ZK.}
+Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, \pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that \yupeng{Can be moved to Appendix. Check the definitions, add a statement for ZK.}
 
 \begin{framed}
 	\centering
@@ -75,7 +75,7 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 	\subsubsection{Scheme Description}
 	
 	\begin{theorem} 
-		\label{thm:zkvpd}
+		
 		Zhang et al.'s construction \cite{zkvpd} is a zero knowledge extractable verifiable polynomial-delegation protocol. For a variable-degree-$d$ $l$-variate polynomial $f \in \mathcal{F}$ with $m$ monomials, algorithm \textnormal{KeyGen} runs in time $O(\binom{ld+l}{ld})$, \textnormal{CommitPoly} in time $O(m)$, \textnormal{CommitValue} in time $O(ldm)$, \textnormal{Ver} in time $O(l)$ and \textnormal{CheckCom} in time $O(1)$. The commitment produced by \textnormal{CommitPoly} consists of $O(1)$ group elements and the proof produced by \textnormal{CommitPoly} consists of $O(l)$ group elements.
 	\end{theorem}
 }

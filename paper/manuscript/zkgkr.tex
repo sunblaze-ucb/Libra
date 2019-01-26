@@ -241,31 +241,50 @@ In the ideal world, $R^*(u_1,c)$ and $R^*(v_1,c)$ are independent and uniformly 
 \end{proof}
 
 \subsection{Zero knowledge VPD}\label{sec::zkvpd}
-In this section, we explain how to exemplify the oracles using the zero knowledge VPD protocol. In the preliminary, we have defined the general zero knowledge VPD. We could use it as an oracle to verify any polynomial evaluations. However, at the end of our zero knowledge GKR protocol, for the input layer, the verifier needs to verify $\tilde{V}_d(r) + Z(r)\sum\limits_{c \in \{0, 1\}}R_d(r_1, c)$ and $\tilde{V}_d(s) + Z(s)\sum\limits_{c \in \{0, 1\}}R_d(s_1, c)$, which are not multi-linear polynomials. Here we show that we only need to add several extra terms in the public key of the original zero-knowledge VPD for multi-linear polynomials proposed in~\cite{zkvpd}. The overhead for commit, prove and verification are also minimal.
+In this section, we present the instantiation of the zkVPD protocol, as defined in Definition~\ref{def::zkpd}. We start with the one used for the input layer. Recall that at the end of the GKR protocol, $\V$ receives two evaluations of the polynomial $\dot{V}_d(z)=\tV_d(z)+Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$ at $z=u^{(d)}$ and $z=v^{(d)}$. In our zero knowledge proof protocol, which will be presented in Section~\ref{subsec::zkall}, $\P$ commits to $\dot{V}_d(z)$ using the zkVPD at the beginning, and opens it to the two points selected by $\V$ using the zkVPD.
+
+
+Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cite{zkvpd}. The protocol in~\cite{zkvpd} works for any polynomial with $\ell$ variables and any variable degree, and is particularly efficient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and preserves the efficiency. Note that though $\dot{V}_d(z)$ is a low degree extension of the input, it can be decomposed to the sum of $\tV_d(z)$, a multilinear polynomial, and $Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$. Moreover, $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$ can be computed directly by $\V$. Therefore, in our construction, $\P$ commits to $\tV_d(z)$ and $\sum\limits_{w \in\binary} R_d(z_1,w)$ separately, and later opens the sum together given $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$, which is naturally supported because of the homomorphic property of the commitment. Another optimization is that unlike other layers of the circuit, $R_d(z_1,w)$ itself is not opened at two points ($\V$ does not receive $R_d(u^{(d)},c^{(d)})$ and $R_d(v^{(d)},c^{(d)})$ in Protocol~\ref{??}). Therefore, it suffices to set $\dot{V}_d(z)=\tV_d(z)+Z_d(z)R_d(z_1)$, where $R_d$ is a univariate linear polynomial.
+
+The full protocol is presented in Protocol~\ref{??}.
 
 \medskip\noindent\textbf{Protocol.}
-Let $\mathbb{F}$ be a prime-order finite field, $l$ be a variable parameter, and $d$ be a variable-degree parameter such that $\mathcal{O}(1)$ is polynomial in $\lambda$. For our problem, $l = s_n$ and $d = 1$.
-\begin{enumerate}
-\item \textbf{KeyGen($1^{\lambda}, l, d$):} Select $\alpha, \beta, t_1, t_2, \cdots, t_l, t_{l+1} \in \mathbb{F}$ uniformaly at random, run $bp \leftarrow \text{BilGen}(1^{\lambda})$ and compute $\mathbb{P} = \{g^{\Pi_{i \in W}t_i}, g^{\alpha \Pi_{i \in W}t_i}\}_{W \in \mathcal{W}_{l, d}} \cup \{g^{t_1}\}$. The public parameters are set to be $pp = (bp, \mathbb{P}, g^{\alpha}, g^{\beta}, g^{t_{l+1}}, g^{\alpha t_{l+1}}, g^{\beta t_{l+1}})$ and the verifier parameters are set to be $vp = (bp, g^{t_1}, g^{t_2}, \cdots, g^{t_{l+1}}, g^{\alpha}, g^{\beta})$.
+Let $\mathbb{F}$ be a prime-order finite field. Let $\dot{V}(x): \F^\ell\rightarrow \F$ be an $\ell$-variate polynomial such that $\dot{V}(x) = \tV(x)+Z(x)R(x_1)$, where $\tV(x)$ is a multilinear polynomial, $Z(x) = \prod_{i=1}^\ell x_i(1-x_i)$ and $R(x_1) = a_0+a_1x_1$. 
 
-\item \textbf{CommitPoly($\tilde{V}_d, p_1, pp$):} Compute $c_1 = g^{V_d(t_1, t_2, \cdots, t_l) + p_1t_{l+1}}$ and $c_2 = g^{\alpha(V_d(t_1, t_2, \cdots, t_l)+ p_1t_{l+1})}$, output the commitment $com_{R_d} = (c_1, c_2)$.
 
-\item \textbf{CommitPoly($R_d, p_2, pp$):} Compute $c_3 = g^{R_d(t_1) + p_2t_{l+1}}$ and $c_4 = g^{\alpha(R_d(t_1)+ p_2t_{l+1})}$, output the commitment $com_{V_d} = (c_3, c_4)$.
+\begin{itemize}
+\item $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell)$: Select $\alpha, t_1, t_2, \cdots, t_l, t_{\ell+1} \in \F$ uniformaly at random, run $\mathsf{bp} \leftarrow \mathsf{BilGen}(1^{\lambda})$ and compute $\pp = (\mathsf{bp},g^\alpha, g^{t_{\ell+1}}, g^{\alpha t_{\ell+1}}, \{g^{\prod_{i\in W}t_i}, g^{\alpha\prod_{i\in W}t_i}\}_{W\in \mathcal{W}_\ell})$, where $\mathcal{W}_\ell$ is the set of all subsets of $\{1,\ldots, \ell\}$. Set $\vp = (\mathsf{bp},g^{t_1}, \ldots, g^{t_{\ell+1}}, g^\alpha)$.
 
-\item \textbf{CommitPoly($\tilde{V}_d + Z(r)R_d, p_1 + Z(r)p_2, pp$):} Compute $c_5 = c_1 \cdot c_3^{Z(r)}$ and $c_6 = c_2 \cdot c_4^{Z(r)}$, output the commitment $com_{\tilde{V}_d + Z(r)R_d} = (c_5, c_6)$.
 
-\item \textbf{CheckCom($com_{\tilde{V}_d}, com_{R_d}, com_{\tilde{V}_d + Z(r)R_d}$, vp):} Output accept if $e(com_{\tilde{V}_d, 1}, g^\alpha) = e(com_{\tilde{V}_d, 2}, g)$and $e(com_{R_d, 1}, g^\alpha) = e(com_{R_d, 2}, g)$ and $e(com_{\tilde{V}_d + Z(r)R_d, 1}, g^\alpha) = e(com_{\tilde{V}_d + Z(r)R_d, 2}, g)$, reject otherwise.
+\item $\comm \leftarrow \Commit(\tV, r_V, R, r_R, \pp)$: Compute $c_1 = g^{\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1}}$, $c_2 = g^{\alpha(\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1})}$, $c_3 = g^{R(t_1)+r_Rt_{\ell+1}}$ and $c_4 = g^{\alpha(R(t_1)+r_Rt_{\ell+1})}$  output the commitment $\comm = (c_1, c_2,c_3,c_4)$.
 
-\item \textbf{CommitValue($\tilde{V}_d + Z(r)R_d, r, \tilde{V}_d(r) + Z(r)R_d(r_1), p_1 + Z(r)p_2, p_3, pp$):} the same as the \text{CommitValue} function in general ZK VPD protocol. 
-\item \textbf{Ver($com_{V_d + Z(r)R_d}, r, com_{\tilde{V}_d(r) + Z(r)R_d(r_1)}, \pi, vp$):} the same as the \text{Ver} function in general ZK VPD protocol. 
-\end{enumerate} 
+\item $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$: Output $\accept$ if $e(c_1, g^\alpha) = e(c_2,g)$ and $e(c_3, g^\alpha) = e(c_4,g)$. Otherwise, output $\reject$.
 
-Notice the verifier could verify the value of $\tilde{V}_d(r) + Z(r)R_d(r_1)$ and $\tilde{V}_d(s) + Z(s)R_d(s_1)$ using this protocol and it is still zero knowledge since the general ZK VPD protocol is zero knowledge. 
+\item $(y,\pi)\leftarrow\Open(\tV, r_V, R, r_R, Z, u,\pp)$: Choose $r_1,\ldots, r_\ell\in\F$ at random, and compute polynomials $q_i$ such that
+\[
+\tV(x)+r_Vx_{\ell+1}+Z(u)(R(x_1)+r_Rx_{\ell+1}) -(\tV(u)+Z(u)R(u_1)) =
+\]
+\[ \sum_{i=1}^\ell(x_i-u_i)(q_i(x_i,\ldots,x_\ell)+r_ix_{\ell+1})+x_{\ell+1}(r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(x_i-u_i)).
+\]   
+Set $\pi = (\{g^{q_i(t_i\ldots, t_\ell)+r_it_{\ell+1}}, g^{\alpha(q_i(t_i\ldots, t_\ell)+r_it_{\ell+1})}\}_{i\in[1,\ell]}, g^{r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(t_i-u_i)}, g^{\alpha(r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(t_i-u_i))})$ and $y = \tV(u)+Z(u)R(u_1)$.
 
+\item $\{\accept,\reject\}\leftarrow\Verify(\comm,u,y,\pi,Z,\vp)$: Parse $\pi$ as $(\pi_i,\pi_{\alpha i})$ for $i\in[1,\ell+1]$. Check $e(\pi_i,g^\alpha) = e(\pi_{\alpha i},g)$ for $i\in[1,\ell+1]$. Check $e(c_1c_3^{Z(u)}/g^y, g) = \prod_{i=1}^\ell e(\pi_i, g^{t_i-u_i}) \cdot e(g^{\pi_{\ell+1}},g^{t_{\ell+1}})$. Output $\accept$ if all the checks pass, otherwise, output $\reject$.
+
+
+\end{itemize} 
+
+
+\begin{theorem}\label{thm:zkvpd}
+	Protocol~\ref{??} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
+\end{theorem}
+
+The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit.
+
+\paragraph{zkVPD for other layers.}
 For the masking polynomials $G(x)$ and $R_i(x,y)$ in each layer, we use the original zero-knowledge VPD. As the masking polynomials are small, it is not hard to see that the public parameters used in those zk-VPDs are subsets of the public key presented above. The commitment time, prover time, proof size and verification time of each instance are all $O(s_i)$, logarithmic on the number of gates in each layer. 
 
 
-\subsection{Putting Everything Together}
+\subsection{Putting Everything Together}\label{subsec::zkall}
 
 \yupeng{A figure for the whole scheme.}
 
