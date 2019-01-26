@@ -92,7 +92,9 @@ When executing the zero-knowledge sumcheck protocol on Equation~\ref{eq:zkGKR}, 
 
 Unfortunately, similar to the zero-knowledge sumcheck, the masking polynomail $R_i$ is very large in~\cite{zksumcheck}. Opening $R_i$ at a random point takes exponential time for $\P$ either using a PCP oracle as in~\cite{zksumcheck} or potentially using a zkVPD, as $R$ has $s_i+2s_{i+1}+\lambda$ variables.
 
-In this section, we show that we can set $R_i$ to be a small polynomial to achieve zero-knowledge. In particular, $R_i$ has only two variables with variable degree 2. This is because in the $(i-1)$-th round, $\V$ receives two evaluations of $V_i$, $\dot{V}_i(u)$ and $\dot{V}_i(v)$,  which are masked by $\sum_{w}R_i(u,w)$ and $\sum_{w}R_i(v,w)$; in the $i$-th sumcheck, $\V$ opens $R_i$ at $\alpha R_i(u,c)+\beta R_i(v,c)$. It suffices to make these three evaluations linearly independent, assuming the commitment and opening of $R_i$ are using a zkVPD. Therefore, we set the low-degree term in Equation~\ref{eq:lde} as $Z_i(z)\sum\limits_{w \in\binary} R_i(z_1, w)$, i.e. $R_i$ only takes two variables: the first variable $z_1$ of $z$ and the length of $w\in\binary$ instead of $\binary^\lambda$. We present the protocol in detail below.
+In this section, we show that we can set $R_i$ to be a small polynomial to achieve zero-knowledge. In particular, $R_i$ has only two variables with variable degree 2. This is because in the $(i-1)$-th round, $\V$ receives two evaluations of $V_i$, $\dot{V}_i(u)$ and $\dot{V}_i(v)$,  which are masked by $\sum_{w}R_i(u,w)$ and $\sum_{w}R_i(v,w)$; in the $i$-th sumcheck, $\V$ opens $R_i$ at $R_i(u,c)$ and $R_i(v,c)$. It suffices to make these four evaluations linearly independent, assuming the commitment and opening of $R_i$ are using a zkVPD. Therefore, we set the low-degree term in Equation~\ref{eq:lde} as $Z_i(z)\sum\limits_{w \in\binary} R_i(z_1, w)$, i.e. $R_i$ only takes two variables: the first variable $z_1$ of $z$ and an extra variable $w\in\binary$ instead of $\binary^\lambda$.  \yupeng{exlain $c\neq 1/2$.}
+
+The full protocol is presented below. Here we use superscriptions (e.g., $u^{(i)}$) to denote random numbers or vectors for the $i$-th layer of the circuit.
 
 
 
@@ -102,9 +104,13 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 
 \item $\P$ randomly selects polynomials $R_1(z_1, w), \ldots, R_d(z_1, w): \F^2\rightarrow \F$ with variable degree 2. $\P$ commits to these polynomials by sending $\comm_i\leftarrow\Commit(R_i)$ to $\V$ for $i\in[1,d]$.
 
-\item $\V$ defines $\dot{V}_0(z)= \tV_0(z)$, where $\tV_0(z)$ is the multilinear extension of $\mathsf{out}$. $\dot{V}_0(z)$ can be viewed as a special case with $R_0(z_1,w)$ being the 0 polynomial.
+\item $\V$ defines $\dot{V}_0(z)= \tV_0(z)$, where $\tV_0(z)$ is the multilinear extension of $\mathsf{out}$. $\dot{V}_0(z)$ can be viewed as a special case with $R_0(z_1,w)$ being the 0 polynomial. $\V$ evaluates it at a random point $\dot{V}_0(g^{(0)})$ and sends $g^{(0)}$ to $\P$.
  
-\item $\P$ and $\V$ execute the zero knowledge sumcheck protocol presented in Protocol~\ref{??} on Equation~\ref{eq:zkGKR} with $i=0$. At the end of the protocol, $\V$ receives $\dot{V}_1(u^{(1)})$ and $\dot{V}_1(v^{(1)})$.
+\item $\P$ and $\V$ execute the zero knowledge sumcheck protocol presented in Protocol~\ref{??} on
+\[
+\dot{V}_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\dot{V}_{1}(x)\dot{V}_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\dot{V}_{1}(x)+\dot{V}_{1}(y))
+\]
+If $u_1^{(1)} = v_1^{(1)}$, $\P$ aborts. \yupeng{$c=1/2$, aborts.} At the end of the protocol, $\V$ receives $\dot{V}_1(u^{(1)})$ and $\dot{V}_1(v^{(1)})$. $\V$ computes $\tmult_1(g^{(0)},u^{(1)},v^{(1)})$, $\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ and checks that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\dot{V}_1(u^{(1)})\dot{V}_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\dot{V}_1(u^{(1)})+\dot{V}_1(v^{(1)}))$ equals to the last message of the sumcheck (evaluation oracle).
 
 \item For layer $i=1,\ldots, d-1$:
 	\begin{enumerate}
@@ -117,7 +123,7 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 	&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber\\
 	&+ I((x, y), \vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, w)+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, w)))
 	\end{align*}
-	
+	If $u_1^{(i+1)} = v_1^{(i+1)}$, $\P$ aborts. \yupeng{$c^{(i)}=1/2$, aborts.}
 	
 	\item At the end of the zero-knowledge sumcheck protocol, $\P$ sends $\V$ $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$.
 	
@@ -140,54 +146,97 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 	Protocol~\ref{??} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$.
 \end{theorem}
 
-\begin{proof}
-\textbf{Completeness}. The completeness property immediately follows from the construction of the protocol and the completeness of zero knowledge sumcheck. We now proceed to argue about the soundness.\\
+The completeness follows from the construction explained above and the completeness of the zero knowledge sumcheck. The soundness follows the soundness of the GKR protocol with low degree extensions, as proven in~\cite{GKR} and~\cite{zksumcheck}. \yupeng{think more about the proof.}
 
-\noindent
-\textbf{Soundness}. Let $\mathcal{P}^*$ be an cheating prover which convinces $\mathcal{V}$ of a claim ``Output = C(Input)'' for some Input and C such that Output $\neq$ C(Input). That means $\dot{V_0(0)} \neq \text{Output}$ in the beginning of the protocol. Supoose that we omit the soundness of the oracle since all of them are negligible of $\lambda = \log |\mathbb{F}|$. We claim that if there exists $\dot{V}_i(r) \neq a_r$, then after this iteration with high probability either $(a)$ $\mathcal{V}$ rejects, or $(b)$ in the next iteration, $\dot{V}_{i+1}(r) \neq a_r$ or $\dot{V}_{i+1}(s) \neq a_s$. Since $\alpha_1$ and $\alpha_2$ are randomly chosen by $\mathcal{V}$, the probability that $\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$ is $1/|\mathbb{F}|$ if $\dot{V}_i(r) \neq a_r$. Besides, according to the soundness of sumcheck protobol, when we run the protocol on a false claim with $2s_{i+1} + 1 \leq 3 \log S$ variables and individual degree at most 2, the verifier $\mathcal{V}$ either rejects or passses the false claim to the next iteration with probability $1 - 6 \log S / (|\mathbb{F}| - 2)$.\\
+
+
+\ignore{
+Let $\mathcal{P}^*$ be an cheating prover which convinces $\mathcal{V}$ of a claim ``Output = C(Input)'' for some Input and C such that Output $\neq$ C(Input). That means $\dot{V_0(0)} \neq \text{Output}$ in the beginning of the protocol. Supoose that we omit the soundness of the oracle since all of them are negligible of $\lambda = \log |\mathbb{F}|$. We claim that if there exists $\dot{V}_i(r) \neq a_r$, then after this iteration with high probability either $(a)$ $\mathcal{V}$ rejects, or $(b)$ in the next iteration, $\dot{V}_{i+1}(r) \neq a_r$ or $\dot{V}_{i+1}(s) \neq a_s$. Since $\alpha_1$ and $\alpha_2$ are randomly chosen by $\mathcal{V}$, the probability that $\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$ is $1/|\mathbb{F}|$ if $\dot{V}_i(r) \neq a_r$. Besides, according to the soundness of sumcheck protobol, when we run the protocol on a false claim with $2s_{i+1} + 1 \leq 3 \log S$ variables and individual degree at most 2, the verifier $\mathcal{V}$ either rejects or passses the false claim to the next iteration with probability $1 - 6 \log S / (|\mathbb{F}| - 2)$.\\
 
 That is to say, if $C(\text{Input}) \neq \dot{V}_0(0)$, the verifier $\mathcal{V}$ will accept with probability at most $\mathcal{O}(d \log S / |\mathcal{F}|)$, where $d$ is the depth of $C$ and $S$ is the maximum number of gates in one layer of $C$. Hence, the total soundness of the zero knowledge GKR protocol is negligible of $\lambda$.
-\end{proof}
+}
 
 \begin{theorem}[Zero knowledge]\label{thm:zkgkr}
 	For every verifier $\V^*$ and every layered circuit $C$ with $d$ layers, input $\mathsf{in}$ and output $\mathsf{out}$, there exists a simulator $\S$ such that given oracle access to $\mathsf{out}$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-5 of Protocol~\ref{??}. 
 \end{theorem}
 
-\begin{proof} We prove that the protocol has perfect zero knowledge by exhibiting a polynomial-time simulator $\mathcal{S}$ with $\text{Ouptut}$ and the circuit $C$ that perfectly samples the view of any malicious verifier. 
+\begin{proof} With oracle access to $\mathsf{out}$, and the simulator $\S_{sc}$ of the zero-knowledge sumcheck protocol in Secion~\ref{subsec:zksumcheck} as a subroutine, we construct the simulator $\mathcal{S}$ as following:
 
 \begin{enumerate}
 
-\item For every layer $i(1 \leq i \leq d)$ and the function $\dot{V}_i(z)$, sample $R_i^{sim} \in \mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$ uniformly at random satisfying some conditions. Use $R_i^{sim}$ to answer queries to $R_i$.
+\item $\S$ sends the $\mathsf{out}$ to $\V^*$.
 
-\item For every layer function $\dot{V}_i(z)$, run the zero knowledge sumcheck subsimulator for the sumcheck of $\dot{V}_i(z)$, and use it to answer quries of the verifier $\mathcal{V}^*$. 
+\item $\S$ randomly selects polynomials $R^*_1(z_1, w), \ldots, R^*_d(z_1, w): \F^2\rightarrow \F$ with variable degree 2. $\S$ commits to these polynomials by sending $\comm_i\leftarrow\Commit(R^*_i)$ to $\V^*$ for $i\in[1,d]$.
 
-\item For the output layer(layer $0$), run the zero knowledge sumcheck subsimulator on the claim
+\item $\S$ receives $g^{(0)}$ from $\V^*$.
 
-$$\text{Output} = \dot{V}_0(0) = \sum_{u, v\in \{0,1\}^{s_1}}\tilde{mult}(0, u, v)(\dot{V}_1(u)\dot{V}_1(v))+\tilde{add}(0,u,v)(\dot{V}_1(u)+\dot{V}_1(v))$$ 
-At the end of the zero knowledge sumcheck protocol, the simulator receives the random vector $q = (r, s)$ with with $r, s \in \mathbb{F}^{s_1}$. If $r_1 = s_1$, abort. Otherwise, sample $\dot{V}_1(r)$ and $\dot{V}_1(s)$ at random conditioned on satifying the sumcheck protocol. 
-\item For layer $i(1 \leq i \leq d - 1)$:
-	\begin{itemize}
-	\item Receive $\alpha_1$ and $\alpha_2$ from the verifier.
-	\item Using the subsimulator for $\dot{V}_i$, simulate the strong zero knowledge sumcheck protocol on the claim
-	$$\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$$
-	Let $z^{(1)} = r$ and $z^{(2)} = s$. 
-	\item Then the simulator receives the random vector $q = (r, s, p)$ with $r, s \in (\mathbb{F}-\{0, 1\})^{s_{i+1}}$ and $p \in \mathbb{F}$. 
-	\item If $r_1 = s_1$, abort. 
-	\item Otherwise, reply with the value
-	\begin{align}
-		\sum_{j = 1, 2} \alpha_j (\tilde{mult}(z^{(j)}, r, s)(\dot{V}_{i+1}(r)\dot{V}_{i+1}(s))&+\tilde{add}(z^{(j)},r,s)(\dot{V}_{i+1}(r)+\dot{V}_{i+1}(s))\\
- 		&+ Z_i(z^{(j)})\sum\limits_{c \in \{0, 1\}}R_i(z_1^{(j)}, c))
-	\end{align}
-	\item Sample $\dot{V}_{i+1}(r)$ and $\dot{V}_{i+1}(s)$ at random. And randomly choose the function $R^{sim}_i(X, Y)$ satisfying the above claim. The verifier queries the oracle to get $R^{sim}_i(z_1^{(1)}, p)$ and $R^{sim}_i(z_1^{(2)}, p)$.   
-	\end{itemize}
-\item For input layer $d$, the verifier queries the oracle to verify the values of $\dot{V}_d(r)$ and $\dot{V}_d(s)$.
+\item $\S$ calls $\S_{sc}$ to simulate the partial view of the zero knowledge sumcheck protocol on 
+\[
+\dot{V}_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\dot{V}_{1}(x)\dot{V}_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\dot{V}_{1}(x)+\dot{V}_{1}(y))
+\]
+If $u_1^{(1)} = v_1^{(1)}$, $\S$ aborts. \yupeng{$c=1/2$, aborts.} At the end of the sumcheck, $\S$ samples $\dot{V}^*_1(u^{(1)})$ and $\dot{V}^*_1(v^{(1)})$ such that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\dot{V}^*_1(u^{(1)})\dot{V}^*_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\dot{V}^*_1(u^{(1)})+\dot{V}^*_1(v^{(1)}))$ equals to the last message of the sumcheck.
+
+\item For layer $i=1,\ldots,d-1$:
+	\begin{enumerate}
+	\item $\S$ receives $\alpha^{(i)}, \beta^{(i)}$ from $\V^*$.
+	\item $\S$ calls $\S_{sc}$ to simulate the partial view of the zero knowledge sumcheck protocol on \\
+	
+	$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
+	\begin{align*}
+	\sum_{x, y\in \binary^{s_{i+1}},w \in \binary}&(I(\vec{0},w) \cdot (\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
+	&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber\\
+	&+ I((x, y), \vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, w)+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, w)))
+	\end{align*}
+	If $u_1^{(i+1)} = v_1^{(i+1)}$, $\S$ aborts. \yupeng{$c^{(i)}=1/2$, aborts.}
+	
+	\item At the end of the zero-knowledge sumcheck protocol, if $u_1^{(i+1)} = v_1^{(i+1)}$, $\S$ aborts. Otherwise, $\S$ samples $\dot{V}^*_{i+1}(u^{(i+1)})$ and $\dot{V}^*_{i+1}(v^{(i+1)})$ randomly such that the following equals to the last message of the sumcheck protocol.
+	\begin{align*}
+	I(\vec{0},c^{(i)})(a_{i+1}(\dot{V}^*_{i+1}(u^{(i+1)})\dot{V}^*_{i+1}(v^{(i+1)}))+b_{i+1}(\dot{V}^*_{i+1}(u^{(i+1)})+\dot{V}^*_{i+1}(v^{(i+1)})))\\
+	+I((u^{(i+1)},v^{(i+1)}),\vec{0})(\alpha^{(i)}Z_i(u^{(i)})R^*_i(u_1^{(i)}, c^{(i)})+\beta^{(i)}Z_i(v^{(i)})R^*_i(v_1^{(i)}, c^{(i)})),
+	\end{align*}
+	where $a_{i+1} = \alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ and $b_{i+1} = \alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$. $\S$ sends $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$ to $\V^*$.
+	
+	\item $\V^*$ computes the corresponding values locally as in step 5(d) of Protocol~\ref{??}.
+	\item $\S$ opens $R^*_i$ at two points $R^*_i(u_1^{(i)},c^{(i)})$ and $R^*_i(v_1^{(i)},c^{(i)})$ using $\Open$.
+	\item $\V^*$ performs the checks as in step 5(f) of Protocol~\ref{??}.
+	\end{enumerate}
 \end{enumerate} 
 
-If we want to make it zero knowledge, we need to prove that $\{View_{V^*}(\mathcal{P}(\text{Output, C, Input}) \leftrightarrow \mathcal{V^*}(\text{Output, C}))\} = \{\mathcal{S}^{\mathcal{V^*}}(\text{Output, C})\}$. We claim that in the real world execution, the distribution of $\dot{V}_i(r)$ and $\dot{V}_i(s)$ are also uniformly at random in $\mathbb{F}$. In the real world, for every mask function $R_i$, the verifier only knows the value of $R_i(r_1, p)$ and $R_i(s_1, p)$, where $r_1 \neq s_1$ and $r_1, s_1, p$ are randomly chosen by the verifier. If the verifier still have any no idea about the value of $\sum\limits_{c \in \{0, 1\}}R_i(r_1, c)$ and $\sum\limits_{c \in \{0, 1\}}R_i(s_1, c)$ conditioned on it, then $\dot{V}_i(r)$ and $\dot{V}_i(s)$ are uniformly at random.\\
+Note here that $\V^*$ can actually behave arbitrarily in step 5(d) and 5(f) above. We include these steps to be consistent with the real world in  Protocol~\ref{??} for the ease of interpretation.
 
-Therefore, we only need to claim that $R(x, p), R(y, p), \sum\limits_{c \in \{0, 1\}}R(x, c), \sum\limits_{c \in \{0, 1\}}R(y, c)$ are independent if $R(x, y)$ are uniformly sampled from $\mathbb{F}[X^{\leqslant 2}, Y^{\leqslant 2}]$ and $x \neq y$. That is obvious since $x \neq y$ and both of the degrees of $X, Y$ are two.\\
+To prove zero-knowledge, step 1,3, 5(a), 5(d) and 5(f) are obviously indistinguishable as $\S$ only receives messages from $\V^*$. Step 2 and 5(e) of both worlds are indistinguishable because of the zero knowledge property of the zkVPD, and the fact that $R^*$ and $R$ are sampled randomly in both worlds. Step 4 and 5(b) are indistinguishable as proven in Theorem~\ref{thm:zksc} for $\S_{sc}$.  
 
-Other things are also distinguishable for the verifier $\mathcal{V^*}$ because of the zero knowledge oracle(ZK VPD) and the zero knowledge sumcheck protocol. So our entire protocol is zero knowledge, which completes our proof.\\
+
+It remains to consider the messages received at the end of step 4 and in step 5(c), namely $\dot{V}_{i}(u^{(i)}), \dot{V}_{i}(v^{(i)})$ and $\dot{V}^*_{i}(u^{(i)}), \dot{V}^*_{i}(v^{(i)})$ for $i = 1,\ldots,d$. In the real world, $\dot{V}_{i}(z)$ is masked by $\sum\limits_{w \in\binary}R_i(z_1,w)$ ($Z(z)$ is publicly known), thus $\dot{V}_{i}(u^{(i)})$ and $\dot{V}_{i}(v^{(i)})$ are masked by $\sum\limits_{w \in\binary}R_i(u_1^{(i)},w)$ and $\sum\limits_{w \in\binary}R_i(v_1^{(i)},w)$ correspondingly. In addition, in step 5(e), $\V^*$ opens $R_i$ at $R_i(u_1^{(i)},c^{(i)})$ and $R_i(v_1^{(i)},c^{(i)})$. To simplify the notation here, we consider only a particular layer and omit the subscription and superscription of $i$. Let $R(z_1,w) = a_0+a_1z_1+a_2w+a_3z_1w$, where $a_0,\ldots,a_3$ are randomly chosen. We can write the four evaluations above as 
+\[
+\begin{bmatrix}
+2 & 2u_1 & 1 & u_1\\
+2 & 2v_1 & 1 & v_1\\
+1 & u_1 & c & cu_1\\
+1 & v_1 & c & cv_1\\
+\end{bmatrix}
+\times
+\begin{bmatrix}
+a_0\\
+a_1\\
+a_2\\
+a_3\\
+\end{bmatrix}
+\]
+After row reduction, the left matrix is
+\[
+\begin{bmatrix}
+2 & 2u_1 & 1 & u_1\\
+0 & 2(v_1-u_1) & 0 & v_1-u_1\\
+0 & 0 & 2c-1 & (2c-1)u_1\\
+0 & 0 & 0 & (2c-1)(v_1-u_1)\\
+\end{bmatrix}
+\]
+As $u_1\neq v_1$ and $c\neq 1/2$, the matrix has full rank and the four evaluations are linearly independent and uniformly distributed, as $a_0,\ldots a_3$ are chosen randomly.
+
+In the ideal world, $R^*(u_1,c)$ and $R^*(v_1,c)$ are independent and uniformly distributed, and $\dot{V}^*(u), \dot{V}^*(v)$ are randomly selected subject to a linear constraint (step 5(c)), which is the same as the real world. Therefore, they are indistinguishable in the two worlds, which completes the proof.   
+
+
 
 \end{proof}
 
