@@ -64,7 +64,7 @@ The completeness of the protocol holds obviously. The soundness of the protocol 
 
 
 
-\subsection{Zero knowledge GKR}
+\subsection{Zero knowledge GKR}\label{subsec::zkgkr}
 
 To achieve zero-knowledge, we replace the sumcheck protocol in GKR with the zero-knowledge version described in the previous section. However, the protocol still leaks additional information. In particular, at the end of the zero-knowledge sumcheck, $\V$ queries the oracle to evaluate the polynomial on a random point. When executed on Equation~\ref{eq:GKR}, this reveals two evaluations of the polynomial $\tV_i$ defined by the values in the $i$-th layer of the circuit: $\tV_i(u)$ and $\tV_i(v)$.
 
@@ -278,22 +278,31 @@ Set $\pi = (\{g^{q_i(t_i\ldots, t_\ell)+r_it_{\ell+1}}, g^{\alpha(q_i(t_i\ldots,
 	Protocol~\ref{??} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
 \end{theorem}
 
-The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit.
+The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit. Using the same algorithms proposed in in~\cite{vram,zkvpd}, the running time of $\KeyGen$, $\Commit$ and $\Open$ is $O(2^\ell)$, $\Verify$ takes $O(\ell)$ time and the proof size is $O(\ell)$.
 
 \paragraph{zkVPD for other layers.}
-For the masking polynomials $G(x)$ and $R_i(x,y)$ in each layer, we use the original zero-knowledge VPD. As the masking polynomials are small, it is not hard to see that the public parameters used in those zk-VPDs are subsets of the public key presented above. The commitment time, prover time, proof size and verification time of each instance are all $O(s_i)$, logarithmic on the number of gates in each layer. 
+Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{subsec::zkgkr}, we also use a zkVPD protocol to commit and open the masking polynomials $g_i(x), R_i(z_1, w)$ for each intermediate layer $i$. We use the same zkVPD protocol for these polynomials as in~\cite{zkvpd} in our construction. In fact, as we show in the previous sections that these polynomials are very small ($g_i$ is the sum of univariate polynomials with constant degrees and $R_i$ has 2 variables with variable degree 2), the zkVPD protocols become very simple. The complexity of $\KeyGen, \Commit, \Open, \Verify$ and proof size are all $O(s_i)$ for $g_i$ and are all $O(1)$ for $R_i$. We give the full protocols in Appendix~\ref{app:zkvpd}.
 
 
 \subsection{Putting Everything Together}\label{subsec::zkall}
 
+In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,wahby2018doubly,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Protocol~\ref{??}, which combines our zero knowledge GKR and zkVPD protocols.
+
 \yupeng{A figure for the whole scheme.}
 
 \begin{theorem}\label{theorem:main}
-	Construction~\ref{??} is a zero-knowledge argument system per Definition~\ref{??}, under Assumptions~\ref{??}. Keygen, prove, vtime, proof size.
+	For an input size $n$ and a finite field $\F$, Protocol~\ref{??} is a zero knowledge argument for the relation
+	\[
+	\mathcal{R} = \{(C,x;w): C\in\mathcal{C}_\F\wedge|x|+|w|\le n\wedge C(x;w) = 1\},
+	\]
+	as defined in Definition~\ref{def::zkp}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}. Moreover, for every $(C,x;w)\in\mathcal{R}$, the running time of $\P$ is $O(|C|)$ field operations and $O(n)$ multiplications in the base group of the bilinear map. The running time of $\V$ is $O(|x|+d\cdot\log |C|)$ if $C$ is log-space uniform with $d$ layers. $\P$ and $\V$ interact $O(d\log |C|)$ rounds and the total communication (proof size) is $O(d\log |C|)$. In case $d$ is $\mathsf{polylog}(|C|)$, the protocol is a succinct argument.
 \end{theorem}
 
+\paragraph{Proof Sketch.} The correctness and the soundness follow from those of the two building blocks, zero knowledge GKR and zkVPD, by Theorem~\ref{thm:zkgkr} and~\ref{thm:zkvpd}.
 
-\paragraph{Complexity}. Consider the time complexity of zero knowledge GKR protocol. We would like to focus on the prover time. Since we have analyzed the prover time in our linear GKR protocol, we only need to think about the overhead complexity while maintaining zero knowledge for GKR protocol. For every layer of the circuit $C$, the prover samples $R_i(X, Y)$, runs the zeor knowledge sumcheck protocol for at most $3s_i$ variables with individual degree at most $2$ and run the zero knowledge oracle(ZK VPD) for $R(X, Y)$ on $2$ random points. The total complexity is $\mathcal{O}(s_i)$ since the size of $R_i(X, Y)$ is only constant. Suppose the depth of the circuit $C$ is $d$ and the maximum number of gates in one layer is $S$. The total complexity is $\mathcal{O}(d \log S)$. In addition, at the end of the protocol, the prover needs to run the zero knowledge oracle(ZK VPD) for $\dot{V}_d$ on $2$ random points. It needs $\mathcal{O}(S)$. So the total complexity is $\mathcal{O}(S \times d)$, which is linear of the circuit size and it is optimal as the prover must evaluate the circuit $C$. 
+To prove zero knowledge, consider a simulator $\S$ that calls the simulator $\S_{GKR}$ of zero knowledge GKR given in Section~\ref{subsec::zkgkr} as a subroutine, which simulates the partial view up to the input layer. At the input layer, the major challenge is that $\S$ committed to (a randomly chosen) $\dot{V}^*_d$ at the beginning of the protocol, before knowing the points $u^{(d)}, v^{(d)}$ to evaluate on. If $\S$ opens the commitment honestly, with high probability the evaluations are not consistent with the last message of the GKR (sumcheck in layer $d-1$) and a malicious $\V^*$ can distinguish the ideal world from the real world. In our proof, we resolve this issue by using the simulator $\S_{VPD}$ of our zkVPD protocol. Given the trapdoor $\mathsf{trap}$ used in $\KeyGen$, $\S_{VPD}$ is able to open the commitment to any value in zero knowledge, and in particular it opens to those messages that are consistent with the GKR protocol in our scheme, which completes the construction of $\S$. We give the formal proof in Appendix~\ref{??}. \yupeng{or full version.} 
+
+The complexity of our zero knowledge argument scheme follows from our new GKR protocol with linear prover time, and the complexity of the zkVPD protocol for the input layer analyzed in Section~\ref{subsec::zkvpd}. The masking polynomials $g_i, R_i$ and their commitments and openings introduce no asymptotic overhead and are efficient in practice.
 
 
 

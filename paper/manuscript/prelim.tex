@@ -55,7 +55,7 @@ We formalize the "interactive proof" in the following:
 
 \paragraph{Zero-knowledge Argument.} An argument system for an NP relationship $R$ is a protocol between a computationally bounded prover $\P$ and a verifier $\V$. At the end of the protocol, $\V$ is convinced by $\P$ that there exists a witness $w$ such that $(x; w) \in R$ for some input $x$. We focus on arguments of knowledge which have the stronger property that if the prover convinces the verifier of the statement’s validity, then the prover must know $w$. We use $\mathcal{G}$ to represent private key $\pk$ and verificaiton key $\vk$ generation phase. Formally, consider the definition below.
 
-\begin{definition}\label{def::zkpd}
+\begin{definition}\label{def::zkp}
 	
 	Let $R$ be an NP relation and let $\lambda$ be the security parameter. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero knowledge argument fro $R$ if the following holds.
 	
