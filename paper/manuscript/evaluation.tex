@@ -16,13 +16,40 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 
 
 \subsection{Comparing to Other ZKP Schemes}\label{subsec:expZKP}
-\textbf{Baselines.} We compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties like hyrax\cite{hyrax}, ligero\cite{ligero}, bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.\\
-\paragraph{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verify time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run hyrax under the same setting of our system.\\
-\paragraph{Bulletproofs} is a zero knowledge argument with logarithmic prove time for range query. Since hyrax has implemented this system and released the code, we use the hyrax's implementation directly.\\
-\paragraph{Ligero:} we report on the authors' C++ implementation.\\
-\paragraph{libSTANK:} we report on the author's C++ implementation.\\
-\paragraph{Methodology.}
-
+\textbf{Baselines.} We compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties like hyrax\cite{hyrax}, Ligero\cite{ligero}, Bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.
+\begin{itemize}
+\item
+\textbf{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verify time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run Hyrax under the same setting of our system.
+\item
+\textbf{Bulletproofs} is a zero knowledge argument with logarithmic prove time for range query. Since hyrax has implemented this system and released the code, we use the hyrax's implementation directly.
+\item
+\textbf{Ligero:} we report on the authors' C++ implementation.
+\item
+\textbf{libSTARK:} we report on the author's C++ implementation.
+\item
+\textbf{libSNARK:} we report on the author's C++ implementation.
+\end{itemize}
+\paragraph{Benchmarks.} We evaluate \name{}, Hyrax, Bulletproofs, Ligero, libSNARK and libSTARK on several benchmarks below. Considering various properties of different systems and some constrains on implementation(\ie we do not have the sourse code of some systems), for each benchmark, we only evaluate the systems that is senseful and suitable for the benchmark.\\
+\begin{itemize}
+	\item
+	\textbf{Matrix multiplication} is a basic function to test on the arithmetic cuicuit. $\mathbb{P}$ proves to $\mathbb{V}$ that it knows two matrics whose product equals the public input. We evaluate this function for different sizes from 16x16 to 128x128 matrics on \name and other systems.  
+	\item
+	\textbf{Image scaling} means $\mathbb{P}$ needs to prove to $\mathbb{V}$ a low-definition image is a scaled version of a high-definition image. And we use a standard and classic image transformation method called Lanczos resampling\cite{Lanczos} to scale the picture. In Lanczos resampling, it uses the convolution of the input image to produce the output pixels. We choose this function as a benchmark since it is data parallel where sub-ACs for adjacent pixels must share inputs from the original high-definition picture. We evaluate the scaling function from 4x to 256x of various size of pixels on \name and other systems.
+	\item
+	\textbf{Image scaling of different functions} is very similar to the previous scaling. The only difference is that the convolution function for every pixel is not the same, so it is still ... but ... We evaluate the function with the same size of previous scaling on \name and other systems.
+	\item
+	\textbf{Merkle tree} means $\mathbb{P}$ proves to $\mathbb{V}$ it knows the value of the leaves of a Merkle tree\cite{merkletree} that computes the public root's value\cite{blum1994checking}. Same as the previous work, we use SHA-256 for the hash function. Besides, each sub-computation is one instance of the hash function which makes it data parallel. Therefore, if the Merkle tree has $M$ leaves, then we need $2M - 1$ sub-computations. We evaluate this function of varying number of leaves on \name and other systems.
+	\item
+	\textbf{Random circuit} is a circuit with random circuit structure and random input. We evaluate the random circuits of different sizes from .. to .. for \name and other systems.
+\end{itemize}
+\paragraph{Methodology.} For each benchmarks, we construct the corresponding arithmetic circuits of different sizes. Then we feed the circuit as the input into these zero knowledge systems. These systems would generate the proof and verify the proof itself. We measure the runtime using standard system clock.\\   
+\paragraph{Experimental results.} All of experimental results are summarized using figures and tables. We would analyse the consequence from four perspectives: prove time, verification time, proof size and memory consumption.
+\begin{itemize}
+	\item prove time
+	\item verification time
+	\item proof size
+	\item memory consumption
+\end{itemize}
 
 \subsection{Discussion}
 
