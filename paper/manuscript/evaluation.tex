@@ -1,10 +1,12 @@
+%!TEX root = fastZKP.tex
+
 \section{Implementations and Evaluations}\label{sec:eval}
 
 
 
-Settings
+\textbf{Settings.} We use C++ to implement our zero knowledge protocol including circuit generator, zk-GKR and zk-VPD. Besides, we write a new large integer class named u512 combined with GMP\cite{GNU} for field arithmetic. For the binary pairing, we use the ate-pairing\cite{ate-pairing} library on a 254-bit elliptic curve.\\
+We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of RAM and an Intel Xeon E5-2686v4 CPU with eight 2.3GHz virtual cores. Our implementations are not parallelized and only use a single CPU core.\\
 
-\subsection{More optimizations}
 \paragraph{Key generation with lookup tables.}
 
 \paragraph{More gate types with no overhead.}
@@ -14,7 +16,11 @@ Settings
 
 
 \subsection{Comparing to Other ZKP Schemes}\label{subsec:expZKP}
-
+\textbf{Baselines.} We compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties like hyrax\cite{hyrax}, ligero\cite{ligero}, bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.\\
+\paragraph{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verify time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run hyrax under the same setting of our system.\\
+\paragraph{Bulletproofs} is a zero knowledge argument with logarithmic prove time for range query. Since hyrax has implemented this system and released the code, we use the hyrax's implementation directly.\\
+\paragraph{Ligero:} we report on the authors' C++ implementation.\\
+\paragraph{libSTANK:} we report on the author's C++ implementation.\\
 \paragraph{Methodology.}
 
 
