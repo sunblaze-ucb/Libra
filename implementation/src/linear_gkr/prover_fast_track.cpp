@@ -278,6 +278,10 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 	ret.b.value = ret.b.value % prime_field::mod;
 	ret.c.value = ret.c.value % prime_field::mod;
 	
+	ret.a.value = (ret.a.value + prime_field::mod) % prime_field::mod;
+	ret.b.value = (ret.b.value + prime_field::mod) % prime_field::mod;
+	ret.c.value = (ret.c.value + prime_field::mod) % prime_field::mod;
+	
 	
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -413,13 +417,19 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 		{
 			
 			V_mult_add[i].b.value = (V_mult_add[g_zero].a.value * previous_random.value + V_mult_add[g_zero].b.value) % prime_field::mod;
-			V_mult_add[i].a.value = (V_mult_add[g_one].a.value * previous_random.value + V_mult_add[g_one].b.value - V_mult_add[i].b.value) % prime_field::mod;
+			auto a = V_mult_add[g_one].a.value * previous_random.value + V_mult_add[g_one].b.value, b = V_mult_add[i].b.value;
+			b = b % prime_field::mod;
+			V_mult_add[i].a.value = (a + prime_field::mod - b) % prime_field::mod;
 
 			addV_array[i].b.value = (addV_array[g_zero].a.value * previous_random.value + addV_array[g_zero].b.value) % prime_field::mod;
-			addV_array[i].a.value = (addV_array[g_one].a.value * previous_random.value + addV_array[g_one].b.value - addV_array[i].b.value) % prime_field::mod;
+			a = addV_array[g_one].a.value * previous_random.value + addV_array[g_one].b.value, b = addV_array[i].b.value;
+			b = b % prime_field::mod;
+			addV_array[i].a.value = (a + prime_field::mod - b) % prime_field::mod;
 
 			add_mult_sum[i].b.value = (add_mult_sum[g_zero].a.value * previous_random.value + add_mult_sum[g_zero].b.value) % prime_field::mod;
-			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value) % prime_field::mod;
+			a = add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value, b = add_mult_sum[i].b.value;
+			b = b % prime_field::mod;
+			add_mult_sum[i].a.value = (a + prime_field::mod - b) % prime_field::mod;
 		}
 
 		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
@@ -447,6 +457,9 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 	ret.a.value = ret.a.value % prime_field::mod;
 	ret.b.value = ret.b.value % prime_field::mod;
 	ret.c.value = ret.c.value % prime_field::mod;
+	ret.a.value = (ret.a.value + prime_field::mod) % prime_field::mod;
+	ret.b.value = (ret.b.value + prime_field::mod) % prime_field::mod;
+	ret.c.value = (ret.c.value + prime_field::mod) % prime_field::mod;
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);

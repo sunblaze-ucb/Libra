@@ -70,7 +70,7 @@ void verifier::read_circuit(const char *path)
 		{
 			C.circuit[i].bit_length = cnt - 1;
 		}
-		fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
+		//fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
 		if(C.circuit[i].bit_length > max_bit_length)
 			max_bit_length = C.circuit[i].bit_length;
 	}
@@ -145,7 +145,7 @@ void verifier::read_circuit_from_string(char* file)
 		{
 			C.circuit[i].bit_length = cnt - 1;
 		}
-		fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
+		//fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
 		if(C.circuit[i].bit_length > max_bit_length)
 			max_bit_length = C.circuit[i].bit_length;
 	}
@@ -296,13 +296,13 @@ bool verifier::verify()
 	}
 	
 	std::chrono::high_resolution_clock::time_point t_a = std::chrono::high_resolution_clock::now();
-	std::cerr << "Calc V_output(r)" << std::endl;
+	//std::cerr << "Calc V_output(r)" << std::endl;
 	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, result, C.circuit[C.total_depth - 1].bit_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
 	
 	std::chrono::high_resolution_clock::time_point t_b = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> ts = std::chrono::duration_cast<std::chrono::duration<double>>(t_b - t_a);
-	std::cerr << "	Time: " << ts.count() << std::endl;
+	//std::cerr << "	Time: " << ts.count() << std::endl;
 	a_0 = alpha * a_0;
 	prime_field::field_element a_1 = prime_field::field_element(0); //* beta
 
@@ -311,7 +311,7 @@ bool verifier::verify()
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
-		std::cerr << "Bound u start" << std::endl;
+		//std::cerr << "Bound u start" << std::endl;
 		p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 		p -> sumcheck_phase1_init();
 		prime_field::field_element previous_random = prime_field::field_element(0);
@@ -349,9 +349,9 @@ bool verifier::verify()
 		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 		std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
-		std::cerr << "	Time: " << time_span.count() << std::endl;
+		//std::cerr << "	Time: " << time_span.count() << std::endl;
 		
-		std::cerr << "Bound v start" << std::endl;
+		//std::cerr << "Bound v start" << std::endl;
 		t0 = std::chrono::high_resolution_clock::now();
 		p -> sumcheck_phase2_init(previous_random, r_u, one_minus_r_u);
 		previous_random = prime_field::field_element(0);
@@ -372,7 +372,7 @@ bool verifier::verify()
 		}
 		t1 = std::chrono::high_resolution_clock::now();
 		time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
-		std::cerr << "	Time: " << time_span.count() << std::endl;
+		//std::cerr << "	Time: " << time_span.count() << std::endl;
 		
 		auto final_claims = p -> sumcheck_finalize(previous_random);
 		auto v_u = final_claims.first;
@@ -396,7 +396,7 @@ bool verifier::verify()
 		}
 		else
 		{
-			fprintf(stderr, "Verification Pass, semi final, circuit level %d\n", i);
+		//	fprintf(stderr, "Verification Pass, semi final, circuit level %d\n", i);
 		}
 		auto tmp_alpha = generate_randomness(1), tmp_beta = generate_randomness(1);
 		alpha = tmp_alpha[0];
@@ -413,7 +413,7 @@ bool verifier::verify()
 		r_1 = r_v;
 		one_minus_r_0 = one_minus_r_u;
 		one_minus_r_1 = one_minus_r_v;
-		std::cerr << "Prove Time " << p -> total_time << std::endl;
+		//std::cerr << "Prove Time " << p -> total_time << std::endl;
 	}
 
 	//post sumcheck
@@ -445,8 +445,8 @@ bool verifier::verify()
 	}
 	else
 	{
-		fprintf(stderr, "Verification pass\n");
-		std::cerr << "Prove Time " << p -> total_time << std::endl;
+		//fprintf(stderr, "Verification pass\n");
+		//std::cerr << "Prove Time " << p -> total_time << std::endl;
 	}
 	p -> delete_self();
 	delete_self();

@@ -1,11 +1,16 @@
 #include <cstdio>
+#include <cstdlib>
+#include <utility>
 #include <cassert>
+#include <vector>
+
+using namespace std;
 
 int main(int argc, char **argv)
 {
 	int mode;
 	sscanf(argv[1], "%d", &mode);
-	if(mode == 0)
+	if(mode == 0) //three layers of simple circuit
 	{
 		int d, w;
 		sscanf(argv[2], "%d", &d);
@@ -15,7 +20,7 @@ int main(int argc, char **argv)
 		printf("%d ", n);
 		for(int j = 0; j < n; ++j)
 		{
-			printf("%d %d %d %d ", 3, j, j + 1, 0);
+			printf("%d %d %d %d ", 3, j, rand(), 0);
 		}
 		printf("\n");
 		for(int k = 1; k < d - 1; ++k)
@@ -36,7 +41,7 @@ int main(int argc, char **argv)
 		}
 		printf("\n");
 	}
-	else
+	else if(mode == 1) //blocked circuit
 	{
 		FILE *meta;
 		meta = fopen("meta_data.txt", "w");
@@ -54,7 +59,7 @@ int main(int argc, char **argv)
 		str_length += printf("%d ", n);
 		for(int j = 0; j < n; ++j)
 		{
-			str_length += printf("%d %d %010d %d ", 3, j, j + 1, 0);
+			str_length += printf("%d %d %010d %d ", 3, j, rand(), 0);
 		}
 		str_length += printf("\n");
 		fprintf(meta, "%d %d %d %d %d\n", block_size, block_number, 5, w - 5, str_length);
@@ -91,6 +96,100 @@ int main(int argc, char **argv)
 		fprintf(meta, "%d %d %d %d %d\n", block_size, block_number, 4, w - 5, str_length);
 		str_length = 0;
 		fclose(meta);
+	}
+	else if(mode == 2) //matrix mul with addition tree
+	{
+		FILE *meta;
+		meta = fopen("meta_data.txt", "w");
+
+		int mat_sz;
+		sscanf(argv[2], "%d", &mat_sz);
+
+		assert(__builtin_popcount(mat_sz) == 1);
+
+		int log_mat_sz = 0;
+		while(mat_sz != (1 << log_mat_sz))
+			log_mat_sz++;
+		
+		//input layer
+		int block_number = mat_sz * mat_sz;
+		int block_size;
+		vector<vector<int> > A, B;
+		A.resize(mat_sz), B.resize(mat_sz);
+
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			A[i].resize(mat_sz);
+			B[i].resize(mat_sz);
+			for(int j = 0; j < mat_sz; ++j)
+				A[i][j] = rand() % 10, B[i][j] = rand() % 10;
+		}
+		//expand the input for trivial data parallel
+
+		//input layer
+		int str_length = 0;
+		printf("%d\n", 1 + 1 + log_mat_sz);
+		str_length += printf("%d ", mat_sz * mat_sz * mat_sz * 2);
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			for(int j = 0; j < mat_sz; ++j)
+			{
+				for(int k = 0; k < mat_sz; ++k)
+				{
+					str_length += printf("%d %d %010d %d ", 3, 2 * (i * mat_sz * mat_sz + j * mat_sz + k) + 0, A[i][k], 0);
+					str_length += printf("%d %d %010d %d ", 3, 2 * (i * mat_sz * mat_sz + j * mat_sz + k) + 1, B[k][j], 0);
+				}
+			}
+		}
+		str_length += printf("\n");
+		fprintf(meta, "%d %d %d %d %d\n", mat_sz * 2, block_number, log_mat_sz + 1, 2 * log_mat_sz, str_length);
+
+		//mult
+		str_length = printf("%d ", mat_sz * mat_sz * mat_sz);
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			for(int j = 0; j < mat_sz; ++j)
+			{
+				for(int k = 0; k < mat_sz; ++k)
+				{
+					int id = i * mat_sz * mat_sz + j * mat_sz + k;
+					str_length += printf("%d %d %d %d ", 1, id, id * 2, id * 2 + 1);
+				}
+			}
+		}
+		str_length += printf("\n");
+
+		fprintf(meta, "%d %d %d %d %d\n", mat_sz, block_number, log_mat_sz, 2 * log_mat_sz, str_length);
+
+		//addition tree
+		int num_leaves = mat_sz;
+		for(int dep = 0; dep < log_mat_sz; ++dep)
+		{
+			num_leaves /= 2;
+			str_length = printf("%d ", num_leaves * mat_sz * mat_sz);
+			for(int i = 0; i < mat_sz; ++i)
+			{
+				for(int j = 0; j < mat_sz; ++j)
+				{
+					for(int k = 0; k < num_leaves; ++k)
+					{
+						int id = i * mat_sz * num_leaves + j * num_leaves + k;
+						str_length += printf("%d %d %d %d ", 0, id, id * 2, id * 2 + 1);
+					}
+				}
+			}
+			str_length += printf("\n");
+			fprintf(meta, "%d %d %d %d %d\n", num_leaves, block_number, log_mat_sz - dep - 1, 2 * log_mat_sz, str_length);
+		}
+		fclose(meta);
+	}
+	else if(mode == 3) //matrix mul with non-expanded input
+	{
+
+	}
+	else if(mode == 4) //matrix mul with both non-expanded input and summation gate
+	{
+
 	}
 	return 0;
 }

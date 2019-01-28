@@ -1,0 +1,1 @@
+clang++ -Wall -march=native -I include -I include/ate-pairing/include -std=c++11 src/linear_gkr/verifier_fast_track.cpp src/linear_gkr/prime_field.cpp src/linear_gkr/prover_fast_track.cpp src/linear_gkr/polynomial.cpp src/linear_gkr/main_fast_track.cpp -o bin/main -O3 -lgmp -lgmpxx

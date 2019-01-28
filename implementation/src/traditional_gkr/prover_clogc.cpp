@@ -86,7 +86,7 @@ prime_field::field_element* prover::evaluate()
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
-	std::cerr << "total evaluation time: " << time_span.count() << " seconds." << std::endl;
+	//std::cerr << "total evaluation time: " << time_span.count() << " seconds." << std::endl;
 	return circuit_value[C.total_depth - 1];
 }
 

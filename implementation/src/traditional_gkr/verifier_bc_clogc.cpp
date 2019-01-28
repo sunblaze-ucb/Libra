@@ -390,7 +390,6 @@ bool verifier::verify()
 		one_minus_r_0 = one_minus_r_u;
 		one_minus_r_1 = one_minus_r_v;
 		one_minus_r_b_0 = one_minus_r_b;
-		std::cerr << "Prove Time " << p -> total_time << std::endl;
 	}
 
 	//post sumcheck

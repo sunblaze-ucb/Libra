@@ -254,6 +254,7 @@ void prover::sumcheck_phase0_init()
 
 cubic_poly prover::sumcheck_phase0_update(prime_field::field_element previous_random, int current_bit)
 {
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	cubic_poly ret;
 	ret = cubic_poly(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	
@@ -324,7 +325,7 @@ cubic_poly prover::sumcheck_phase0_update(prime_field::field_element previous_ra
 					}
 					break;
 				case 2:
-					assert(false);
+					//assert(false);
 					break;
 				case 3:
 					break;
@@ -333,6 +334,10 @@ cubic_poly prover::sumcheck_phase0_update(prime_field::field_element previous_ra
 
 		ret = ret + v_part * beta_part;
 	}
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	double tmp = time_span.count();
+	total_time += time_span.count();
 	return ret;
 }
 
