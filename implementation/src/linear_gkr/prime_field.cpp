@@ -1,4 +1,5 @@
 #include "linear_gkr/prime_field.h"
+#include <cmath>
 #include <climits>
 #include <ctime>
 namespace prime_field
@@ -300,41 +301,80 @@ namespace prime_field
 		not_x = not_x + one;
 		return *this + not_x;
 	}
-	
+
+	inline void mul_no_hi(const u256b &a, const u256b &b, u256b &ret)
+	{
+		const __uint128_t lolo = (__uint128_t)a.lo * (__uint128_t)b.lo;
+		
+		const __uint128_t lomid1 = (__uint128_t)a.mid * (__uint128_t)b.lo;
+		const __uint128_t lomid2 = (__uint128_t)a.lo * (__uint128_t)b.mid;
+		
+		//hi * hi omitted
+		ret.lo = (unsigned long long)lolo;
+		const __uint128_t carry = lolo >> 64; //this carry is less than 2**64
+		ret.mid = ((unsigned long long)lomid1 + (unsigned long long)lomid2 + (unsigned long long)carry);
+		//this carry is not necessary less than 2**64
+		const __uint128_t carry2 = ((lomid1 >> 64) + (lomid2 >> 64)) + 
+						   (((lomid1 & __max_ull) + (lomid2 & __max_ull) + carry) >> 64);
+						   
+		ret.hi = (__uint128_t)a.mid * (__uint128_t)b.mid + carry2;
+	}
 	u512b u512b::operator * (const u512b &x) const
 	{
 		u512b ret;
-		u256b lolo = (u256b)lo * (u256b)x.lo;
+		const u256b alo = (u256b)lo, xlo = (u256b)x.lo;
+		const u256b amid = (u256b)mid, xmid = (u256b)x.mid;
+		u256b lolo; mul_no_hi(alo, xlo, lolo);
 		
-		u256b lomid1 = (u256b)mid * (u256b)x.lo;
-		u256b lomid2 = (u256b)lo * (u256b)x.mid;
+		u256b lomid1; mul_no_hi(amid, xlo, lomid1);
+		u256b lomid2; mul_no_hi(alo, xmid, lomid2);
+
+		u256b midmid; mul_no_hi(amid, xmid, midmid);
 		
-		u256b lohi1 = (u256b)lo * (u256b)x.hi;
-		u256b lohi2 = (u256b)hi * (u256b)x.lo;
-		u256b midmid = (u256b)mid * (u256b)x.mid;
-		
-		u256b midhi1 = midhi_mul(mid, x.hi);
-		u256b midhi2 = midhi_mul(hi, x.mid);
 		
 		//hi * hi omitted
 		ret.lo = (__uint128_t)lolo.lo | ((__uint128_t)lolo.mid << 64);
-		__uint128_t carry = lolo.hi; //this carry is less than 2**128
+		const __uint128_t carry = lolo.hi; //this carry is less than 2**128
 		
-		u256b tmp = (lomid1 + lomid2 + carry);
+		const u256b tmp = (lomid1 + lomid2 + carry);
 		
 		ret.mid = (__uint128_t)tmp.lo | ((__uint128_t)tmp.mid << 64);
 		//this carry is not necessary less than 2**128
-		u256b carry2 = ((u256b)(lomid1.hi) + (u256b)(lomid2.hi)) + 
+		//double sum = (double)lomid1.hi + (double)lomid2.hi + (double)lomid1.lo + (double)((__uint128_t)lomid1.mid << 64) + (double)lomid2.lo + (double)((__uint128_t)lomid2.mid << 64) + (double)carry;
+		//sum = sum / max_int128;
+		const u256b carry2 = ((u256b)(lomid1.hi) + (u256b)(lomid2.hi)) + 
 						   (((u256b)((__uint128_t)lomid1.lo | ((__uint128_t)lomid1.mid << 64))
 						   + (u256b)((__uint128_t)lomid2.lo | ((__uint128_t)lomid2.mid << 64)) + (u256b)carry).hi);
-						   
-		ret.hi = lohi1 + lohi2 + midmid + ((midhi1 + midhi2).left_128()) + carry2;
+		
+		//const u256b carry2 = (unsigned long long)(sum);
+
+		//ret.hi = lohi1 + lohi2 + midmid + ((midhi1 + midhi2).left_128()) + carry2;
+		ret.hi = midmid + carry2;
 		return ret;
 	}
+	u256b my_factor;
 	
 	u512b u512b::operator % (const u256b &x) const
 	{
-		u256b ret = zero;
+		u512b hi_factor = (u512b)hi * (u512b)my_factor;
+		u512b lo256bit;
+		lo256bit.hi = (unsigned long long)0;
+		lo256bit.mid = mid;
+		lo256bit.lo = lo;
+		const u512b lo_factor = (u512b)lo256bit * (u512b)my_factor;
+		const u512b res = hi_factor + (u512b)lo_factor.hi;
+		u256b t;
+		t.hi = res.hi.hi << 4 | (res.hi.mid >> 60);
+		t.mid = res.hi.mid << 4 | (res.hi.lo >> 60);
+		t.lo = (res.hi.lo << 4) | (res.mid >> 124);
+		u512b t512 = (u512b)t;
+		t512 = *this - t512 * mod;
+
+		auto result = t512;
+		if(t512 >= mod)
+			result = t512 - mod;
+		return result;
+		/*u256b ret = zero;
 		u256b not_x;
 		not_x.lo = ~x.lo;
 		not_x.mid = ~x.mid;
@@ -378,7 +418,10 @@ namespace prime_field
 			if(x <= ret)
 				ret = ret + not_x;
 		}
+		u512b ret512 = u512b(ret);
+		assert(!(result != ret512));
 		return u512b(ret);
+		*/
 	}
 	bool u512b::operator != (const u512b &x) const
 	{
@@ -432,6 +475,7 @@ namespace prime_field
 
 
 	u256b mod;
+	const int shift = 508;
 	bool initialized = false;
 
 	void init(std::string s, int base)
@@ -444,6 +488,9 @@ namespace prime_field
 		preprocess_mod(mod);
 		one = (u256b)(unsigned long long)1;
 		zero = (u256b)(unsigned long long)0;
+
+		std::string factor_s = "49885853761272603568320884710755151782187486770207743353506441985236025007921";
+		my_factor = u256b(factor_s.c_str(), factor_s.length(), 10);
 	}
 	void init_random()
 	{

@@ -255,7 +255,8 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(true)
 		{
 			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
 			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
@@ -360,14 +361,14 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 			addV_array[v].b.value = ((beta_g_sum[i].value * beta_u[u].value % prime_field::mod) * v_u.value + addV_array[v].b.value);
 
 			add_mult_sum_counter[v]++;
-			if(add_mult_sum_counter[v] > 30)
+			//if(add_mult_sum_counter[v] > 30)
 			{
 				add_mult_sum_counter[v] = 0;
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
 			}
 
 			addV_array_counter[v]++;
-			if(addV_array_counter[v] > 30)
+			//if(addV_array_counter[v] > 30)
 			{
 				addV_array_counter[v] = 0;
 				addV_array[v].b.value = addV_array[v].b.value % prime_field::mod;
@@ -426,7 +427,8 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(true)
 		{
 			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
 			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value

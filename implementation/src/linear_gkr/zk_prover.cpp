@@ -439,7 +439,6 @@ void zk_prover::sumcheck_phase1_init()
 		v = C.circuit[sumcheck_layer_id].gates[i].v;
 		if(C.circuit[sumcheck_layer_id].gates[i].ty == 0) //add gate
 		{
-		//	addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
 			auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
 							 + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
 			addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
@@ -493,7 +492,8 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(true)
 		{
 			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
 			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
@@ -590,7 +590,8 @@ quintuple_poly zk_prover::sumcheck_phase1_updatelastbit(prime_field::field_eleme
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(true)
 		{
 			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
 			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
@@ -752,7 +753,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			//add_mult_sum[v].b.value = add_mult_sum[v].b.value + (beta_g_sum[i].value * beta_u[u].value % prime_field::mod * v_u.value) % prime_field::mod;
 			add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
 			add_mult_sum_counter[v]++;
-			if(add_mult_sum_counter[v] > 30)
+			//if(add_mult_sum_counter[v] > 30)
 			{
 				add_mult_sum_counter[v] = 0;
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
@@ -769,14 +770,14 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value);
 
 			add_mult_sum_counter[v]++;
-			if(add_mult_sum_counter[v] > 30)
+			//if(add_mult_sum_counter[v] > 30)
 			{
 				add_mult_sum_counter[v] = 0;
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
 			}
 
 			addV_array_counter[v]++;
-			if(addV_array_counter[v] > 30)
+			//if(addV_array_counter[v] > 30)
 			{
 				addV_array_counter[v] = 0;
 				addV_array[v].b.value = addV_array[v].b.value % prime_field::mod;
@@ -837,7 +838,8 @@ quadratic_poly zk_prover::sumcheck_phase2_update(prime_field::field_element prev
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(true)
 		{
 			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
 			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
@@ -935,7 +937,8 @@ quintuple_poly zk_prover::sumcheck_phase2_updatelastbit(prime_field::field_eleme
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
-		if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
+		if(true)
 		{
 			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
 			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
