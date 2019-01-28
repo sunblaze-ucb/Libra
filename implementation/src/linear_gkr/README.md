@@ -14,7 +14,14 @@ The rest of this line contains `4n` integers, represent `n` gates. For each gate
 
 We have `3` different types of gates for now. They are addition, multiplication, dummy. Dummy gate takes no input, and never serves as a input of other gate.
 
-`ty=0` is addition gate, `ty=1` is multiplication gate, `ty=2` is dummy gate, `ty=3` is input gate.
+`ty=0` is addition gate, `ty=1` is multiplication gate, `ty=2` is dummy gate, `ty=3` is input gate, `ty=4` is direct relay gate, `ty=5` is summation gate.
+
+## Special gate explain
+### Direct relay gate
+Do not use it in the circuit description, it's a gate that we use it to simplify computation. The gate just directly copy the value from the node in previous layer which has the same label as the direct relay gate.
+
+### Summation gate
+It's a gate that output the summation of previous layer. A simple use case is matrix multiplication.
 
 ## Example
 ```

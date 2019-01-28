@@ -427,6 +427,10 @@ bool verifier::verify()
 		{
 			input[g] = prime_field::field_element(C.circuit[0].gates[g].u);
 		}
+		else if(C.circuit[0].gates[g].ty == 2)
+		{
+			input[g] = prime_field::field_element(0);
+		}
 		else
 			assert(false);
 	}

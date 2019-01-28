@@ -43,7 +43,7 @@ prime_field::field_element* prover::evaluate()
 		u = C.circuit[0].gates[g].u;
 		v = C.circuit[0].gates[g].v;
 		ty = C.circuit[0].gates[g].ty;
-		assert(ty == 3);
+		assert(ty == 3 || ty == 2);
 		circuit_value[0][g] = prime_field::field_element(u);
 	}
 	assert(C.total_depth < 1000000);

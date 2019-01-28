@@ -31,7 +31,7 @@ public:
 char source_gate0[1000], source_gate1[1000];
 string source_line;
 int target_gate, src0, src1, tgt;
-bool visit[Maxn];
+int visit[Maxn];
 
 vector<int> input_gates;
 
@@ -39,10 +39,13 @@ int mx_depth = 0;
 
 void dfs(int x, int depth = 1)
 {
-	if(visit[x]) return;
+	if(visit[x])
+	{
+		return;
+	}
 	if(mx_depth < depth)
 		mx_depth = depth;
-	visit[x] = true;
+	visit[x] = depth;
 	for(int i = G.head[x]; i; i = G.Next[i])
 	{
 		int y = G.No[i];
@@ -53,7 +56,7 @@ void dfs(int x, int depth = 1)
 int main()
 {
 	memset(visit, 0, sizeof visit);
-	ifstream sha256in ("SHA256_64.pws");
+	ifstream sha256in ("lanczos2_2.pws");
 	
 	regex add_gate("P V[0-9]+ = V[0-9]+ \\+ V[0-9]+ E");
 	regex mult_gate("P V[0-9]+ = V[0-9]+ \\* V[0-9]+ E");
@@ -65,6 +68,7 @@ int main()
 	regex constant_assign_gate("P V[0-9]+ = [0-9]+ E");
 	regex input_gate("P V[0-9]+ = I[0-9]+ E");
 	regex output_gate("P O[0-9]+ = V[0-9]+ E");
+	regex pass_gate("P V[0-9]+ = V[0-9]+ PASS V[0-9]+");
 	
 	smatch base_match;
 	G.init(3000000 - 101);
@@ -124,6 +128,12 @@ int main()
 		else if(std::regex_match(source_line, base_match, output_gate))
 		{
 			sscanf(source_line.c_str(), "P O%d = V%d E", &tgt, &src0);
+			tgt += 1000000;
+			G.add(src0, tgt);
+		}
+		else if(std::regex_match(source_line, base_match, pass_gate))
+		{
+			sscanf(source_line.c_str(), "P V%d = V%d PASS V%d E", &tgt, &src0, &src1);
 			tgt += 1000000;
 			G.add(src0, tgt);
 		}

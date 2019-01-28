@@ -63,7 +63,7 @@ prime_field::field_element* zk_prover::evaluate()
 		g = i;
 		u = C.circuit[0].gates[g].u;
 		ty = C.circuit[0].gates[g].ty;
-		assert(ty == 3);
+		assert(ty == 3 || ty == 2);
 		circuit_value[0][g] = prime_field::field_element(u);
 	}
 	assert(C.total_depth < 1000000);
@@ -137,6 +137,7 @@ vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree)
 
 std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_commit(int input_bit_length)
 {
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	input_vpd::KeyGen(input_bit_length);
 	std::vector<bn::Ec1> ret, ret2;
 	ret.resize(2);
@@ -148,6 +149,10 @@ std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_com
 		if(C.circuit[0].gates[g].ty == 3)
 		{
 			input_mpz[g] = prime_field::field_element(C.circuit[0].gates[g].u).to_gmp_class();
+		}
+		else if(C.circuit[0].gates[g].ty == 2) //dummy gate
+		{
+			input_mpz[g] = prime_field::field_element(0).to_gmp_class();
 		}
 		else
 			assert(false);
@@ -161,13 +166,22 @@ std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_com
 	auto tmp_pair = input_vpd::commit(ret[0], ret[1], ret2[0], ret2[1], input_mpz, maskr_mpz);
 	r_f_input = tmp_pair.first;
 	r_f_input2 = tmp_pair.second;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	total_time += time_span.count();
 	return std::make_pair(ret, ret2);
 }
 
 std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_input(std::vector<mpz_class> R, mpz_class &ans, mpz_class Z)
 {
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	std::vector<bn::Ec1> witness, witnessa;
 	input_vpd::prove(R, ans, input_mpz, maskr_mpz, witness, witnessa, r_f_input, r_f_input2, Z);
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	total_time += time_span.count();
 	return std::make_pair(witness, witnessa);
 }
 
@@ -238,24 +252,33 @@ std::vector<bn::Ec1> zk_prover::generate_maskR(int layer_id){
 		sumRc.b = maskR[1];
 		sumRc.c = maskR[0];
 	}
-
 	return ret;
 }
 
 std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_R(std::vector<mpz_class> R, mpz_class &ans)
 {
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	std::vector<bn::Ec1> witness, witnessa;
 	std::vector<mpz_class> input;
 	for(int i = 0; i < 6; ++i)
 		input.push_back(preR[i].to_gmp_class());
 	vpdR::prove(R, ans, input, witness, witnessa, r_f_R);
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	total_time += time_span.count();
 	return std::make_pair(witness, witnessa);
 }
 
 std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::prove_mask(std::vector<mpz_class> R, mpz_class &ans)
 {
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	std::vector<bn::Ec1> witness, witnessa;
-	vpd_test::prove(R, ans, maskpoly_gmp, witness, witnessa, r_f_mask_poly);
+	vpd_test::prove(R, ans, maskpoly_gmp, witness, witnessa, r_f_mask_poly);	
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
+	total_time += time_span.count();
 	return std::make_pair(witness, witnessa);
 }
 
@@ -727,7 +750,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
 							 + beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
 			//add_mult_sum[v].b.value = add_mult_sum[v].b.value + (beta_g_sum[i].value * beta_u[u].value % prime_field::mod * v_u.value) % prime_field::mod;
-			add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value) % prime_field::mod;
+			add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
 			add_mult_sum_counter[v]++;
 			if(add_mult_sum_counter[v] > 30)
 			{
@@ -871,6 +894,9 @@ quadratic_poly zk_prover::sumcheck_phase2_update(prime_field::field_element prev
 	ret.a.value = (ret.a.value + tmp1.value) % prime_field::mod;
 	ret.b.value = (ret.b.value + tmp2.value) % prime_field::mod;
 	ret.c.value = (ret.c.value + maskpoly_sumc.value + tmp3.value) % prime_field::mod;
+	ret.a.value = (ret.a.value + prime_field::mod) % prime_field::mod;
+	ret.b.value = (ret.b.value + prime_field::mod) % prime_field::mod;
+	ret.c.value = (ret.c.value + prime_field::mod) % prime_field::mod;
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
@@ -900,13 +926,13 @@ quintuple_poly zk_prover::sumcheck_phase2_updatelastbit(prime_field::field_eleme
 		{
 			
 			V_mult_add[i].b.value = (V_mult_add[g_zero].a.value * previous_random.value + V_mult_add[g_zero].b.value) % prime_field::mod;
-			V_mult_add[i].a.value = (V_mult_add[g_one].a.value * previous_random.value + V_mult_add[g_one].b.value - V_mult_add[i].b.value) % prime_field::mod;
+			V_mult_add[i].a.value = (V_mult_add[g_one].a.value * previous_random.value + V_mult_add[g_one].b.value + prime_field::mod - V_mult_add[i].b.value) % prime_field::mod;
 
 			addV_array[i].b.value = (addV_array[g_zero].a.value * previous_random.value + addV_array[g_zero].b.value) % prime_field::mod;
-			addV_array[i].a.value = (addV_array[g_one].a.value * previous_random.value + addV_array[g_one].b.value - addV_array[i].b.value) % prime_field::mod;
+			addV_array[i].a.value = (addV_array[g_one].a.value * previous_random.value + addV_array[g_one].b.value + prime_field::mod - addV_array[i].b.value) % prime_field::mod;
 
 			add_mult_sum[i].b.value = (add_mult_sum[g_zero].a.value * previous_random.value + add_mult_sum[g_zero].b.value) % prime_field::mod;
-			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value) % prime_field::mod;
+			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
 		if(i % 8 == 0 || i + 1 == (total_uv >> 1))

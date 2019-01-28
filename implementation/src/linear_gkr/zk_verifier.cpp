@@ -20,7 +20,7 @@ void zk_verifier::read_circuit(const char *path)
 
 	fscanf(circuit_in, "%d", &d);
 	int n;
-	C.circuit = new layer[d];
+	C.circuit = new layer[d + 1];
 	C.total_depth = d;
 	int max_bit_length = -1;
 	for(int i = 0; i < d; ++i)
@@ -34,8 +34,9 @@ void zk_verifier::read_circuit(const char *path)
 		int previous_g = -1;
 		for(int j = 0; j < n; ++j)
 		{
-			int ty, g, u, v;
-			fscanf(circuit_in, "%d%d%d%d", &ty, &g, &u, &v);
+			int ty, g;
+			long long u, v;
+			fscanf(circuit_in, "%d%d%lld%lld", &ty, &g, &u, &v);
 			if(g != previous_g + 1)
 			{
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
@@ -78,10 +79,6 @@ void zk_verifier::read_circuit(const char *path)
 	}
 	p -> init_array(max_bit_length);
 
-//	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
-//	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
-//	beta_v = new prime_field::field_element[(1 << max_bit_length)];
-//	beta_u = new prime_field::field_element[(1 << max_bit_length)];
 	int first_half_len = max_bit_length / 2, second_half_len = max_bit_length - first_half_len;
 	beta_g_r0_first_half = new prime_field::field_element[(1 << first_half_len)];
 	beta_g_r0_second_half = new prime_field::field_element[(1 << second_half_len)];
@@ -159,39 +156,6 @@ void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_f
 	const prime_field::field_element* one_minus_r_0, const prime_field::field_element* one_minus_r_1, 
 	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
 {
-/*
-	beta_g_r0[0] = alpha;
-	beta_g_r1[0] = beta;
-	for(int i = 0; i < C.circuit[depth].bit_length; ++i)
-	{
-		for(int j = 0; j < (1 << i); ++j)
-		{
-			beta_g_r0[j | (1 << i)].value = beta_g_r0[j].value * r_0[i].value % prime_field::mod;
-			beta_g_r1[j | (1 << i)].value = beta_g_r1[j].value * r_1[i].value % prime_field::mod;
-		}
-		for(int j = 0; j < (1 << i); ++j)
-		{
-			beta_g_r0[j].value = beta_g_r0[j].value * one_minus_r_0[i].value % prime_field::mod;
-			beta_g_r1[j].value = beta_g_r1[j].value * one_minus_r_1[i].value % prime_field::mod;
-		}
-	}
-	beta_u[0] = prime_field::field_element(1);
-	beta_v[0] = prime_field::field_element(1);
-	for(int i = 0; i < C.circuit[depth - 1].bit_length; ++i)
-	{
-		for(int j = 0; j < (1 << i); ++j)
-		{
-			beta_u[j | (1 << i)] = beta_u[j] * r_u[i];
-			beta_v[j | (1 << i)] = beta_v[j] * r_v[i];
-		}
-			
-		for(int j = 0; j < (1 << i); ++j)
-		{
-			beta_u[j] = beta_u[j] * one_minus_r_u[i];
-			beta_v[j] = beta_v[j] * one_minus_r_v[i];
-		}
-	}
-*/
 	beta_g_r0_first_half[0] = alpha;
 	beta_g_r1_first_half[0] = beta;
 	beta_g_r0_second_half[0] = prime_field::field_element(1);
@@ -550,6 +514,10 @@ bool zk_verifier::verify()
 		one_minus_r_0 = one_minus_r_u;
 		one_minus_r_1 = one_minus_r_v;
 	}
+
+	//merge two vpd into one: add a layer of direct relay gates
+
+
 
 	//post sumcheck
 
