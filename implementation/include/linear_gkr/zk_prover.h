@@ -35,7 +35,6 @@ public:
 
 
 
-	short *addV_array_counter, *add_mult_sum_counter;
 	double total_time;
 	void init_array(int);
 	void get_circuit(const layered_circuit &from_verifier);

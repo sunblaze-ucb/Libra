@@ -6,7 +6,7 @@ using namespace bn;
 namespace input_vpd
 {
 #define P 512
-const int multi_scalar_w = 2;
+const int multi_scalar_w = 4;
 
 unsigned long int seed;
 int NumOfVar;
@@ -21,7 +21,7 @@ vector<Ec2> pub_g2, g2_pre;
 class multi_scalar_state
 {
 public:
-	Ec1 value;
+	Ec1 value[(1 << multi_scalar_w) - 3];
 };
 
 vector<multi_scalar_state> multi_scalar_g1;
@@ -129,7 +129,7 @@ void KeyGen(int d){
 	}
 	pub_g1[1 << d] = pre_exp(g1_pre, s[d]);
 	//multi_scalar
-	assert(multi_scalar_w == 2); //to avoid some error
+	//assert(multi_scalar_w == 2); //to avoid some error
 	vector<Ec1> scalars;
 	scalars.resize(multi_scalar_w);
 	multi_scalar_g1.resize((1 << d) / multi_scalar_w + 1);
@@ -147,20 +147,15 @@ void KeyGen(int d){
 				scalars[j] = pub_g1[id];
 			}
 		}
-		multi_scalar_g1[i].value = scalars[0] + scalars[1];
-		/*
-		for(int j = 0; j < (1 << multi_scalar_w); ++j)
+		for(int j = 3; j < (1 << multi_scalar_w); ++j)
 		{
 			multi_scalar_g1[i].value[j] = g1 * 0;
 			for(int k = 0; k < multi_scalar_w; ++k)
 			{
 				if((j >> k) & 1)
-				{
-					multi_scalar_g1[i].value[j] = multi_scalar_g1[i].value[j] + scalars[k];
-				}
+					multi_scalar_g1[i].value[j] += scalars[k];
 			}
 		}
-		*/
 	}
 	for(int i = 0; i < d + 1; ++i)
 	{
@@ -195,8 +190,8 @@ Ec1 multi_scalar_calc(int index, int pub_g1_length, const vector<mpz_class> &sca
 				if(index * multi_scalar_w + 1 < pub_g1_length)
 					ret = ret + pub_g1[index * multi_scalar_w + 1];
 				break;
-			case 3:
-				ret = ret + multi_scalar_g1[index].value;
+			default:
+				ret = ret + multi_scalar_g1[index].value[current_scalar];
 		}
 	}
 	return ret;
@@ -264,7 +259,6 @@ std::pair<mpz_class, mpz_class> commit(Ec1& digest, Ec1& digesta, Ec1& digest2, 
 	cout << "Input VPD commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return make_pair(r_f, r_f2);
-	
 }
 
 bool check_commit(Ec1 digest, Ec1 digesta, Ec1 digest2, Ec1 digest2a){

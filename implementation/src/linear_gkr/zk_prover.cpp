@@ -345,17 +345,13 @@ void zk_prover::init_array(int max_bit_length)
 	add_mult_sum = new linear_poly[(1 << max_bit_length)];
 	V_mult_add = new linear_poly[(1 << max_bit_length)];
 	addV_array = new linear_poly[(1 << max_bit_length)];
-//	beta_g_sum = new prime_field::field_element[(1 << max_bit_length)];
-//	beta_u = new prime_field::field_element[(1 << max_bit_length)];
 	int half_length = (max_bit_length >> 1) + 1;
 	beta_g_r0_fhalf = new prime_field::field_element[(1 << half_length)];
 	beta_g_r0_shalf = new prime_field::field_element[(1 << half_length)];
 	beta_g_r1_fhalf = new prime_field::field_element[(1 << half_length)];
 	beta_g_r1_shalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_fhalf = new prime_field::field_element[(1 << half_length)];
-	beta_u_shalf = new prime_field::field_element[(1 << half_length)];
-	addV_array_counter = new short[(1 << max_bit_length)];
-	add_mult_sum_counter = new short[(1 << max_bit_length)]; 
+	beta_u_shalf = new prime_field::field_element[(1 << half_length)]; 
 }
 
 void zk_prover::delete_self()
@@ -363,8 +359,6 @@ void zk_prover::delete_self()
 	delete[] add_mult_sum;
 	delete[] V_mult_add;
 	delete[] addV_array;
-//	delete[] beta_u;
-//	delete[] beta_g_sum;
 
 	delete[] beta_g_r0_fhalf;
 	delete[] beta_g_r0_shalf;
@@ -372,8 +366,6 @@ void zk_prover::delete_self()
 	delete[] beta_g_r1_shalf;
 	delete[] beta_u_fhalf;
 	delete[] beta_u_shalf;
-	delete[] addV_array_counter;
-	delete[] add_mult_sum_counter;
 	for(int i = 0; i < C.total_depth; ++i)
 		delete[] circuit_value[i];
 	delete[] maskpoly;
@@ -430,37 +422,37 @@ void zk_prover::sumcheck_phase1_init()
 	}
 
 	int mask_fhalf = (1 << first_half) - 1;
-/*
-	for(int i = 0; i < (1 << length_g); ++i)
-	{
-		beta_g_sum[i].value = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
-							 + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
-	}
-*/
+	
 	for(int i = 0; i < (1 << length_g); ++i)
 	{
 		int u, v;
 		u = C.circuit[sumcheck_layer_id].gates[i].u;
 		v = C.circuit[sumcheck_layer_id].gates[i].v;
-		if(C.circuit[sumcheck_layer_id].gates[i].ty == 0) //add gate
+		switch(C.circuit[sumcheck_layer_id].gates[i].ty)
 		{
-			auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
-					  + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
-			addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
-			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
-		}
-		if(C.circuit[sumcheck_layer_id].gates[i].ty == 1) //mult gate
-		{
-		//	add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
-			auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
-					  + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
-			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
-		}
-		if(C.circuit[sumcheck_layer_id].gates[i].ty == 4) //direct relay gate
-		{
-			auto tmp = (beta_g_r0_fhalf[u & mask_fhalf].value * beta_g_r0_shalf[u >> first_half].value 
-					  + beta_g_r1_fhalf[u & mask_fhalf].value * beta_g_r1_shalf[u >> first_half].value) % prime_field::mod;
-			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+			case 0: //add gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
+			case 1: //mult gate
+			{
+			//	add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
+				break;
+			}
+			case 4: //direct relay gate
+			{
+				auto tmp = (beta_g_r0_fhalf[u & mask_fhalf].value * beta_g_r0_shalf[u >> first_half].value 
+						+ beta_g_r1_fhalf[u & mask_fhalf].value * beta_g_r1_shalf[u >> first_half].value) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
 		}
 	}
 	
@@ -503,23 +495,11 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
-		if(true)
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value) % prime_field::mod;
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value) % prime_field::mod;
-		}
-		else
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value);
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value);
-		}
+		ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+		ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
+									+ addV_array[i].a.value) % prime_field::mod;
+		ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									+ addV_array[i].b.value) % prime_field::mod;
 	}
 
 	total_uv >>= 1;
@@ -537,8 +517,6 @@ quadratic_poly zk_prover::sumcheck_phase1_update(prime_field::field_element prev
 
 	
 	//compute with sumcheck maskpol
-	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
-	
 
 	prime_field::field_element tmp1, tmp2;
 	tmp1.value = maskpoly[current_bit << 1].value;
@@ -601,30 +579,17 @@ quintuple_poly zk_prover::sumcheck_phase1_updatelastbit(prime_field::field_eleme
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
-		if(true)
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value) % prime_field::mod;
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value) % prime_field::mod;
-		}
-		else
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value);
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value);
-		}
+		ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+		ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
+									+ addV_array[i].a.value) % prime_field::mod;
+		ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									+ addV_array[i].b.value) % prime_field::mod;
 	}
 
 	total_uv >>= 1;
 
 	//compute with maskpolyR
-	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
-
+	
 	Iuv = Iuv * (prime_field::field_element(1) - previous_random);
 
 	if(current_bit > 0){
@@ -637,7 +602,6 @@ quintuple_poly zk_prover::sumcheck_phase1_updatelastbit(prime_field::field_eleme
 	ret.c = ret.c + maskR_sumcu + maskR_sumcv;
 	
 	//compute with sumcheck maskpol
-	//quintuple_poly ret5(prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0), prime_field::field_element(0));
 	
 	if(current_bit == length_u - 1){
 		prime_field::field_element a = sumRc.a;
@@ -730,12 +694,6 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 	int mask_fhalf = (1 << first_half) - 1;
 	int first_g_half = (length_g >> 1);
 	int mask_g_fhalf = (1 << (length_g >> 1)) - 1;
-/*
-	for(int i = 0; i < (1 << length_u); ++i)
-	{
-		beta_u[i].value = beta_u_fhalf[i & mask_fhalf].value * beta_u_shalf[i >> first_half].value % prime_field::mod;
-	}
-*/
 	
 	total_uv = (1 << C.circuit[sumcheck_layer_id - 1].bit_length);
 	int total_g = (1 << C.circuit[sumcheck_layer_id].bit_length);
@@ -746,8 +704,6 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 		add_mult_sum[i].b = zero;
 		addV_array[i].a = zero;
 		addV_array[i].b = zero;
-		addV_array_counter[i] = 0;
-		add_mult_sum_counter[i] = 0;
 		V_mult_add[i] = circuit_value[sumcheck_layer_id - 1][i];
 	}
 	
@@ -756,52 +712,30 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 		int ty = C.circuit[sumcheck_layer_id].gates[i].ty;
 		int u = C.circuit[sumcheck_layer_id].gates[i].u;
 		int v = C.circuit[sumcheck_layer_id].gates[i].v;
-		if(ty == 1) //mult gate
+		switch(ty)
 		{
-			auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
-			auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
-							 + beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
-			//add_mult_sum[v].b.value = add_mult_sum[v].b.value + (beta_g_sum[i].value * beta_u[u].value % prime_field::mod * v_u.value) % prime_field::mod;
-			add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
-			add_mult_sum_counter[v]++;
-			//if(add_mult_sum_counter[v] > 30)
+			case 1: //mult gate
 			{
-				add_mult_sum_counter[v] = 0;
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
+				break;
 			}
-		}
-		if(ty == 0) //add gate
-		{
-			auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
-			auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
-							 + beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
-			//add_mult_sum[v].b.value = (add_mult_sum[v].b.value + beta_g_sum[i].value * beta_u[u].value);
-			add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g * tmp_u);
-			//addV_array[v].b.value = ((beta_g_sum[i].value * beta_u[u].value % prime_field::mod) * v_u.value + addV_array[v].b.value);
-			addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value);
-
-			add_mult_sum_counter[v]++;
-			//if(add_mult_sum_counter[v] > 30)
+			case 0:
 			{
-				add_mult_sum_counter[v] = 0;
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g * tmp_u);
+				addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value);
+
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
-			}
-
-			addV_array_counter[v]++;
-			//if(addV_array_counter[v] > 30)
-			{
-				addV_array_counter[v] = 0;
 				addV_array[v].b.value = addV_array[v].b.value % prime_field::mod;
+				break;
 			}
 		}
-	}
-
-	for(int i = 0; i < total_uv; ++i)
-	{
-		if(add_mult_sum_counter[i])
-			add_mult_sum[i].b.value = add_mult_sum[i].b.value % prime_field::mod;
-		if(addV_array_counter[i])
-			addV_array[i].b.value = addV_array[i].b.value % prime_field::mod;
 	}
 
 	//update maskpoly

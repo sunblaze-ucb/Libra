@@ -321,6 +321,10 @@ namespace prime_field
 	}
 	u512b u512b::operator * (const u512b &x) const
 	{
+		if(x.mid == 0 && x.lo == 0)
+			return x;
+		if(mid == 0 && lo == 0)
+			return *this;
 		u512b ret;
 		const u256b alo = (u256b)lo, xlo = (u256b)x.lo;
 		const u256b amid = (u256b)mid, xmid = (u256b)x.mid;
@@ -356,6 +360,8 @@ namespace prime_field
 	
 	u512b u512b::operator % (const u256b &x) const
 	{
+		if(lo == 0 && mid == 0 && hi.lo == 0 && hi.mid == 0 && hi.hi == 0)
+			return *this;
 		u512b hi_factor = (u512b)hi * (u512b)my_factor;
 		u512b lo256bit;
 		lo256bit.hi = (unsigned long long)0;
@@ -520,6 +526,10 @@ namespace prime_field
 	field_element field_element::operator * (const field_element &b) const
 	{
 		field_element ret;
+		if(b.value.mid == 0 && b.value.lo == 0)
+			return b;
+		if(value.mid == 0 && value.lo == 0)
+			return *this;
 		ret.value = (b.value * value) % mod;
 		return ret;
 	}
