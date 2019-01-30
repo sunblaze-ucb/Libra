@@ -126,28 +126,45 @@ where $g\in\mathbb{F}^{s_i}$ is a random vector.
 \end{align}
 $\V$ and $\P$ then execute the sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equation~\ref{eq:GKR}. At the end of the sumcheck protocol, $\V$ still receives two claims about $\tV_{i+1}$, computes their random linear combination and proceeds to an layer above recursively until the input layer.
 
-In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Figure~\ref{protocol::CMT}. \yupeng{change the protocol using the 2nd approach and new notations, and put it into a figure.}
+In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Figure~\ref{protocol::CMT}.
 
 \begin{protocol}
 	\label{protocol::CMT}
 	Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ wants to convince that $\mathsf{out}=C(\mathsf{in})$ where $\mathsf{in}$ is the input from $\V$, and $\mathsf{out}$ is the output. Without loss of generality, assume $n$ and $k$ are both powers of 2 and we can pad them if not.
 
 	\begin{itemize}
-		\item Define the multilinear extension of array $\mathsf{out}$ as $\tV_0$. $\V$ chooses a random $r_0 \in \mathbb{F}^{s_0}$ and sends it to $\P$. Both parties compute $\tilde{V_0}(r_0)$
-		\item For $i=1,...,d$:
+		\item Define the multilinear extension of array $\mathsf{out}$ as $\tV_0$. $\V$ chooses a random $g \in \mathbb{F}^{s_0}$ and sends it to $\P$. Both parties compute $\tilde{V_0}(g)$.
+		\item $\P$ and $\V$ run a sumcheck protocol on
+		\[
+		\tV_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\tV_{1}(x)\tV_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\tV_{1}(x)+\tV_{1}(y))
+		\]
+		At the end of the protocol, $\V$ receives $\tV_1(u^{(1)})$ and $\tV_1(v^{(1)})$. $\V$ computes $\tmult_1(g^{(0)},u^{(1)},v^{(1)})$, $\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ and checks that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\tV_1(u^{(1)})\tV_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\tV_1(u^{(1)})+\tV_1(v^{(1)}))$ equals to the last message of the sumcheck.
+		
+		\item For $i=1,...,d-1$:
 		\begin{itemize}
-			\item Both parties runs sumcheck protocol for $a_{i-1}$ on polynomial $\tilde{V_{i-1}}$, in the last step of sumcheck, verifier need to access the oracle to compute $$\tilde{add}_{i-1}(g, R_{u}, R_{v})(\tilde{V}_{i}(R_{u})+\tilde{V}_{i}(R_v))+\tilde{mult}_{i-1}(g, R_{u}, R_{v})(\tilde{V}_{i}(R_{u})\tilde{V}_{i}(R_v))\textnormal{,}$$ 
-			where $R_{u}, R_{v}$ are chosen randomlly from $\mathbb{F}^{|u|},\mathbb{F}^{|v|}$. 
+			
+			\item $\V$ randomly selects $\alpha^{(i)}, \beta^{(i)}\in\F$ and sends them to $\mathcal{P}$.
+			\item $\P$ and $\V$ run the sumcheck on the equation\\
 
-			\item Here we implement the oracle: $\V$ asks the value of $\tilde{V}_i(u), \tilde{V}_i(v)$ from $\P$, and $\V$ compute $\tilde{add}, \tilde{mult}$ locally. 
-			\item Then $\V$ combines $\tilde{V_{i}}(R_{u}), \tilde{V_{i}}(R_{v})$ in this way: 
-			\begin{itemize}
-				\item Let $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ be a line with $\gamma(0)=R_{u}, \gamma(1)=R_{v}$. 
-				\item The verifier sends $\gamma(x)$ to $\P$. 
-				\item Then prover send a degree $s_i$ polynomial $h(x)=\tilde{V_{i}}(\gamma(x))$. The verifier verifies that $h(0)=v_0, h(1)=v_1$. And it compute $a_i=h(r_i)$ by randomly choose $r_i'$ and set $r_i=\gamma(r_i')$ and sends $r_i, a_i$ to prover.
-			\end{itemize}
+			$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
+			\begin{align*}
+			\sum_{x, y\in \binary^{s_{i+1}}}&((\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)\tV_{i+1}(y))\\
+			&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber
+			\end{align*}
+					
+			\item At the end of the sumcheck protocol, $\P$ sends $\V$ $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$.
+			
+		
+			\item $\V$ computes the following and checks if it equals to the last message of the sumcheck.
+			\begin{align*}
+			&(\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)}))(\tV_{i+1}(u^{(i+1)})\tV_{i+1}(v^{(i+1)}))+\\
+			&(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)}))(\tV_{i+1}(u^{(i+1)})+\tV_{i+1}(v^{(i+1)}))
+			\end{align*}
+			If all checks in the sumcheck pass, $V$ uses $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
+			
 		\end{itemize}
-		\item The verifier accepts iff $a_d = \tilde{V_d}(r_d)$, where $\tilde{V_d}$ is the multi-linear extension representation of input layer.
+		\item At the input layer $d$, $\V$ has two claims $\tV_{d}(u^{(d)})$ and $\tV_{d}(v^{(d)})$. $\V$ queries the oracle of evaluations of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$ and checks that they are the same as the two claims. If yes, output $\accept$; otherwise, output $\reject$.
+		
 	\end{itemize}
 \end{protocol}
 

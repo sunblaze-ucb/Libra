@@ -3,32 +3,30 @@
 \subsection{Zero-Knowledge Verifiable Polynomial Delegation Scheme}
 \label{subsec::zkvpd}
 
-Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, \pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that \yupeng{Can be moved to Appendix. Check the definitions, add a statement for ZK.}
+Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, \pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that
 
-\begin{framed}
-	\centering
-	\begin{enumerate}
+\begin{itemize}
 			\item \textbf{Perfect Completeness}
 				For any polynomial $f \in \mathcal{F}$ and value $t$,
-				{\fontsize{10}{10}{\[\Pr_{r_f}\left[
+				\[\Pr_{r_f}\left[
 					\begin{aligned}
 						(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \\
 						\comm \leftarrow \Commit(f, r_f, \pp) &:&  \CheckComm(\comm, \vp)=\accept \hspace*{5pt}\land \\
 						(y, \pi) \leftarrow \Open(f, t, r_f, \pp) && \hspace*{10pt}\Verify(\comm, t, y, \pi, \vp)=\accept\\
 					\end{aligned}
-				\right]=1\]}}
+				\right]=1\]
 			\item \textbf{Binding}
 			For any PPT adversary $\mathcal{A}$ and benign auxilary input $z_1, z_2$ the following holds:
-			{\fontsize{9}{9}\[\Pr \left[
+			\[\Pr \left[
 				\begin{aligned}
-					(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \{\accept,\reject\}\leftarrow\CheckComm(\comm^*, \vp) \hspace*{5pt}\land\\
-					(\pi^*, \comm*, y^*, state) \leftarrow \mathcal{A}(1^\lambda, z_1, \pp) &:& \Verify(\comm^*, t^*, y^*, \pi^*, \vp)=\accept \hspace*{5pt} \land\\
-					(f^*, t^*, y^*, r_f^*) \leftarrow \mathcal{A}(1^\lambda, z_2, state, \pp) && \comm^*=\Commit(f^*, r_f^*, \pp) \hspace*{5pt} \land\\
+					(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \CheckComm(\comm^*, \vp)=\accept \hspace*{5pt}\land\\
+					(\pi^*, \comm^*, y^*, state) \leftarrow \mathcal{A}(1^\lambda, z_1, \pp) &:& \Verify(\comm^*, t^*, y^*, \pi^*, \vp)=\accept \hspace*{5pt} \land\\
+					(f^*, t^*, r_f^*) \leftarrow \mathcal{A}(1^\lambda, z_2, state, \pp) && \comm^*=\Commit(f^*, r_f^*, \pp) \hspace*{5pt} \land\\
 					&& (y^*, \pi^*) = \Open(f^*, t^*, r_f^*, \pp) \hspace*{5pt} \land \\
 					&& f^*(t^*) \neq y^*\\
 				\end{aligned}
-			\right]\le \negl{(\lambda)}\]}
-			\item \textbf{Zero Knowledge} For security parameter $\lambda$, polynomial $f$, advserary $\mathcal{A}$, and simulator Sim, consider the following two experiments:
+			\right]\le \negl{(\lambda)}\]
+			\item \textbf{Zero Knowledge} For security parameter $\lambda$, polynomial $f$, advserary $\mathcal{A}$, and simulator $\S$, consider the following two experiments:
 				\begin{align*}
 					\begin{minipage}{.5\linewidth}
 						$\mathsf{Real}_{\A, f}(1^\lambda)$:
@@ -48,7 +46,7 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 					\end{minipage}
 					\hspace*{10pt}\vline \hspace*{10pt}
 					\begin{minipage}{.5\linewidth}
-						$\mathsf{Ideal}_{\A, Sim}(1^\lambda)$:
+						$\mathsf{Ideal}_{\A, \S}(1^\lambda)$:
 						\begin{enumerate}
 							\item $(\comm, \pp, \vp, \sigma) \leftarrow \mathsf{Sim}(1^\lambda, \ell, d)$
 							\item $k \leftarrow \A(1^\lambda, \comm, \vp)$
@@ -62,8 +60,11 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 						\end{enumerate}
 					\end{minipage}
 				\end{align*}
-		\end{enumerate}
-\end{framed}
+				For any PPT adversary $\A$ and all polynomial $f\in\F$, there exists simulator $\S$ such that
+				\[
+				|\Pr[\mathsf{Real}_{\A, f}(1^\lambda)=1] - \Pr[\mathsf{Ideal}_{\A, \S}(1^\lambda)=1]|\le \negl(\lambda).
+				\]
+\end{itemize}
 
 
 
