@@ -21,15 +21,32 @@ void zk_verifier::read_circuit(const char *path)
 	fscanf(circuit_in, "%d", &d);
 	int n;
 	C.circuit = new layer[d + 1];
-	C.total_depth = d;
+	C.total_depth = d + 1;
 	int max_bit_length = -1;
-	for(int i = 0; i < d; ++i)
+	for(int i = 1; i <= d; ++i)
 	{
 		fscanf(circuit_in, "%d", &n);
-		if(n == 1)
-			C.circuit[i].gates = new gate[2];
+		if(i != 1)
+		{
+			if(n == 1)
+				C.circuit[i].gates = new gate[2];
+			else
+				C.circuit[i].gates = new gate[n];
+		}
 		else
-			C.circuit[i].gates = new gate[n];
+		{
+			if(n == 1)
+			{
+				C.circuit[0].gates = new gate[2];
+				C.circuit[1].gates = new gate[2];
+			}
+			else
+			{
+				C.circuit[0].gates = new gate[n];
+				C.circuit[1].gates = new gate[n];
+			}
+		}
+		
 		int max_gate = -1;
 		int previous_g = -1;
 		for(int j = 0; j < n; ++j)
@@ -42,7 +59,14 @@ void zk_verifier::read_circuit(const char *path)
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
 			}
 			previous_g = g;
-			C.circuit[i].gates[g] = gate(ty, u, v);
+			if(i != 1)
+				C.circuit[i].gates[g] = gate(ty, u, v);
+			else
+			{
+				assert(ty == 2 || ty == 3);
+				C.circuit[1].gates[g] = gate(4, g, 0);
+				C.circuit[0].gates[g] = gate(ty, u, v);
+			}
 		}
 		max_gate = previous_g;
 		int cnt = 0;
@@ -66,12 +90,24 @@ void zk_verifier::read_circuit(const char *path)
 		if(n == 1)
 		{
 			//add a dummy gate to avoid ill-defined layer.
-			C.circuit[i].gates[max_gate] = gate(2, 0, 0);
-			C.circuit[i].bit_length = cnt;
+			if(i != 1)
+			{
+				C.circuit[i].gates[max_gate] = gate(2, 0, 0);
+				C.circuit[i].bit_length = cnt;
+			}
+			else
+			{
+				C.circuit[0].gates[max_gate] = gate(2, 0, 0);
+				C.circuit[0].bit_length = cnt;
+				C.circuit[1].gates[max_gate] = gate(4, 1, 0);
+				C.circuit[1].bit_length = cnt;
+			}
 		}
 		else
 		{
 			C.circuit[i].bit_length = cnt - 1;
+			if(i == 1)
+				C.circuit[0].bit_length = cnt - 1;
 		}
 		fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
 		if(C.circuit[i].bit_length > max_bit_length)
@@ -148,6 +184,19 @@ prime_field::field_element zk_verifier::mult(int depth)
 	if(ret.value < 0)
 		ret.value = ret.value + prime_field::mod;
 	return ret;
+}
+
+prime_field::field_element zk_verifier::direct_relay(int depth, prime_field::field_element *r_g, prime_field::field_element *r_u)
+{
+	if(depth != 1)
+		return prime_field::field_element(0);
+	else
+	{
+		prime_field::field_element ret = prime_field::field_element(1);
+		for(int i = 0; i < C.circuit[depth].bit_length; ++i)
+			ret = ret * (prime_field::field_element(1) - r_g[i] - r_u[i]);
+		return ret;
+	}
 }
 
 void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_field::field_element beta,
@@ -376,7 +425,6 @@ bool zk_verifier::verify()
 
 		std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
 		std::cerr << "	Time: " << time_span.count() << std::endl;
-		
 		std::cerr << "Bound v start" << std::endl;
 		t0 = std::chrono::high_resolution_clock::now();
 		p -> sumcheck_phase2_init(previous_random, r_u, one_minus_r_u);
@@ -414,6 +462,7 @@ bool zk_verifier::verify()
 				alpha_beta_sum = poly.eval(r_v[j]);
 			}
 		}
+	
 		//Add one more round for maskR
 		//quadratic_poly poly p->sumcheck_finalroundR(previous_random, C.current[i - 1].bit_length);
 
@@ -429,8 +478,8 @@ bool zk_verifier::verify()
 		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
 		auto mult_value = mult(i);
 		auto add_value = add(i);
-		
-		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
+		auto direct_relay_value = alpha * direct_relay(i, r_0, r_u) + beta * direct_relay(i, r_1, r_u);
+		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v + direct_relay_value * v_u);
 
 		if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 		{
@@ -488,7 +537,7 @@ bool zk_verifier::verify()
 		maskpoly_value.value = prime_field::u512b(maskpoly_value_mpz.get_str().c_str(), maskpoly_value_mpz.get_str().length(), 10);
 		maskRg1_value.value = prime_field::u512b(maskRg1_value_mpz.get_str().c_str(), maskRg1_value_mpz.get_str().length(), 10);
 		maskRg2_value.value = prime_field::u512b(maskRg2_value_mpz.get_str().c_str(), maskRg2_value_mpz.get_str().length(), 10);
-		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value)
+		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value + direct_relay_value * v_u)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
@@ -514,10 +563,6 @@ bool zk_verifier::verify()
 		one_minus_r_0 = one_minus_r_u;
 		one_minus_r_1 = one_minus_r_v;
 	}
-
-	//merge two vpd into one: add a layer of direct relay gates
-
-
 
 	//post sumcheck
 

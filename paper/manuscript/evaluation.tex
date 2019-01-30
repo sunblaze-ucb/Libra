@@ -2,9 +2,7 @@
 
 \section{Implementations and Evaluations}\label{sec:eval}
 
-
-
-\textbf{Settings.} We use C++ to implement our zero knowledge protocol including circuit generator, zk-GKR and zk-VPD. Besides, we write a new large integer class named u512 combined with GMP\cite{GNU} for field arithmetic. For the binary pairing, we use the ate-pairing\cite{ate-pairing} library on a 254-bit elliptic curve.\\
+\textbf{Settings.} We use C++ to implement our zero knowledge protocol including circuit generator, GKR and zk-VPD. Besides, we write a new large integer class named u512 combined with GMP\cite{GNU} for field arithmetic. For the binary pairing, we use the ate-pairing\cite{ate-pairing} library on a 254-bit elliptic curve.\\
 We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of RAM and an Intel Xeon E5-2686v4 CPU with eight 2.3GHz virtual cores. Our implementations are not parallelized and only use a single CPU core.\\
 
 \paragraph{Key generation with lookup tables.}
@@ -12,11 +10,37 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 \paragraph{More gate types with no overhead.}
 
 \subsection{Improvements on GKR protocols}\label{subsec:expGKR}
-\paragraph{Methodology.}
-
-
+\paragraph{Methodology.} In the section, we would compare our GKR system with previous various GKR system to verify the optimal prove time in practice. In order to obtain the unbiased result, we reimplement all of these GKR systems in C++ with the same C++ library.
+\begin{itemize}
+	\item Regular circuit
+	\item Single-instruction multi data 
+	\item Multi-instruction multi data 
+	\item Generic circuit
+\end{itemize}
+\paragraph{Benchmarks.} We evaluate all of these systems on several benchmarks below. Considering some of these systems' efficiency only hold on suitable circuits, we choose corresponding functions subject to these properties. 
+ \begin{itemize}
+	\item
+	\textbf{Matrix multiplication} means $\mathbb{P}$ proves to $\mathbb{V}$ that it knows two matrics whose product equals the public input. It is a basic function to test on the arithmetic cuicuit and the depth of the circuit is very small. We evaluate this function for matric of different sizes from 16x16 to 128x128. 
+	\item
+	\textbf{Image scaling} forces $\mathbb{P}$ to prove to $\mathbb{V}$ a low-definition image is a scaled version of a high-definition image. And we use a standard and classic image transformation method called Lanczos resampling\cite{Lanczos} to extend the picture. It uses the convolution of input image and windowed kernel function to produce the output pixels. And we use convolutional kernel function:
+	\begin{equation}
+	k(x)=\left\{
+	\begin{aligned}
+	&sinc(x)/sinc(ax), &\text{if} -a < x < a\\
+	&0, &\text{otherwise}\\
+	\end{aligned}
+	\right.
+	\end{equation}
+	Where $a$ is the parameter and $sinc(x) = sin(x)/x$. This function is data parallel where each sub-AC computes the same function to generate one pixel of the output image. We evaluate 4x to 256x scaling function on various sizes of pixels.
+	\item
+	\textbf{Image scaling of different parameters} is very similar to the previous scaling. The only difference is that the parameter of the kernal function changes with window moves.
+	So sub-ACs are still parallel but do not compute the same function. We evaluate the function with the same size of image scaling.
+	\item
+	\textbf{Random circuit} is an arithmatic circuit with depth three and constant gates every layer. And we randomly sample the type of each gate, input value and the connection between adjacent circuit layers. We evaluate the random circuits of varying numbers of gates per layer from $2^{10}$ to $2^{20}$.
+\end{itemize}
+\paragraph{Results.} As all of these systems implement GKR protocol, proof size and verification time are exactly the same. Therefore, we only need to focus on the prove time of them. Experimental results are shown in \figurename{??} and \tablename{??}. It is obvious that our optimal prove time GKR beats all previous protocol for each test.
 \subsection{Comparing to Other ZKP Schemes}\label{subsec:expZKP}
-\textbf{Baselines.} We compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties like hyrax\cite{hyrax}, Ligero\cite{ligero}, Bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.
+\textbf{Baselines.} In this section, we compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties including Hyrax\cite{hyrax}, Ligero\cite{ligero}, Bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.
 \begin{itemize}
 \item
 \textbf{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verify time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run Hyrax under the same setting of our system.
@@ -27,20 +51,12 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 \item
 \textbf{libSTARK:} we report on the author's C++ implementation.
 \item
-\textbf{libSNARK:} we report on the author's C++ implementation.
+\textbf{libSNARK:} we download their open source library and run their system on the same environment.
 \end{itemize}
-\paragraph{Benchmarks.} We evaluate \name{}, Hyrax, Bulletproofs, Ligero, libSNARK and libSTARK on several benchmarks below. Considering various properties of different systems and some constrains on implementation(\ie we do not have the sourse code of some systems), for each benchmark, we only evaluate the systems that is senseful and suitable for the benchmark.\\
+\paragraph{Benchmarks.} We evaluate \name{}, Hyrax, Bulletproofs, Ligero, libSNARK and libSTARK on all previous mentioned benchmarks expect image scaling with different parameter. In addition, we also evaluate these systems on Merkle Tree\cite{merkletree}. Considering various properties of different systems and some constrains on implementation(\ie we do not have the sourse code of some systems), for each benchmark, we only evaluate the systems that is senseful and suitable for this benchmark.
 \begin{itemize}
 	\item
-	\textbf{Matrix multiplication} is a basic function to test on the arithmetic cuicuit. $\mathbb{P}$ proves to $\mathbb{V}$ that it knows two matrics whose product equals the public input. We evaluate this function for different sizes from 16x16 to 128x128 matrics on \name and other systems.  
-	\item
-	\textbf{Image scaling} means $\mathbb{P}$ needs to prove to $\mathbb{V}$ a low-definition image is a scaled version of a high-definition image. And we use a standard and classic image transformation method called Lanczos resampling\cite{Lanczos} to scale the picture. In Lanczos resampling, it uses the convolution of the input image to produce the output pixels. We choose this function as a benchmark since it is data parallel where sub-ACs for adjacent pixels must share inputs from the original high-definition picture. We evaluate the scaling function from 4x to 256x of various size of pixels on \name and other systems.
-	\item
-	\textbf{Image scaling of different functions} is very similar to the previous scaling. The only difference is that the convolution function for every pixel is not the same, so it is still ... but ... We evaluate the function with the same size of previous scaling on \name and other systems.
-	\item
-	\textbf{Merkle tree} means $\mathbb{P}$ proves to $\mathbb{V}$ it knows the value of the leaves of a Merkle tree\cite{merkletree} that computes the public root's value\cite{blum1994checking}. Same as the previous work, we use SHA-256 for the hash function. Besides, each sub-computation is one instance of the hash function which makes it data parallel. Therefore, if the Merkle tree has $M$ leaves, then we need $2M - 1$ sub-computations. We evaluate this function of varying number of leaves on \name and other systems.
-	\item
-	\textbf{Random circuit} is a circuit with random circuit structure and random input. We evaluate the random circuits of different sizes from .. to .. for \name and other systems.
+	\textbf{Merkle tree} means $\mathbb{P}$ proves to $\mathbb{V}$ it knows the value of the leaves of a Merkle tree\cite{merkletree} that computes the public root's value\cite{blum1994checking}. Same as the previous work, we use SHA-256 for the hash function. Besides, each sub-computation is one instance of the hash function which makes it data parallel. Therefore, if the Merkle tree has $M$ leaves, then we need $2M - 1$ sub-computations. We evaluate this function of varying number of leaves from 16 to 256.
 \end{itemize}
 \paragraph{Methodology.} For each benchmarks, we construct the corresponding arithmetic circuits of different sizes. Then we feed the circuit as the input into these zero knowledge systems. These systems would generate the proof and verify the proof itself. We measure the runtime using standard system clock.\\   
 \paragraph{Experimental results.} All of experimental results are summarized using figures and tables. We would analyse the consequence from four perspectives: prove time, verification time, proof size and memory consumption.
