@@ -73,6 +73,10 @@ prime_field::field_element* prover::evaluate()
 			{
 				circuit_value[i][g] = prime_field::field_element(u);
 			}
+			else if(ty == 4)
+			{
+				circuit_value[i][g] = circuit_value[i - 1][u];
+			}
 			else
 			{
 				assert(false);
@@ -214,6 +218,12 @@ void prover::sumcheck_phase1_init()
 		if(C.circuit[sumcheck_layer_id].gates[i].ty == 1) //mult gate
 		{
 			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
+		}
+		if(C.circuit[sumcheck_layer_id].gates[i].ty == 4) //direct relay gate
+		{
+			auto tmp = (beta_g_r0_fhalf[u & mask_fhalf].value * beta_g_r0_shalf[u >> first_half].value 
+					  + beta_g_r1_fhalf[u & mask_fhalf].value * beta_g_r1_shalf[u >> first_half].value) % prime_field::mod;
+			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
 		}
 	}
 	

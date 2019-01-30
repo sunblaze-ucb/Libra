@@ -25,6 +25,7 @@ public:
 	prime_field::field_element mult(int);
 	prime_field::field_element add(int);
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, int, int);
+	prime_field::field_element direct_relay(int depth, prime_field::field_element *r_g, prime_field::field_element *r_u);
 	void read_circuit_from_string(char*);
 };
 

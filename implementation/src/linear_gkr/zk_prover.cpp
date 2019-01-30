@@ -93,6 +93,10 @@ prime_field::field_element* zk_prover::evaluate()
 			{
 				circuit_value[i][g] = prime_field::field_element(u);
 			}
+			else if(ty == 4)
+			{
+				circuit_value[i][g] = circuit_value[i - 1][u];
+			}
 			else
 			{
 				assert(false);
@@ -137,8 +141,9 @@ vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree)
 
 std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_commit(int input_bit_length)
 {
-	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	input_vpd::KeyGen(input_bit_length);
+	//no key gen time
+	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	std::vector<bn::Ec1> ret, ret2;
 	ret.resize(2);
 	ret2.resize(2);
@@ -440,7 +445,7 @@ void zk_prover::sumcheck_phase1_init()
 		if(C.circuit[sumcheck_layer_id].gates[i].ty == 0) //add gate
 		{
 			auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
-							 + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+					  + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
 			addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
 			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
 		}
@@ -448,8 +453,14 @@ void zk_prover::sumcheck_phase1_init()
 		{
 		//	add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
 			auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
-							 + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+					  + beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
 			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
+		}
+		if(C.circuit[sumcheck_layer_id].gates[i].ty == 4) //direct relay gate
+		{
+			auto tmp = (beta_g_r0_fhalf[u & mask_fhalf].value * beta_g_r0_shalf[u >> first_half].value 
+					  + beta_g_r1_fhalf[u & mask_fhalf].value * beta_g_r1_shalf[u >> first_half].value) % prime_field::mod;
+			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
 		}
 	}
 	

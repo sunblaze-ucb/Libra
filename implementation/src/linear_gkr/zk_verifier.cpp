@@ -194,7 +194,7 @@ prime_field::field_element zk_verifier::direct_relay(int depth, prime_field::fie
 	{
 		prime_field::field_element ret = prime_field::field_element(1);
 		for(int i = 0; i < C.circuit[depth].bit_length; ++i)
-			ret = ret * (prime_field::field_element(1) - r_g[i] - r_u[i]);
+			ret = ret * (prime_field::field_element(1) - r_g[i] - r_u[i] + prime_field::field_element(2) * r_g[i] * r_u[i]);
 		return ret;
 	}
 }
@@ -347,6 +347,7 @@ bool zk_verifier::verify()
 
 	prime_field::field_element alpha_beta_sum = a_0; //+ a_1
 
+	prime_field::field_element direct_relay_value;
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
@@ -370,7 +371,7 @@ bool zk_verifier::verify()
 		//next level random
 		auto r_u = generate_randomness(C.circuit[i - 1].bit_length);
 		auto r_v = generate_randomness(C.circuit[i - 1].bit_length);
-
+		direct_relay_value = alpha * direct_relay(i, r_0, r_u) + beta * direct_relay(i, r_1, r_u);
 		auto r_c = generate_randomness(1);
 		prime_field::field_element *one_minus_r_u, *one_minus_r_v;
 		one_minus_r_u = new prime_field::field_element[C.circuit[i - 1].bit_length];
@@ -387,7 +388,7 @@ bool zk_verifier::verify()
 			if(j == C.circuit[i - 1].bit_length - 1){
 				quintuple_poly poly = p->sumcheck_phase1_updatelastbit(previous_random, j);
 				previous_random = r_u[j];
-			
+
 
 				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
 				{ 
@@ -404,7 +405,6 @@ bool zk_verifier::verify()
 
 			else{
 				quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
-		
 				previous_random = r_u[j];
 			
 
@@ -431,10 +431,13 @@ bool zk_verifier::verify()
 		previous_random = prime_field::field_element(0);
 		for(int j = 0; j < C.circuit[i - 1].bit_length; ++j)
 		{
+			if(i == 1)
+				r_v[j] = prime_field::field_element(0);
 			if(j == C.circuit[i - 1].bit_length - 1){
 				quintuple_poly poly = p -> sumcheck_phase2_updatelastbit(previous_random, j);
+				poly.f = poly.f;
 				previous_random = r_v[j];
-				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+				if(poly.eval(0) + poly.eval(1) + direct_relay_value * p -> v_u != alpha_beta_sum)
 				{
 					fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d\n", i, j);
 					return false;
@@ -443,14 +446,15 @@ bool zk_verifier::verify()
 				{
 					
 				}
-				alpha_beta_sum = poly.eval(r_v[j]);
+				alpha_beta_sum = poly.eval(r_v[j]) + direct_relay_value * p -> v_u;
 			}
 			else
 			{
 				quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
+				poly.c = poly.c;
 			
 				previous_random = r_v[j];
-				if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+				if(poly.eval(0) + poly.eval(1) + direct_relay_value * p -> v_u != alpha_beta_sum)
 				{
 					fprintf(stderr, "Verification fail, phase2, circuit level %d, current bit %d\n", i, j);
 					return false;
@@ -459,7 +463,7 @@ bool zk_verifier::verify()
 				{
 					
 				}
-				alpha_beta_sum = poly.eval(r_v[j]);
+				alpha_beta_sum = poly.eval(r_v[j]) + direct_relay_value * p -> v_u;
 			}
 		}
 	
@@ -478,15 +482,16 @@ bool zk_verifier::verify()
 		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
 		auto mult_value = mult(i);
 		auto add_value = add(i);
-		auto direct_relay_value = alpha * direct_relay(i, r_0, r_u) + beta * direct_relay(i, r_1, r_u);
-		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v + direct_relay_value * v_u);
+		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
 
-		if(poly.eval(0) + poly.eval(1) != alpha_beta_sum)
+		if(poly.eval(0) + poly.eval(1) + direct_relay_value * v_u != alpha_beta_sum)
 		{
 			fprintf(stderr, "Verification fail, phase2, lastbit for c\n");
 			return false;
 		}
-		alpha_beta_sum = poly.eval(r_c[0]);
+		if(i == 1)
+			r_c[0] = prime_field::field_element(0);
+		alpha_beta_sum = poly.eval(r_c[0]) + direct_relay_value * p -> v_u;
 
 		mpz_class maskRg1_value_mpz, maskRg2_value_mpz;
 		std::vector<mpz_class> r;
@@ -551,9 +556,10 @@ bool zk_verifier::verify()
 		beta = tmp_beta[0];
 		delete[] tmp_alpha;
 		delete[] tmp_beta;
-
-		alpha_beta_sum = alpha * v_u + beta * v_v;
-
+		if(i != 1)
+			alpha_beta_sum = alpha * v_u + beta * v_v;
+		else
+			alpha_beta_sum = v_u;
 		delete[] r_0;
 		delete[] r_1;
 		delete[] one_minus_r_0;
@@ -566,7 +572,7 @@ bool zk_verifier::verify()
 
 	//post sumcheck
 
-	prime_field::field_element input_0, input_1;
+	prime_field::field_element input_0;//, input_1;
 	
 	std::vector<mpz_class> r_0_mpz, r_1_mpz;
 	for(int i = 0; i< C.circuit[0].bit_length; ++i)
@@ -578,28 +584,28 @@ bool zk_verifier::verify()
 
 	input_0_mpz = 0, input_1_mpz = 0;
 	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
-	auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz, p -> Zv.to_gmp_class());
+	//auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz, p -> Zv.to_gmp_class());
 
 	bool input_0_verify = input_vpd::verify(r_0_mpz, digest_input.first[0], digest_input.second[0], p -> Zu.to_gmp_class(), input_0_mpz, witnesses_0.first, witnesses_0.second);
-	bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input.first[0], digest_input.second[0], p -> Zv.to_gmp_class(), input_1_mpz, witnesses_1.first, witnesses_1.second);
-	if(!(input_0_verify & input_1_verify))
+	//bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input.first[0], digest_input.second[0], p -> Zv.to_gmp_class(), input_1_mpz, witnesses_1.first, witnesses_1.second);
+	if(!(input_0_verify))
 	{
 		fprintf(stderr, "Verification fail, input vpd.\n");
 		return false;
 	}
 
 	input_0 = input_0 + p->Zu * p->sumRc.eval(p->preu1);
-	input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
+	//input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
 
-	auto is0 = input_0_mpz.get_str(), is1 = input_1_mpz.get_str();
+	auto is0 = input_0_mpz.get_str();//, is1 = input_1_mpz.get_str();
 	input_0.value = prime_field::u512b(is0.c_str(), is0.length(), 10);
-	input_1.value = prime_field::u512b(is1.c_str(), is1.length(), 10);
+	//input_1.value = prime_field::u512b(is1.c_str(), is1.length(), 10);
 
 	delete[] r_0;
 	delete[] r_1;
 	delete[] one_minus_r_0;
 	delete[] one_minus_r_1;
-	if(alpha_beta_sum != input_0 * alpha + input_1 * beta)
+	if(alpha_beta_sum != input_0)// + input_1 * beta)
 	{
 		fprintf(stderr, "Verification fail, final input check fail.\n");
 		return false;

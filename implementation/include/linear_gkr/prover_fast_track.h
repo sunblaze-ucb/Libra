@@ -37,6 +37,7 @@ public:
 		const prime_field::field_element &, const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, prime_field::field_element*);
 	void sumcheck_phase1_init();
 	void sumcheck_phase2_init(prime_field::field_element, const prime_field::field_element*, const prime_field::field_element*);
+	
 	quadratic_poly sumcheck_phase1_update(prime_field::field_element, int);
 	quadratic_poly sumcheck_phase2_update(prime_field::field_element, int);
 	prime_field::field_element V_res(const prime_field::field_element*, const prime_field::field_element*, const prime_field::field_element*, int, int);
