@@ -3,6 +3,7 @@
 \subsection{Zero-Knowledge Verifiable Polynomial Delegation Scheme}
 \label{subsec::zkvpd}
 
+\begin{definition}\label{def::zkvpd}
 Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, \pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that
 
 \begin{itemize}
@@ -66,7 +67,8 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 				\]
 \end{itemize}
 
-
+	
+\end{definition}
 
 \ignore{
 	Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for short) is a important building block for our zero knowledge construction. We will use the construction from Zhang et al. \cite{zkvpd}.
