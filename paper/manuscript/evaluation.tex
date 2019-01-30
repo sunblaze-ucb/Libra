@@ -10,12 +10,12 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 \paragraph{More gate types with no overhead.}
 
 \subsection{Improvements on GKR protocols}\label{subsec:expGKR}
-\paragraph{Methodology.} In the section, we would compare our GKR system with previous various GKR system to verify the optimal prove time in practice. In order to obtain the unbiased result, we reimplement all of these GKR systems in C++ with the same C++ library.
+\paragraph{Methodology.} In the section, we would compare our GKR system with previous various GKR system to verify the optimal prove time in practice. In order to obtain the unbiased result, we reimplement all of these GKR systems in C++ with the same C++ library. 
 \begin{itemize}
-	\item Regular circuit
-	\item Single-instruction multi data 
-	\item Multi-instruction multi data 
-	\item Generic circuit
+	\item Regular circuit is the circuit that has a very good structure. More general, there are two map funtions that take the arbitrary gate as the input and output the corresponding two input gates of this gate. The prove time could be improved to linear of the circiut\cite{JT_Thesis}.
+	\item Single-instruction multi-data circuit means the circuit $C$ could be divided into several parallel copies of sub circuit $C'$, whose maximum number of gates are at any layer is $S'$. Suppose the total number of copies is $B$, then the prove time could be $C\log(S')$ proposed by Zhang \etal \cite{zhang2017vsql}, then improved to $C + C'\log S'$ by Wahby \etal \cite{wahby2017full}.   
+	\item Multi-instruction multi-data circuit is similar to the above circuit but its parallel copies are not the same. The prove time of this circuit maintains $C\log S'$.
+	\item Generic circuit is the general layered arithmetic circuit, which is equivalent to the Turing machine. The previous best prove time of generic cuicuit is $C\log C$, where $|C|$ is the size of the circuit\cite{CMT}.
 \end{itemize}
 \paragraph{Benchmarks.} We evaluate all of these systems on several benchmarks below. Considering some of these systems' efficiency only hold on suitable circuits, we choose corresponding functions subject to these properties. 
  \begin{itemize}
