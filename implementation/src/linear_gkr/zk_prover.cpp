@@ -783,25 +783,12 @@ quadratic_poly zk_prover::sumcheck_phase2_update(prime_field::field_element prev
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
-		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
-		if(true)
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
-									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value) % prime_field::mod;
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value) % prime_field::mod;
-		}
-		else
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
-									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value);
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value);
-		}
+		ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+		ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
+									+	add_mult_sum[i].b.value * V_mult_add[i].a.value
+									+ addV_array[i].a.value) % prime_field::mod;
+		ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									+ addV_array[i].b.value) % prime_field::mod;
 	}
 
 	total_uv >>= 1;
@@ -882,25 +869,12 @@ quintuple_poly zk_prover::sumcheck_phase2_updatelastbit(prime_field::field_eleme
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
-		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
-		if(true)
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
-									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value) % prime_field::mod;
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value) % prime_field::mod;
-		}
-		else
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
-									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value);
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value);
-		}
+		ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+		ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
+									+	add_mult_sum[i].b.value * V_mult_add[i].a.value
+									+ addV_array[i].a.value) % prime_field::mod;
+		ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									+ addV_array[i].b.value) % prime_field::mod;
 	}
 
 	total_uv >>= 1;
