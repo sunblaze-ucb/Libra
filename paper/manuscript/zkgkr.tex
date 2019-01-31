@@ -272,7 +272,7 @@ Set $\pi = (\{g^{q_i(t_i\ldots, t_\ell)+r_it_{\ell+1}}, g^{\alpha(q_i(t_i\ldots,
 
 
 \begin{theorem}\label{thm:zkvpd}
-	Protocol~\ref{??} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
+	Protocol~\ref{??} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkvpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
 \end{theorem}
 
 The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit. Using the same algorithms proposed in in~\cite{vram,zkvpd}, the running time of $\KeyGen$, $\Commit$ and $\Open$ is $O(2^\ell)$, $\Verify$ takes $O(\ell)$ time and the proof size is $O(\ell)$.
@@ -283,9 +283,26 @@ Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{s
 
 \subsection{Putting Everything Together}\label{subsec::zkall}
 
-In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,wahby2018doubly,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Protocol~\ref{??}, which combines our zero knowledge GKR and zkVPD protocols.
+In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,wahby2018doubly,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Protocol~\ref{??}, which combines our zero knowledge GKR and zkVPD protocols. Similar to the protocols in~\cite{zkvpd,hyrax}, Step 6 and 7 are to check that $\P$ indeed uses $x$ as the input to the circuit.
 
-\yupeng{A figure for the whole scheme.}
+\begin{protocol}
+	Let $\lambda$ be the security parameter, $\F$ be a prime field, $n$ be an upper bound on input size, and $S$ be an upper bound on circuit size. We use $\VPD_1, \VPD_2, \VPD_3$ to denote the zkVPD protocols for input layer, masking polynomials $g_i$ and $R_i$ described in Protocol~\ref{??}.
+	\begin{itemize}
+		\item $\mathcal{G}(1^\lambda, n, S)$: run $(\pp_1,\vp_1)\leftarrow\VPD_1.\KeyGen(1^\lambda, \log n)$, $(\pp_2,\vp_2)\leftarrow\VPD_2.\KeyGen(1^\lambda, \log S)$, $(\pp_3,\vp_3)\leftarrow\VPD_3.\KeyGen(1^\lambda)$. Output $\pk = (\pp_1, \pp_2, \pp_3)$ and $\vk = (\vp_1, \vp_2, \vp_3)$.
+		
+		\item $\langle\P(\pk,w), \V(\vk)\rangle(x)$: Let $C$ be a layered arithmetic circuit over $\F$ with $d$ layers, input $x$ and witness $w$ such that $|x|+|w|\le n$, $|C|\le S$ and $C(x;w) =1$. Without loss of generality, assume $|w|/|x| = 2^m -1$ for some $m\in\N$.
+		\begin{enumerate}
+			\item $\P$ selects a random bivariate polynomial $R_d$ with variable degree 2 and commits to the input of $C$ by sending $\comm_d\leftarrow\VPD_1.\Commit(\tV_d, r_V, R_d, r_R, \pp_1)$ to $\V$, where $\tV_d$ is the multilinear extension of array $(x;w)$.
+			\item $\V$ runs $\VPD_1.\CheckComm(\comm_d,\vp_1)$. If it outputs $\reject$, $\V$ aborts and outputs $\reject$.  
+			\item $\P$ and $\V$ execute Step 1-5 of the zero knowledge GKR protocol in Protocol~\ref{??}, with the zkVPDs instantiated with $\VPD_2$ and $\VPD_3$. If Protocol~\ref{??} rejects, $\V$ outputs $\reject$ and aborts. Otherwise, by the end of this step, $\V$ receives two claims of $\dot{V}_d$ at $u^{(d)}$ and $v^{(d)}$.
+			\item $\P$ runs $(y_1,\pi_1)\leftarrow\VPD_1.\Open(\tV_d, r_V, R_d, r_R, Z, u^{(d)},\pp_1)$,  $(y_2,\pi_2)\leftarrow\VPD_1.\Open(\tV_d, r_V, R_d, r_R, Z, v^{(d)},\pp_1)$ and sends $y_1,\pi_1,y_2,\pi_2$ to $\V$.
+			\item $\V$ runs $\Verify(\comm_d,u^{(d)},y_1,\pi_1,Z,\vp_1)$ and $\Verify(\comm_d,v^{(d)},y_2,\pi_2,Z,\vp_1)$ and output $\reject$ if either check fails. Otherwise, $\V$ checks $\dot{V}_d(u^{(d)}) = y_1$ and $\dot{V}_d(v^{(d)}) = y_2$, and rejects if either fails.
+			\item $\V$ computes the multilinear extension of input $x$ at a random point $r_x\in\F^{\log |x|}$ and sends $r_x$ to $\P$.
+			\item $\P$ pads $r_x$ to $r'_x\in\F^{\log |x|}\times 0^{\log |w|}$ with $\log |w|$ 0s and sends $\V$ $(y_x,\pi_x)\leftarrow\VPD_1.\Open(\tV_d, r_V, R_d, r_R, Z, r'_x,\pp_1)$. $\V$ checks $\Verify(\comm_d,r'_x,y_x,\pi_x,Z,\vp_1)$ and $y_x$ equals the evaluation of the multilinear extension on $x$. $\V$ outputs $\reject$ if the checks fail. Otherwise, $\V$ outputs $\accept$.
+		\end{enumerate}
+		
+	\end{itemize}
+\end{protocol}
 
 \begin{theorem}\label{theorem:main}
 	For an input size $n$ and a finite field $\F$, Protocol~\ref{??} is a zero knowledge argument for the relation
