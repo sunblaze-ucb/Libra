@@ -26,6 +26,11 @@ public:
 	prime_field::field_element add(int);
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, int, int);
 	prime_field::field_element direct_relay(int depth, prime_field::field_element *r_g, prime_field::field_element *r_u);
+	prime_field::field_element not_gate(int depth);
+	prime_field::field_element minus_gate(int depth);
+	prime_field::field_element xor_gate(int depth);
+	prime_field::field_element NAAB_gate(int depth);
+	prime_field::field_element sum_gate(int depth);
 	void read_circuit_from_string(char*);
 };
 

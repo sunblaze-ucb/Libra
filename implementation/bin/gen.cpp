@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 			printf("%d ", n);
 			for(int j = 0; j < n; ++j)
 			{
-				printf("%d %d %d %d ", 0, j, j, j);
+				printf("%d %d %d %d ", 8, j, j, 0);
 			}
 			printf("\n");
 		}
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 		printf("%d ", n);
 		for(int j = 0; j < n; ++j)
 		{
-			printf("%d %d %d %d ", 1, j, (j << 1), (j << 1 | 1));
+			printf("%d %d %d %d ", 9, j, (j << 1), (j << 1 | 1));
 		}
 		printf("\n");
 	}
@@ -185,11 +185,93 @@ int main(int argc, char **argv)
 	}
 	else if(mode == 3) //matrix mul with non-expanded input
 	{
-
+		
 	}
 	else if(mode == 4) //matrix mul with both non-expanded input and summation gate
 	{
+		int mat_sz;
+		sscanf(argv[2], "%d", &mat_sz);
 
+		assert(__builtin_popcount(mat_sz) == 1);
+
+		int log_mat_sz = 0;
+		while(mat_sz != (1 << log_mat_sz))
+			log_mat_sz++;
+		
+		//input layer
+		int block_number = mat_sz * mat_sz;
+		int block_size;
+		vector<vector<int> > A, B;
+		A.resize(mat_sz), B.resize(mat_sz);
+
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			A[i].resize(mat_sz);
+			B[i].resize(mat_sz);
+			for(int j = 0; j < mat_sz; ++j)
+				A[i][j] = rand() % 10, B[i][j] = rand() % 10;
+		}
+		//input layer
+		printf("%d\n", 1 + 1 + 1);
+		printf("%d ", mat_sz * mat_sz * 2);
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			for(int j = 0; j < mat_sz; ++j)
+			{
+				printf("%d %d %010d %d ", 3, i * mat_sz + j, A[i][j], 0);
+			}
+		}
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			for(int j = 0; j < mat_sz; ++j)
+			{
+				printf("%d %d %010d %d ", 3, mat_sz * mat_sz + i * mat_sz + j, B[i][j], 0);
+			}
+		}
+		printf("\n");
+
+		//mult
+		printf("%d ", mat_sz * mat_sz * mat_sz);
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			for(int j = 0; j < mat_sz; ++j)
+			{
+				for(int k = 0; k < mat_sz; ++k)
+				{
+					int id = i * mat_sz * mat_sz + j * mat_sz + k;
+					int a = i * k, b = k * j;
+					printf("%d %d %d %d ", 1, id, a, b);
+				}
+			}
+		}
+		printf("\n");
+
+		
+
+		//addition tree
+		printf("%d ", mat_sz * mat_sz);
+		for(int i = 0; i < mat_sz; ++i)
+		{
+			for(int j = 0; j < mat_sz; ++j)
+			{
+				printf("5 %d %d %d ", i * mat_sz + j, i * mat_sz * mat_sz + j * mat_sz, i * mat_sz * mat_sz + j * mat_sz + mat_sz);
+			}
+		}
+	}
+	else if(mode == 5) //addition tree test
+	{
+		int d, w;
+		sscanf(argv[2], "%d", &d);
+		sscanf(argv[3], "%d", &w);
+		printf("%d\n", d);
+		int n = (1 << w);
+		printf("%d ", n);
+		for(int j = 0; j < n; ++j)
+		{
+			printf("%d %d %d %d ", 3, j, 1, 0);
+		}
+		printf("\n");
+		printf("2 5 0 0 0 5 1 0 0\n");
 	}
 	return 0;
 }

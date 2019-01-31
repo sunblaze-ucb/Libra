@@ -77,16 +77,37 @@ prime_field::field_element* prover::evaluate()
 			{
 				circuit_value[i][g] = circuit_value[i - 1][u];
 			}
+			else if(ty == 5)
+			{
+				circuit_value[i][g] = prime_field::field_element(0);
+				for(int k = 0; k < (1 << C.circuit[i - 1].bit_length); ++k)
+					circuit_value[i][g] = circuit_value[i][g] + circuit_value[i - 1][k];
+			}
+			else if(ty == 6)
+			{
+				circuit_value[i][g] = prime_field::field_element(1) - circuit_value[i - 1][u];
+			}
+			else if(ty == 7)
+			{
+				circuit_value[i][g] = circuit_value[i - 1][u] - circuit_value[i - 1][v];
+			}
+			else if(ty == 8)
+			{
+				auto &x = circuit_value[i - 1][u], &y = circuit_value[i - 1][v];
+				circuit_value[i][g] = x + y - prime_field::field_element(2) * x * y;
+			}
+			else if(ty == 9)
+			{
+				auto &x = circuit_value[i - 1][u], &y = circuit_value[i - 1][v];
+				circuit_value[i][g] = y - x * y;
+			}
 			else
 			{
 				assert(false);
 			}
 		}
 	}
-/*
-	//cheating prover test
-	ret[0].second =  prime_field::field_element(111);
-*/
+
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
@@ -125,8 +146,6 @@ void prover::init_array(int max_bit_length)
 	beta_g_r1_shalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_fhalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_shalf = new prime_field::field_element[(1 << half_length)];
-	addV_array_counter = new int[(1 << max_bit_length)];
-	add_mult_sum_counter = new int[(1 << max_bit_length)]; 
 }
 
 void prover::delete_self()
@@ -143,8 +162,6 @@ void prover::delete_self()
 	delete[] beta_g_r1_shalf;
 	delete[] beta_u_fhalf;
 	delete[] beta_u_shalf;
-	delete[] addV_array_counter;
-	delete[] add_mult_sum_counter;
 	for(int i = 0; i < C.total_depth; ++i)
 		delete[] circuit_value[i];
 }
@@ -210,20 +227,76 @@ void prover::sumcheck_phase1_init()
 		int u, v;
 		u = C.circuit[sumcheck_layer_id].gates[i].u;
 		v = C.circuit[sumcheck_layer_id].gates[i].v;
-		if(C.circuit[sumcheck_layer_id].gates[i].ty == 0) //add gate
+		switch(C.circuit[sumcheck_layer_id].gates[i].ty)
 		{
-			addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
-			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + beta_g_sum[i].value) % prime_field::mod;
-		}
-		if(C.circuit[sumcheck_layer_id].gates[i].ty == 1) //mult gate
-		{
-			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * beta_g_sum[i].value) % prime_field::mod;
-		}
-		if(C.circuit[sumcheck_layer_id].gates[i].ty == 4) //direct relay gate
-		{
-			auto tmp = (beta_g_r0_fhalf[u & mask_fhalf].value * beta_g_r0_shalf[u >> first_half].value 
-					  + beta_g_r1_fhalf[u & mask_fhalf].value * beta_g_r1_shalf[u >> first_half].value) % prime_field::mod;
-			add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+			case 0: //add gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
+			case 1: //mult gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
+				break;
+			}
+			case 4: //direct relay gate
+			{
+				auto tmp = (beta_g_r0_fhalf[u & mask_fhalf].value * beta_g_r0_shalf[u >> first_half].value 
+						+ beta_g_r1_fhalf[u & mask_fhalf].value * beta_g_r1_shalf[u >> first_half].value) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
+			case 5: //sum gate
+			{
+				auto tmp = beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+					+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value;
+				for(int j = 0; j < (1 << length_u); ++j)
+				{
+					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp) % prime_field::mod;
+				}
+				break;
+			}
+			case 6: //NOT gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + prime_field::mod - tmp) % prime_field::mod;
+				addV_array[u].b.value = (addV_array[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
+			case 7: //minus gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				addV_array[u].b.value = (addV_array[u].b.value + prime_field::mod - (circuit_value[sumcheck_layer_id - 1][v].value * tmp % prime_field::mod)) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
+			case 8: //XOR gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				addV_array[u].b.value = (addV_array[u].b.value + tmp * circuit_value[sumcheck_layer_id - 1][v].value % prime_field::mod) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp + prime_field::mod - (prime_field::field_element(2).value * circuit_value[sumcheck_layer_id - 1][v].value % prime_field::mod * tmp % prime_field::mod)) % prime_field::mod;
+				break;
+			}
+			case 9: //NAAB gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				addV_array[u].b.value = (addV_array[u].b.value + tmp * circuit_value[sumcheck_layer_id - 1][v].value % prime_field::mod) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + prime_field::mod - (circuit_value[sumcheck_layer_id - 1][v].value * tmp % prime_field::mod)) % prime_field::mod;
+				break;
+			}
+			default:
+			{
+				break;
+			}
 		}
 	}
 	
@@ -265,23 +338,11 @@ quadratic_poly prover::sumcheck_phase1_update(prime_field::field_element previou
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value - add_mult_sum[i].b.value + prime_field::mod) % prime_field::mod;
 
 		}
-		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
-		if(true)
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value) % prime_field::mod;
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value) % prime_field::mod;
-		}
-		else
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value);
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value);
-		}
+		ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+		ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value + add_mult_sum[i].b.value * V_mult_add[i].a.value
+									+ addV_array[i].a.value) % prime_field::mod;
+		ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									+ addV_array[i].b.value) % prime_field::mod;
 	}
 
 	total_uv >>= 1;
@@ -305,7 +366,6 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 {
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	v_u = V_mult_add[0].eval(previous_random);
-//	fprintf(stderr, "v_u %s\n", v_u.to_string(10).c_str());
 
 	int first_half = length_u >> 1, second_half = length_u - first_half;
 
@@ -345,61 +405,89 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 		add_mult_sum[i].b = zero;
 		addV_array[i].a = zero;
 		addV_array[i].b = zero;
-		addV_array_counter[i] = 0;
-		add_mult_sum_counter[i] = 0;
 		V_mult_add[i] = circuit_value[sumcheck_layer_id - 1][i];
 	}
-
+	int first_g_half = (length_g >> 1);
+	int mask_g_fhalf = (1 << (length_g >> 1)) - 1;
 	for(int i = 0; i < total_g; ++i)
 	{
 		int ty = C.circuit[sumcheck_layer_id].gates[i].ty;
 		int u = C.circuit[sumcheck_layer_id].gates[i].u;
 		int v = C.circuit[sumcheck_layer_id].gates[i].v;
-		if(ty == 1) //mult gate
+		switch(ty)
 		{
-			add_mult_sum[v].b.value = add_mult_sum[v].b.value + (beta_g_sum[i].value * beta_u[u].value % prime_field::mod * v_u.value) % prime_field::mod;
-			add_mult_sum_counter[v]++;
-			if(add_mult_sum_counter[v] > 30)
+			case 1: //mult gate
 			{
-				add_mult_sum_counter[v] = 0;
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
+				break;
 			}
-		}
-		if(ty == 0) //add gate
-		{
-			add_mult_sum[v].b.value = (add_mult_sum[v].b.value + beta_g_sum[i].value * beta_u[u].value);
-			addV_array[v].b.value = ((beta_g_sum[i].value * beta_u[u].value % prime_field::mod) * v_u.value + addV_array[v].b.value);
-
-			add_mult_sum_counter[v]++;
-			//if(add_mult_sum_counter[v] > 30)
+			case 0: //add gate
 			{
-				add_mult_sum_counter[v] = 0;
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g * tmp_u);
+				addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value);
+
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
-			}
-
-			addV_array_counter[v]++;
-			//if(addV_array_counter[v] > 30)
-			{
-				addV_array_counter[v] = 0;
 				addV_array[v].b.value = addV_array[v].b.value % prime_field::mod;
+				break;
+			}
+			case 5: //sum gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp_g * v_u.value % prime_field::mod) % prime_field::mod;
+				break;
+			}
+			case 6: //not gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp_g * tmp_u % prime_field::mod + prime_field::mod - tmp_g * tmp_u % prime_field::mod * v_u.value % prime_field::mod) % prime_field::mod;
+				break;
+			}
+			case 7: //minus gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + prime_field::mod - tmp_g * tmp_u % prime_field::mod) % prime_field::mod;
+				addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value) % prime_field::mod;
+				break;
+			}
+			case 8: //xor gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				auto tmp = tmp_g * tmp_u % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod - (prime_field::field_element(2).value * v_u.value) % prime_field::mod * tmp % prime_field::mod) % prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp * v_u.value % prime_field::mod) % prime_field::mod;
+				break;
+			}
+			case 9: //NAAB gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				auto tmp = tmp_g * tmp_u % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod - v_u.value * tmp % prime_field::mod) % prime_field::mod;
+				break;
+			}
+			default:
+			{
+				break;
 			}
 		}
 	}
 
-	for(int i = 0; i < total_uv; ++i)
-	{
-		if(add_mult_sum_counter[i])
-			add_mult_sum[i].b.value = add_mult_sum[i].b.value % prime_field::mod;
-		if(addV_array_counter[i])
-			addV_array[i].b.value = addV_array[i].b.value % prime_field::mod;
-	}
-
-//	for(int i = 0; i < total_uv; ++i)
-//	{
-//		fprintf(stderr, "add %s\n", add_array[i].b.to_string(10).c_str());
-//		fprintf(stderr, "addV %s\n", add_array[i].b.to_string(10).c_str());
-//		fprintf(stderr, "V_mult_add %s\n", add_array[i].b.to_string(10).c_str());
-//	}
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
@@ -437,25 +525,12 @@ quadratic_poly prover::sumcheck_phase2_update(prime_field::field_element previou
 			add_mult_sum[i].a.value = (add_mult_sum[g_one].a.value * previous_random.value + add_mult_sum[g_one].b.value + prime_field::mod - add_mult_sum[i].b.value) % prime_field::mod;
 		}
 
-		//if(i % 8 == 0 || i + 1 == (total_uv >> 1))
-		if(true)
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
-									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value) % prime_field::mod;
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value) % prime_field::mod;
-		}
-		else
-		{
-			ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value);
-			ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
-									  +	add_mult_sum[i].b.value * V_mult_add[i].a.value
-									  + addV_array[i].a.value);
-			ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
-									  + addV_array[i].b.value);
-		}
+		ret.a.value = (ret.a.value + add_mult_sum[i].a.value * V_mult_add[i].a.value) % prime_field::mod;
+		ret.b.value = (ret.b.value + add_mult_sum[i].a.value * V_mult_add[i].b.value
+									+ add_mult_sum[i].b.value * V_mult_add[i].a.value
+									+ addV_array[i].a.value) % prime_field::mod;
+		ret.c.value = (ret.c.value + add_mult_sum[i].b.value * V_mult_add[i].b.value
+									+ addV_array[i].b.value) % prime_field::mod;
 	}
 
 	total_uv >>= 1;

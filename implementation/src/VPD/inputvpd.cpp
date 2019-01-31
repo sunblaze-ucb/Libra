@@ -149,11 +149,11 @@ void KeyGen(int d){
 		}
 		for(int j = 3; j < (1 << multi_scalar_w); ++j)
 		{
-			multi_scalar_g1[i].value[j] = g1 * 0;
+			multi_scalar_g1[i].value[j - 3] = g1 * 0;
 			for(int k = 0; k < multi_scalar_w; ++k)
 			{
 				if((j >> k) & 1)
-					multi_scalar_g1[i].value[j] += scalars[k];
+					multi_scalar_g1[i].value[j - 3] += scalars[k];
 			}
 		}
 	}
@@ -191,7 +191,7 @@ Ec1 multi_scalar_calc(int index, int pub_g1_length, const vector<mpz_class> &sca
 					ret = ret + pub_g1[index * multi_scalar_w + 1];
 				break;
 			default:
-				ret = ret + multi_scalar_g1[index].value[current_scalar];
+				ret = ret + multi_scalar_g1[index].value[current_scalar - 3];
 		}
 	}
 	return ret;

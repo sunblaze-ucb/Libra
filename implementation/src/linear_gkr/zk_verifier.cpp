@@ -54,6 +54,12 @@ void zk_verifier::read_circuit(const char *path)
 			int ty, g;
 			long long u, v;
 			fscanf(circuit_in, "%d%d%lld%lld", &ty, &g, &u, &v);
+			if(ty == 6)
+			{
+				if(v != 0)
+					fprintf(stderr, "WARNING, v!=0 for NOT gate.\n");
+				v = 0;
+			}
 			if(g != previous_g + 1)
 			{
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
@@ -141,7 +147,6 @@ prime_field::field_element zk_verifier::add(int depth)
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 0)
 		{
-		//	ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 			int g_first_half = g & ((1 << first_half_g) - 1);
 			int g_second_half = (g >> first_half_g);
 			int u_first_half = u & ((1 << first_half_uv) - 1);
@@ -177,7 +182,6 @@ prime_field::field_element zk_verifier::mult(int depth)
 			int v_second_half = v >> first_half_uv;
 			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
 						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
-			//ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
 	ret.value = ret.value % prime_field::mod;
@@ -197,6 +201,137 @@ prime_field::field_element zk_verifier::direct_relay(int depth, prime_field::fie
 			ret = ret * (prime_field::field_element(1) - r_g[i] - r_u[i] + prime_field::field_element(2) * r_g[i] * r_u[i]);
 		return ret;
 	}
+}
+
+prime_field::field_element zk_verifier::not_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 6)
+		{
+			assert(v == 0);
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
+		}
+	}
+	return ret;
+}
+
+prime_field::field_element zk_verifier::xor_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 8)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
+		}
+	}
+	return ret;
+}
+
+prime_field::field_element zk_verifier::minus_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 7)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
+		}
+	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
+	return ret;
+}
+
+prime_field::field_element zk_verifier::NAAB_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 9)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]) * (beta_v_first_half[v_first_half] * beta_v_second_half[v_second_half]);
+		}
+	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
+	return ret;
+}
+
+prime_field::field_element zk_verifier::sum_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 5)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
+						(beta_v_first_half[0] * beta_v_second_half[0]);
+		}
+	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
+	return ret;
 }
 
 void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_field::field_element beta,
@@ -482,7 +617,12 @@ bool zk_verifier::verify()
 		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
 		auto mult_value = mult(i);
 		auto add_value = add(i);
-		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v);
+		auto not_value = not_gate(i);
+		auto minus_value = minus_gate(i);
+		auto xor_value = xor_gate(i);
+		auto naab_value = NAAB_gate(i);
+		auto sum_value = sum_gate(i);
+		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u);
 
 		if(poly.eval(0) + poly.eval(1) + direct_relay_value * v_u != alpha_beta_sum)
 		{
@@ -542,7 +682,7 @@ bool zk_verifier::verify()
 		maskpoly_value.value = prime_field::u512b(maskpoly_value_mpz.get_str().c_str(), maskpoly_value_mpz.get_str().length(), 10);
 		maskRg1_value.value = prime_field::u512b(maskRg1_value_mpz.get_str().c_str(), maskRg1_value_mpz.get_str().length(), 10);
 		maskRg2_value.value = prime_field::u512b(maskRg2_value_mpz.get_str().c_str(), maskRg2_value_mpz.get_str().length(), 10);
-		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value + direct_relay_value * v_u)
+		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value + direct_relay_value * v_u)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
@@ -572,7 +712,7 @@ bool zk_verifier::verify()
 
 	//post sumcheck
 
-	prime_field::field_element input_0;//, input_1;
+	prime_field::field_element input_0;
 	
 	std::vector<mpz_class> r_0_mpz, r_1_mpz;
 	for(int i = 0; i< C.circuit[0].bit_length; ++i)
@@ -584,10 +724,8 @@ bool zk_verifier::verify()
 
 	input_0_mpz = 0, input_1_mpz = 0;
 	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
-	//auto witnesses_1 = p -> prove_input(r_1_mpz, input_1_mpz, p -> Zv.to_gmp_class());
-
+	
 	bool input_0_verify = input_vpd::verify(r_0_mpz, digest_input.first[0], digest_input.second[0], p -> Zu.to_gmp_class(), input_0_mpz, witnesses_0.first, witnesses_0.second);
-	//bool input_1_verify = input_vpd::verify(r_1_mpz, digest_input.first[0], digest_input.second[0], p -> Zv.to_gmp_class(), input_1_mpz, witnesses_1.first, witnesses_1.second);
 	if(!(input_0_verify))
 	{
 		fprintf(stderr, "Verification fail, input vpd.\n");
@@ -595,17 +733,15 @@ bool zk_verifier::verify()
 	}
 
 	input_0 = input_0 + p->Zu * p->sumRc.eval(p->preu1);
-	//input_1 = input_1 + p->Zv * p->sumRc.eval(p->prev1);
-
-	auto is0 = input_0_mpz.get_str();//, is1 = input_1_mpz.get_str();
+	
+	auto is0 = input_0_mpz.get_str();
 	input_0.value = prime_field::u512b(is0.c_str(), is0.length(), 10);
-	//input_1.value = prime_field::u512b(is1.c_str(), is1.length(), 10);
-
+	
 	delete[] r_0;
 	delete[] r_1;
 	delete[] one_minus_r_0;
 	delete[] one_minus_r_1;
-	if(alpha_beta_sum != input_0)// + input_1 * beta)
+	if(alpha_beta_sum != input_0)
 	{
 		fprintf(stderr, "Verification fail, final input check fail.\n");
 		return false;
@@ -622,10 +758,6 @@ bool zk_verifier::verify()
 
 void zk_verifier::delete_self()
 {
-	//delete[] beta_g_r0;
-	//delete[] beta_g_r1;
-	//delete[] beta_u;
-	//delete[] beta_v;
 	delete[] beta_g_r0_first_half;
 	delete[] beta_g_r0_second_half;
 	delete[] beta_g_r1_first_half;

@@ -541,6 +541,8 @@ namespace prime_field
 	}
 	field_element field_element::operator - (const field_element &b) const
 	{
+		assert((u512b)mod >= value);
+		assert((u512b)mod >= b.value);
 		field_element ret;
 		if(value >= b.value)
 			ret.value = value - b.value;

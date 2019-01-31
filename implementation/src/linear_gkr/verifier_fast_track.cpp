@@ -51,6 +51,12 @@ void verifier::read_circuit(const char *path)
 			int ty, g;
 			long long u, v;
 			fscanf(circuit_in, "%d%d%lld%lld", &ty, &g, &u, &v);
+			if(ty == 6)
+			{
+				if(v != 0)
+					fprintf(stderr, "WARNING, v!=0 for NOT gate.\n");
+				v = 0;
+			}
 			if(g != previous_g + 1)
 			{
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
@@ -228,6 +234,133 @@ prime_field::field_element verifier::mult(int depth)
 	return ret;
 }
 
+prime_field::field_element verifier::not_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 6)
+		{
+			assert(v == 0);
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+		}
+	}
+	return ret;
+}
+
+prime_field::field_element verifier::xor_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 8)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+		}
+	}
+	return ret;
+}
+
+prime_field::field_element verifier::minus_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 7)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+		}
+	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
+	return ret;
+}
+
+prime_field::field_element verifier::NAAB_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 9)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			int u_first_half = u & ((1 << first_half_uv) - 1);
+			int u_second_half = u >> first_half_uv;
+			int v_first_half = v & ((1 << first_half_uv) - 1);
+			int v_second_half = v >> first_half_uv;
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
+		}
+	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
+	return ret;
+}
+
+prime_field::field_element verifier::sum_gate(int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		if(C.circuit[depth].gates[i].ty == 5)
+		{
+			int g_first_half = g & ((1 << first_half_g) - 1);
+			int g_second_half = (g >> first_half_g);
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * 
+						(beta_v[0]);
+		}
+	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
+	return ret;
+}
+
 void verifier::beta_init(int depth, prime_field::field_element alpha, prime_field::field_element beta,
 	const prime_field::field_element* r_0, const prime_field::field_element* r_1, 
 	const prime_field::field_element* r_u, const prime_field::field_element* r_v, 
@@ -322,11 +455,6 @@ bool verifier::verify()
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-//	for(int i = 0; i < (1 << C.circuit[C.total_depth - 1].bit_length); ++i)
-//	{
-//		fprintf(stderr, "%d %s\n", i, result[i].to_string(10).c_str());
-//	}
-//	fprintf(stderr, "\n");
 
 	prime_field::field_element alpha, beta;
 	alpha.value = 1;
@@ -388,13 +516,8 @@ bool verifier::verify()
 			}
 			else
 			{
-			//	fprintf(stderr, "Verification Pass, phase1, circuit %d, current bit %d\n", i, j);
 			}
 			alpha_beta_sum = poly.eval(r_u[j]);
-		//	fprintf(stderr, "r_u[%d] = %s\n", j, r_u[j].to_string());
-		//	fprintf(stderr, "alpha_beta_sum = %s\n", alpha_beta_sum.to_string());
-		//	fprintf(stderr, "0_val = %s\n", poly.eval(prime_field::field_element(0)).to_string());
-		//	fprintf(stderr, "1_val = %s\n", poly.eval(prime_field::field_element(1)).to_string());
 		}
 		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -418,7 +541,6 @@ bool verifier::verify()
 			}
 			else
 			{
-			//	fprintf(stderr, "Verification Pass, phase2, circuit level %d, current bit %d\n", i, j);
 			}
 			alpha_beta_sum = poly.eval(r_v[j]) + direct_relay_value * p -> v_u;
 		}
@@ -430,18 +552,16 @@ bool verifier::verify()
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;
 
-//		std::cout << "v_u = " << v_u.to_string(10) << std::endl;
-//		std::cout << "v_v = " << v_v.to_string(10) << std::endl;
-
-//		std::cout << "alpha = " << alpha.to_string(10) << std::endl;
-//		std::cout << "beta = " << beta.to_string(10) << std::endl;
 		beta_init(i, alpha, beta, r_0, r_1, r_u, r_v, one_minus_r_0, one_minus_r_1, one_minus_r_u, one_minus_r_v);
 		auto mult_value = mult(i);
 		auto add_value = add(i);
-//		std::cout << "mult_value = " << mult_value.to_string(10) << std::endl;
-//		std::cout << "add_value = " << add_value.to_string(10) << std::endl;
+		auto not_value = not_gate(i);
+		auto minus_value = minus_gate(i);
+		auto xor_value = xor_gate(i);
+		auto naab_value = NAAB_gate(i);
+		auto sum_value = sum_gate(i);
 
-		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v + direct_relay_value * v_u)
+		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v + direct_relay_value * v_u + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
@@ -491,8 +611,8 @@ bool verifier::verify()
 		else
 			assert(false);
 	}
-	auto input_0 = V_in(r_0, one_minus_r_0, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length)), 
-		 input_1 = V_in(r_1, one_minus_r_1, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
+	auto input_0 = V_in(r_0, one_minus_r_0, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
+		// input_1 = V_in(r_1, one_minus_r_1, input, C.circuit[0].bit_length, (1 << C.circuit[0].bit_length));
 
 	delete[] input;
 	delete[] r_0;
