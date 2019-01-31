@@ -324,8 +324,15 @@ prime_field::field_element zk_verifier::sum_gate(int depth)
 		{
 			int g_first_half = g & ((1 << first_half_g) - 1);
 			int g_second_half = (g >> first_half_g);
-			ret = ret + (beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half]) * 
-						(beta_v_first_half[0] * beta_v_second_half[0]);
+			
+			auto beta_g_val = beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half];
+			auto beta_v_0 = beta_v_first_half[0] * beta_v_second_half[0];
+			for(int j = u; j < v; ++j)
+			{
+				int u_first_half = j & ((1 << first_half_uv) - 1);
+				int u_second_half = j >> first_half_uv;
+				ret = ret + beta_g_val * beta_v_0 * (beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]);
+			}
 		}
 	}
 	ret.value = ret.value % prime_field::mod;

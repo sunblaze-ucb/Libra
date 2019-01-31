@@ -158,7 +158,7 @@ void read_rdl(ifstream &rdl_in)
             gates[id_to_addr[g.u]].outputs.push_back(tgt);
             gates[id_to_addr[g.v]].outputs.push_back(tgt);
             id_to_addr[g.id] = gates.size();
-            rdl_output_pointer.push_back(gates.size() - 1);
+            rdl_output_pointer.push_back(gates.size());
             gates.push_back(g);
             if(tgt > max_rdl_id)
                 max_rdl_id = tgt;

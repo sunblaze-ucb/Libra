@@ -358,6 +358,7 @@ namespace prime_field
 	}
 	u256b my_factor;
 	
+
 	u512b u512b::operator % (const u256b &x) const
 	{
 		if(lo == 0 && mid == 0 && hi.lo == 0 && hi.mid == 0 && hi.hi == 0)
@@ -541,8 +542,6 @@ namespace prime_field
 	}
 	field_element field_element::operator - (const field_element &b) const
 	{
-		assert((u512b)mod >= value);
-		assert((u512b)mod >= b.value);
 		field_element ret;
 		if(value >= b.value)
 			ret.value = value - b.value;

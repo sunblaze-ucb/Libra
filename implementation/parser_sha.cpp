@@ -21,61 +21,23 @@ regex constant_assign_gate("P V[0-9]+ = [\\-]*[0-9]+ E");
 regex input_gate("P V[0-9]+ = I[0-9]+ E");
 regex output_gate("P O[0-9]+ = V[0-9]+ E");
 regex pass_gate("P V[0-9]+ = V[0-9]+ PASS V[0-9]+ E");
+regex xor_gate("P V[0-9]+ = V[0-9]+ XOR V[0-9]+ E");
+regex minus_gate("P V[0-9]+ = V[0-9]+ minus V[0-9]+ E");
+regex naab_gate("P V[0-9]+ = V[0-9]+ NAAB V[0-9]+ E");
+regex not_gate("P V[0-9]+ = V[0-9]+ NOT V[0-9]+ E");
 
 smatch base_match;
-
-/*
-while(getline(rdl_in, source_line))
-{
-    if(std::regex_match(source_line, base_match, add_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = V%d + V%d E", &tgt, &src0, &src1);
-        G.add(src0, tgt);
-        G.add(src1, tgt);
-    }
-    else if(std::regex_match(source_line, base_match, mult_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = V%d * V%d E", &tgt, &src0, &src1);
-        G.add(src0, tgt);
-        G.add(src1, tgt);
-    }
-    else if(std::regex_match(source_line, base_match, constant_assign_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = %d E", &tgt, &src0);
-    }
-    else if(std::regex_match(source_line, base_match, input_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = I%d E", &tgt, &src0);
-        src0 += 500000;
-        G.add(src0, tgt);
-        input_gates.push_back(src0);
-    }
-    else if(std::regex_match(source_line, base_match, output_gate))
-    {
-        sscanf(source_line.c_str(), "P O%d = V%d E", &tgt, &src0);
-        tgt += 1000000;
-        G.add(src0, tgt);
-    }
-    else if(std::regex_match(source_line, base_match, pass_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = V%d PASS V%d E", &tgt, &src0, &src1);
-        tgt += 1000000;
-        G.add(src0, tgt);
-    }
-    else
-    {
-        cout << source_line << endl;
-        assert(false);
-    }
-}
-*/
 
 enum gate_types
 {
     add = 0,
     mult = 1,
     dummy = 2,
-    input = 3
+    input = 3,
+    not_gate_id = 6, 
+    minus_gate_id = 7,
+    xor_gate_id = 8,
+    naab_gate_id = 9
 };
 
 class gate
@@ -158,7 +120,7 @@ void read_rdl(ifstream &rdl_in)
             gates[id_to_addr[g.u]].outputs.push_back(tgt);
             gates[id_to_addr[g.v]].outputs.push_back(tgt);
             id_to_addr[g.id] = gates.size();
-            rdl_output_pointer.push_back(gates.size() - 1);
+            rdl_output_pointer.push_back(gates.size());
             gates.push_back(g);
             if(tgt > max_rdl_id)
                 max_rdl_id = tgt;
@@ -173,7 +135,7 @@ void read_rdl(ifstream &rdl_in)
     assert(rdl_output_cnt / repeat_num * repeat_num == rdl_output_cnt);
 }
 
-map<int, bool> circuit_input;
+map<int, int> circuit_input;
 
 void read_circuit(ifstream &circuit_in)
 {
@@ -185,18 +147,18 @@ void read_circuit(ifstream &circuit_in)
             int u, v;
             for(int i = 0; i < repeat_num; ++i)
             {
-                if(circuit_input[src0])
+                if(circuit_input.find(src0) != circuit_input.end())
                 {
-                    int rdl_gate_ptr = rdl_output_pointer[src0 * repeat_num + i];
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src0] * repeat_num + i];
                     u = gates[rdl_gate_ptr].id;
                 }
                 else
                 {
                     u = src0 * repeat_num + i + max_rdl_id;
                 }
-                if(circuit_input[src1])
+                if(circuit_input.find(src1) != circuit_input.end())
                 {
-                    int rdl_gate_ptr = rdl_output_pointer[src1 * repeat_num + i];
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src1] * repeat_num + i];
                     v = gates[rdl_gate_ptr].id;
                 }
                 else
@@ -225,18 +187,18 @@ void read_circuit(ifstream &circuit_in)
             int u, v;
             for(int i = 0; i < repeat_num; ++i)
             {
-                if(circuit_input[src0])
+                if(circuit_input.find(src0) != circuit_input.end())
                 {
-                    int rdl_gate_ptr = rdl_output_pointer[src0 * repeat_num + i];
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src0] * repeat_num + i];
                     u = gates[rdl_gate_ptr].id;
                 }
                 else
                 {
                     u = src0 * repeat_num + i + max_rdl_id;
                 }
-                if(circuit_input[src1])
+                if(circuit_input.find(src1) != circuit_input.end())
                 {
-                    int rdl_gate_ptr = rdl_output_pointer[src1 * repeat_num + i];
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src1] * repeat_num + i];
                     v = gates[rdl_gate_ptr].id;
                 }
                 else
@@ -258,16 +220,161 @@ void read_circuit(ifstream &circuit_in)
             }
             
         }
+        else if(std::regex_match(source_line, base_match, constant_assign_gate))
+		{
+            sscanf(source_line.c_str(), "P V%d = %lld E", &tgt, &src0);
+            circuit_input[tgt] = src0;
+		}
         else if(std::regex_match(source_line, base_match, input_gate))
         {
             sscanf(source_line.c_str(), "P V%d = I%lld E", &tgt, &src0);
-            circuit_input[tgt] = true;
-            assert(tgt == src0);
+            circuit_input[tgt] = src0;
         }
         else if(std::regex_match(source_line, base_match, output_gate))
         {
             sscanf(source_line.c_str(), "P O%d = V%lld E", &tgt, &src0);
             continue;
+        }
+        else if(std::regex_match(source_line, base_match, xor_gate))
+        {
+        	sscanf(source_line.c_str(), "P V%d = V%lld XOR V%lld E", &tgt, &src0, &src1);
+        	int u, v;
+            for(int i = 0; i < repeat_num; ++i)
+            {
+                if(circuit_input.find(src0) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src0] * repeat_num + i];
+                    u = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    u = src0 * repeat_num + i + max_rdl_id;
+                }
+                if(circuit_input.find(src1) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src1] * repeat_num + i];
+                    v = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    v = src1 * repeat_num + i + max_rdl_id;
+                }
+                
+                gate g;
+                g.id = tgt * repeat_num + i + max_rdl_id;
+                g.ty = xor_gate_id;
+                g.u = u;
+                g.v = v;
+                id_to_addr[g.id] = gates.size();
+                gates.push_back(g);
+                assert(id_to_addr.find(u) != id_to_addr.end());
+                assert(id_to_addr.find(v) != id_to_addr.end());
+                gates[id_to_addr[u]].outputs.push_back(g.id);
+                gates[id_to_addr[v]].outputs.push_back(g.id);
+            }
+        }
+        else if(std::regex_match(source_line, base_match, naab_gate))
+        {
+        	sscanf(source_line.c_str(), "P V%d = V%lld NAAB V%lld E", &tgt, &src0, &src1);
+        	int u, v;
+            for(int i = 0; i < repeat_num; ++i)
+            {
+                if(circuit_input.find(src0) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src0] * repeat_num + i];
+                    u = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    u = src0 * repeat_num + i + max_rdl_id;
+                }
+                if(circuit_input.find(src1) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src1] * repeat_num + i];
+                    v = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    v = src1 * repeat_num + i + max_rdl_id;
+                }
+                
+                gate g;
+                g.id = tgt * repeat_num + i + max_rdl_id;
+                g.ty = naab_gate_id;
+                g.u = u;
+                g.v = v;
+                id_to_addr[g.id] = gates.size();
+                gates.push_back(g);
+                assert(id_to_addr.find(u) != id_to_addr.end());
+                assert(id_to_addr.find(v) != id_to_addr.end());
+                gates[id_to_addr[u]].outputs.push_back(g.id);
+                gates[id_to_addr[v]].outputs.push_back(g.id);
+            }
+        }
+        else if(std::regex_match(source_line, base_match, minus_gate))
+        {
+        	sscanf(source_line.c_str(), "P V%d = V%lld minus V%lld E", &tgt, &src0, &src1);
+        	int u, v;
+            for(int i = 0; i < repeat_num; ++i)
+            {
+                if(circuit_input.find(src0) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src0] * repeat_num + i];
+                    u = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    u = src0 * repeat_num + i + max_rdl_id;
+                }
+                if(circuit_input.find(src1) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src1] * repeat_num + i];
+                    v = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    v = src1 * repeat_num + i + max_rdl_id;
+                }
+                
+                gate g;
+                g.id = tgt * repeat_num + i + max_rdl_id;
+                g.ty = minus_gate_id;
+                g.u = u;
+                g.v = v;
+                id_to_addr[g.id] = gates.size();
+                gates.push_back(g);
+                assert(id_to_addr.find(u) != id_to_addr.end());
+                assert(id_to_addr.find(v) != id_to_addr.end());
+                gates[id_to_addr[u]].outputs.push_back(g.id);
+                gates[id_to_addr[v]].outputs.push_back(g.id);
+            }
+        }
+        else if(std::regex_match(source_line, base_match, not_gate))
+        {
+        	sscanf(source_line.c_str(), "P V%d = V%lld NOT V%lld E", &tgt, &src0, &src1);
+        	int u, v;
+            for(int i = 0; i < repeat_num; ++i)
+            {
+                if(circuit_input.find(src0) != circuit_input.end())
+                {
+                    int rdl_gate_ptr = rdl_output_pointer[circuit_input[src0] * repeat_num + i];
+                    u = gates[rdl_gate_ptr].id;
+                }
+                else
+                {
+                    u = src0 * repeat_num + i + max_rdl_id;
+                }
+                
+                gate g;
+                g.id = tgt * repeat_num + i + max_rdl_id;
+                g.ty = not_gate_id;
+                g.u = u;
+                g.v = 0;
+                id_to_addr[g.id] = gates.size();
+                gates.push_back(g);
+                assert(id_to_addr.find(u) != id_to_addr.end());
+                gates[id_to_addr[u]].outputs.push_back(g.id);
+            }
         }
         else
         {
@@ -467,7 +574,7 @@ void normalize_and_output()
         }
     }
     FILE *out;
-    out = fopen("lanczos_circuit.txt", "w");
+    out = fopen("sha_circuit.txt", "w");
 
     fprintf(out, "%d\n", (int)layered_circuit.size());
     for(int i = 0; i < layered_circuit.size(); ++i)

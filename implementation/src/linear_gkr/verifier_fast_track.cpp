@@ -349,10 +349,8 @@ prime_field::field_element verifier::sum_gate(int depth)
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 5)
 		{
-			int g_first_half = g & ((1 << first_half_g) - 1);
-			int g_second_half = (g >> first_half_g);
-			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * 
-						(beta_v[0]);
+			for(int j = u; j < v; ++j)
+				ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * (beta_v[0]) * (beta_u[j]);
 		}
 	}
 	ret.value = ret.value % prime_field::mod;

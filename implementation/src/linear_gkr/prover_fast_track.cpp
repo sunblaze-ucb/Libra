@@ -80,7 +80,7 @@ prime_field::field_element* prover::evaluate()
 			else if(ty == 5)
 			{
 				circuit_value[i][g] = prime_field::field_element(0);
-				for(int k = 0; k < (1 << C.circuit[i - 1].bit_length); ++k)
+				for(int k = u; k < v; ++k)
 					circuit_value[i][g] = circuit_value[i][g] + circuit_value[i - 1][k];
 			}
 			else if(ty == 6)
@@ -255,9 +255,12 @@ void prover::sumcheck_phase1_init()
 			{
 				auto tmp = beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
 					+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value;
-				for(int j = 0; j < (1 << length_u); ++j)
+				tmp = tmp % prime_field::mod;
+				for(int j = u; j < v; ++j)
 				{
-					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp) % prime_field::mod;
+					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp);
+					if(add_mult_sum[j].b.value >= prime_field::mod)
+						add_mult_sum[j].b.value = add_mult_sum[j].b.value - prime_field::mod;
 				}
 				break;
 			}
@@ -439,10 +442,14 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 			}
 			case 5: //sum gate
 			{
-				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
-								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
-				addV_array[v].b.value = (addV_array[v].b.value + tmp_g * v_u.value % prime_field::mod) % prime_field::mod;
+							+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				auto tmp_g_vu = tmp_g * v_u.value % prime_field::mod;
+				for(int j = u; j < v; ++j)
+				{
+					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;
+					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
+				}
 				break;
 			}
 			case 6: //not gate
