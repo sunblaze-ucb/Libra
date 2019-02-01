@@ -389,6 +389,7 @@ prime_field::field_element zk_verifier::V_in(const prime_field::field_element* r
 bool zk_verifier::verify()
 {
 	double verification_time = 0;
+	double predicates_calc_time = 0;
 	prime_field::init_random();
 	p -> proof_init();
 
@@ -558,6 +559,7 @@ bool zk_verifier::verify()
 		std::chrono::high_resolution_clock::time_point predicates_calc_t1 = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> predicates_calc_span = std::chrono::duration_cast<std::chrono::duration<double>>(predicates_calc_t1 - predicates_calc_t0);
 		verification_time += predicates_calc_span.count();
+		predicates_calc_time += predicates_calc_span.count();
 		
 		auto mult_value = predicates_value[1];
 		auto add_value = predicates_value[0];
@@ -716,6 +718,7 @@ bool zk_verifier::verify()
 		fprintf(stderr, "Verification pass\n");
 		std::cerr << "Prove Time " << p -> total_time << std::endl;
 		std::cerr << "Verification Time " << verification_time << std::endl;
+		std::cerr << "Verification gate time " << predicates_calc_time << std::endl;
 	}
 	p -> delete_self();
 	delete_self();
