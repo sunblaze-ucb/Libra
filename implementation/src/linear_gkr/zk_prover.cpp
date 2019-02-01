@@ -795,8 +795,12 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
-				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g * tmp_u);
-				addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value);
+				auto tmp_g_u = tmp_g * tmp_u % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g_u);
+				addV_array[v].b.value = (tmp_g_u * v_u.value + addV_array[v].b.value);
+
+				if(add_mult_sum[v].b.value >= prime_field::mod)
+					add_mult_sum[v].b.value = add_mult_sum[v].b.value - prime_field::mod;
 
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
 				addV_array[v].b.value = addV_array[v].b.value % prime_field::mod;
@@ -820,7 +824,8 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
-				addV_array[v].b.value = (addV_array[v].b.value + tmp_g * tmp_u % prime_field::mod + prime_field::mod - tmp_g * tmp_u % prime_field::mod * v_u.value % prime_field::mod) % prime_field::mod;
+				auto tmp_g_u = tmp_g * tmp_u % prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp_g_u + prime_field::mod - tmp_g_u * v_u.value % prime_field::mod) % prime_field::mod;
 				break;
 			}
 			case 7: //minus gate
@@ -828,8 +833,9 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
-				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + prime_field::mod - tmp_g * tmp_u % prime_field::mod) % prime_field::mod;
-				addV_array[v].b.value = ((tmp_g * tmp_u % prime_field::mod) * v_u.value + addV_array[v].b.value) % prime_field::mod;
+				auto tmp = tmp_g * tmp_u % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + prime_field::mod - tmp) % prime_field::mod;
+				addV_array[v].b.value = (tmp * v_u.value + addV_array[v].b.value) % prime_field::mod;
 				break;
 			}
 			case 8: //xor gate
@@ -838,8 +844,9 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
-				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod - (prime_field::field_element(2).value * v_u.value) % prime_field::mod * tmp % prime_field::mod) % prime_field::mod;
-				addV_array[v].b.value = (addV_array[v].b.value + tmp * v_u.value % prime_field::mod) % prime_field::mod;
+				auto tmp_v_u = tmp * v_u.value % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod + prime_field::mod - tmp_v_u - tmp_v_u) % prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp_v_u) % prime_field::mod;
 				break;
 			}
 			case 9: //NAAB gate

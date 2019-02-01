@@ -635,4 +635,8 @@ namespace prime_field
 		delete str_value;
 		return ret;
 	} 
+	bool field_element::operator == (const field_element &b) const
+	{
+		return !(*this != b);
+	}
 }

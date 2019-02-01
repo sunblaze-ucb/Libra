@@ -98,6 +98,7 @@ namespace prime_field
 		field_element operator * (const field_element &b) const;
 		field_element operator / (const field_element &b) const;
 		field_element operator - (const field_element &b) const;
+		bool operator == (const field_element &b) const;
 		field_element shr15() const;
 		field_element mul_non_mod(const field_element &b) const;
 		char* to_string();

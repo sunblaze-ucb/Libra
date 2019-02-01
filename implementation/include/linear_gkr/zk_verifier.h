@@ -29,14 +29,8 @@ public:
 	bool verify();
 	void get_prover(zk_prover*);
 	void delete_self();
-	prime_field::field_element mult(int);
-	prime_field::field_element add(int);
+	vector<prime_field::field_element> predicates(int depth);
 	prime_field::field_element direct_relay(int depth, prime_field::field_element *r_g, prime_field::field_element *r_u);
-	prime_field::field_element not_gate(int depth);
-	prime_field::field_element minus_gate(int depth);
-	prime_field::field_element xor_gate(int depth);
-	prime_field::field_element NAAB_gate(int depth);
-	prime_field::field_element sum_gate(int depth);
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, int, int);
 };
 
