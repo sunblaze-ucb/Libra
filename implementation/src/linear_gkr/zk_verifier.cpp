@@ -423,7 +423,7 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 		{
 			int u_first_half = i & ((1 << first_half_uv) - 1);
 			int u_second_half = i >> first_half_uv;
-			tmp_u_val[i] = (beta_u_first_half[u_first_half].value * beta_u_second_half[u_second_half].value % prime_field::mod) * zero_v.value % prime_field::mod;
+			tmp_u_val[i].value = (beta_u_first_half[u_first_half].value * beta_u_second_half[u_second_half].value % prime_field::mod) * zero_v.value % prime_field::mod;
 		}
 
 		for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
