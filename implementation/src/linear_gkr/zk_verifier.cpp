@@ -540,7 +540,7 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 				{
 					int g_first_half = g & ((1 << first_half_g) - 1);
 					int g_second_half = (g >> first_half_g);
-					ret[10].value = ret[10].value + (beta_g_r0_first_half[g_first_half].value * beta_g_r0_second_half[g_second_half].value + beta_g_r1_first_half[g_first_half].value * beta_g_r1_second_half[g_second_half].value) % prime_field::mod * tmp_u_val[u];
+					ret[10].value = ret[10].value + (beta_g_r0_first_half[g_first_half].value * beta_g_r0_second_half[g_second_half].value + beta_g_r1_first_half[g_first_half].value * beta_g_r1_second_half[g_second_half].value) % prime_field::mod * tmp_u_val[u].value;
 					ret[10].value = ret[10].value % prime_field::mod;
 					break;
 				}
