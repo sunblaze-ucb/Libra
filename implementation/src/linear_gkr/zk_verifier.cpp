@@ -229,15 +229,6 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					one_block_beta[0].value = one_block_beta[0].value + (beta_g_r1_block_first_half[g_first_half].value * beta_g_r1_block_second_half[g_second_half].value) % prime_field::mod * uv_value;
 					one_block_alpha[0].value = one_block_alpha[0].value % prime_field::mod;
 					one_block_beta[0].value = one_block_beta[0].value % prime_field::mod;
-					for(int j = 0; j < C.circuit[depth].repeat_num; ++j)
-					{
-						int gid = (j << C.circuit[depth].log_block_size) + i;
-						assert(C.circuit[depth].gates[gid].ty == 0);
-						assert((C.circuit[depth].gates[gid].u & ((1 << C.circuit[depth - 1].log_block_size) - 1)) == u);
-						assert((C.circuit[depth].gates[gid].v & ((1 << C.circuit[depth - 1].log_block_size) - 1)) == v);
-						assert((C.circuit[depth].gates[gid].u >> C.circuit[depth - 1].log_block_size) == j);
-						assert((C.circuit[depth].gates[gid].v >> C.circuit[depth - 1].log_block_size) == j);
-					}
 					break;
 				}
 				case 1:
@@ -415,7 +406,8 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 				}
 			}
 		}
-		ret = ret_para;
+		if(!debug_mode)
+			ret = ret_para;
 	}
 	if(!C.circuit[depth].is_parallel || debug_mode)
 	{
@@ -582,7 +574,8 @@ void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_f
 	const prime_field::field_element* one_minus_r_0, const prime_field::field_element* one_minus_r_1, 
 	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v)
 {
-	if(!C.circuit[depth].is_parallel)
+	bool debug_mode = false;
+	if(!C.circuit[depth].is_parallel || debug_mode)
 	{
 		beta_g_r0_first_half[0] = alpha;
 		beta_g_r1_first_half[0] = beta;
