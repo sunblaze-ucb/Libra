@@ -25,8 +25,14 @@ public:
 	int bit_length;
 	std::unordered_map<int, std::vector<std::pair<int, std::pair<int, int> > > > u_gates;
 	std::unordered_map<int, std::vector<std::pair<int, std::pair<int, int> > > > v_gates;
+	bool is_parallel;
+	int block_size;
+	int log_block_size;
+	int repeat_num;
+	int log_repeat_num;
 	layer()
 	{
+		is_parallel = false;
 		gates = NULL;
 		bit_length = 0;
 	}

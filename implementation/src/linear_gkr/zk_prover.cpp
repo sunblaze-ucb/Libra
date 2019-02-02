@@ -119,6 +119,10 @@ prime_field::field_element* zk_prover::evaluate()
 				auto &x = circuit_value[i - 1][u], &y = circuit_value[i - 1][v];
 				circuit_value[i][g] = y - x * y;
 			}
+			else if(ty == 10)
+			{
+				circuit_value[i][g] = circuit_value[i - 1][u];
+			}
 			else
 			{
 				assert(false);
@@ -516,6 +520,13 @@ void zk_prover::sumcheck_phase1_init()
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + prime_field::mod - (circuit_value[sumcheck_layer_id - 1][v].value * tmp % prime_field::mod)) % prime_field::mod;
 				break;
 			}
+			case 10: //relay gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
+				break;
+			}
 			default:
 			{
 				break;
@@ -732,7 +743,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 
 	Iuv = Iuv * (prime_field::field_element(1) - previous_random);
 	v_u = V_mult_add[0].eval(previous_random);
-	//update v_u to \dot(v_u);
+	
 	Zu = Zu * (prime_field::field_element(1) - previous_random) * previous_random; 
 	v_u = v_u + Zu * sumRc.eval(previous_random);
 
@@ -856,6 +867,15 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
 				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod - v_u.value * tmp % prime_field::mod) % prime_field::mod;
+				break;
+			}
+			case 10: //relay gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				auto tmp = tmp_g * tmp_u % prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp * v_u.value) % prime_field::mod;
 				break;
 			}
 			default:

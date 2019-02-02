@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 		printf("%d ", n);
 		for(int j = 0; j < n; ++j)
 		{
-			printf("%d %d %d %d ", 9, j, (j << 1), (j << 1 | 1));
+			printf("%d %d %d %d ", 10, j, (j << 1), 0);
 		}
 		printf("\n");
 	}

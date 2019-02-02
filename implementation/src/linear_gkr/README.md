@@ -14,7 +14,7 @@ The rest of this line contains `4n` integers, represent `n` gates. For each gate
 
 We have `3` different types of gates for now. They are addition, multiplication, dummy. Dummy gate takes no input, and never serves as a input of other gate.
 
-`ty=0` is addition gate, `ty=1` is multiplication gate, `ty=2` is dummy gate, `ty=3` is input gate, `ty=4` is direct relay gate, `ty=5` is summation gate， `ty=6` is not gate, `ty=7` is minus gate, `ty=8` is XOR gate, `ty=9` is NAAB gate ($\not x \land y$)
+`ty=0` is addition gate, `ty=1` is multiplication gate, `ty=2` is dummy gate, `ty=3` is input gate, `ty=4` is direct relay gate, `ty=5` is summation gate， `ty=6` is not gate, `ty=7` is minus gate, `ty=8` is XOR gate, `ty=9` is NAAB gate ($\not x \land y$), `ty=10` is relay gate.
 
 ## Special gate explain
 ### Direct relay gate
