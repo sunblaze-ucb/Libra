@@ -4,6 +4,3 @@
 [submodule "implementation/include/xbyak"]
 	path = implementation/include/xbyak
 	url = https://github.com/herumi/xbyak.git
-[submodule "SHA256/compiler2016"]
-	path = SHA256/compiler2016
-	url = https://niconiconinico@bitbucket.org/niconiconinico/compiler2016.git
