@@ -69,13 +69,13 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 \end{tabular}
 \caption{\label{GKRCom}Comparison of the performance of \name{} versus various previous GKR systems.}
 \end{table*}
-\paragraph{Results.} As all of these systems implement the same protocol, proof size and verification time are exactly the same. Therefore, we only need to focus on the prove time of them. Experimental results are shown in Table \ref{GKRCom}. In conclusion, our protocol is comparable with previous protocols for regular circuit and data parallel circuit while much faster for multi-instruction multi-data circuit and random circuit. To be specific, for matrix multiplication, when the matrix size is 128x128, our protocol is about 3x slower than Thaler's protocol, that is because the constant coefficient of our protocol is a little larger. For image scaling, when the size of pixels are 112x112, our protocol is also around 2x slower than Wahby's protocol, the same reason remains since the number of sub copies circuits are large. For image scaling with different parameters, when the number of pixels are 112x112, our protocol is 5x speed up since our algorithm is linear. 
+\paragraph{Results.} As all of these systems implement the same protocol, proof size and verification time are exactly the same. Therefore, we only need to focus on the prove time of them. Experimental results are shown in Table \ref{GKRCom}. In conclusion, our protocol is comparable with previous protocols for regular circuit and data parallel circuit while much faster for multi-instruction multi-data circuit and random circuit. To be specific, for matrix multiplication, when the matrix size is 128x128, our protocol is about a litter slower than Thaler's protocol, that is because the constant coefficient of our protocol is larger. For image scaling, when the size of pixels are 112x112, our protocol is also a bit slower than Wahby's protocol, the same reason remains since the number of sub copies circuits are large. For image scaling with different parameters, when the number of pixels are 112x112, our protocol is 5x speed up since our algorithm is linear. 
 For random circuit, when the number of gates per layer are $2^{20}$, our protocol is at least 10x speed up and this gap must be larger with circuit size grows.  
 \subsection{Comparing to Other ZKP Schemes}\label{subsec:expZKP}
 \textbf{Baselines.} In this section, we compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties including Hyrax\cite{hyrax}, Ligero\cite{ligero}, Bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.
 \begin{itemize}
 \item
-\textbf{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verify time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run Hyrax under the same setting of our system.
+\textbf{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verification time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run Hyrax under the same setting of our system.
 \item
 \textbf{Bulletproofs} is a zero knowledge argument with logarithmic prove time for range query. Since hyrax has implemented this system and released the code, we use the hyrax's implementation directly.
 \item
@@ -85,18 +85,98 @@ For random circuit, when the number of gates per layer are $2^{20}$, our protoco
 \item
 \textbf{libSNARK:} we download their open source library and run their system on the same environment.
 \end{itemize}
-\paragraph{Benchmarks.} We evaluate \name{}, Hyrax, Bulletproofs, Ligero, libSNARK and libSTARK on all previous mentioned benchmarks except image scaling with different parameter. In addition, we also evaluate these systems on Merkle Tree\cite{merkletree}. Considering various properties of different systems and some constrains on implementation(\ie we do not have the sourse code of some systems), for each benchmark, we only evaluate the systems that is senseful and suitable for this benchmark.
+\paragraph{Benchmarks.} We evaluate \name{}, Hyrax, Bulletproofs, Ligero, libSNARK and libSTARK on matrix multiplication, image scaling and Merkle Tree\cite{merkletree}. Considering various properties of different systems and some constrains on implementation(\ie we do not have the sourse code of some systems), for each benchmark, we only evaluate the systems that is senseful and suitable for this benchmark.
 \begin{itemize}
 	\item
 	\textbf{Merkle tree} means $\mathbb{P}$ proves to $\mathbb{V}$ it knows the value of the leaves of a Merkle tree\cite{merkletree} that computes the public root's value\cite{blum1994checking}. Same as the previous work, we use SHA-256 for the hash function. Besides, each sub-computation is one instance of the hash function which makes it data parallel. Therefore, if the Merkle tree has $M$ leaves, then we need $2M - 1$ sub-computations. We evaluate this function of varying number of leaves from 16 to 256.
 \end{itemize}
-\paragraph{Methodology.} For each benchmarks, we construct the corresponding arithmetic circuits of different sizes. Then we feed the circuit as the input into these zero knowledge systems. These systems would generate the proof and verify the proof itself. We measure the runtime using standard system clock.\\   
-\paragraph{Experimental results.} All of experimental results are summarized using figures and tables. We would analyse the consequence from four perspectives: prove time, verification time, proof size and memory consumption.
+\paragraph{Methodology.} For each benchmarks, we construct the corresponding arithmetic circuits of different sizes. Then we feed the circuit as the input into these zero knowledge systems. These systems would generate the proof and verify the proof itself. We measure the runtime using standard system clock.\\
+\begin{figure}[htbp]
+%\centering
+\subfigure[Proof size: 64x64 matrix multiplication]{
+%\begin{minipage}[t]{0.25\linewidth}
+\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig1}
+%\end{minipage}%
+}%
+%\hspace{0.05in}
+\subfigure[Proof size: 16x Lanczos scaling]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}
+%\end{minipage}%
+}%
+%\hspace{0.05in}
+\subfigure[Proof size: SHA-256 Merkle tree]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}
+%\end{minipage}%
+}%
+\quad           
+\subfigure[$\mathcal{P}$ time: 64x64 matrix multiplication]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}
+%\end{minipage}
+}%
+%\hspace{0.65in}
+\subfigure[$\mathcal{P}$ time: 16x Lanczos scaling]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}`
+%\end{minipage}
+}%
+%\hspace{0.65in}
+\subfigure[$\mathcal{P}$ time: SHA-256 Merkle tree]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}`
+%\end{minipage}
+}%
+\quad           
+\subfigure[$\mathcal{V}$ time: 64x64 matrix multiplication]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}
+%\end{minipage}
+}%
+%\hspace{0.65in}
+\subfigure[$\mathcal{V}$ time:16x Lanczos scaling]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}`
+%\end{minipage}
+}%
+%\hspace{0.65in}
+\subfigure[$\mathcal{V}$ time:SHA-256 Merkle tree]{
+%\begin{minipage}[t]{0.25\linewidth}
+%\centering
+\includegraphics[width=2.1in]{test.pdf}
+%\caption{fig2}`
+%\end{minipage}
+}%
+%\centering
+\quad
+\centering
+\includegraphics[width = 6.5in]{legend.pdf}
+\caption{\label{ZKGKR}Comparison of the performance of \name{} versus other zero knowledge systems.}
+\end{figure}
+
+\paragraph{Experimental results.} All of experimental results are summarized in Figure \ref{ZKGKR}. We would analyse the consequences from four perspectives: prove time, verification time, proof size and memory consumption.
 \begin{itemize}
-	\item prove time
-	\item verification time
-	\item proof size
-	\item memory consumption
+	\item \textbf{prove time}: Generally, the prove time of \name{} is comparable with Ligero and much faster than any other systems. That is because Ligero is not based on the public key cryptography. For instance, for matrix multiplication, when the matrix size is 128x128, our system's prove time is roughly 5x speed up of Hyrax, 100x speed up of libSTARK and only a little slower than Ligero. For image scaling, when the number of pixels are 1072x1072, our system is...
+	\item \textbf{verification time}: Generally, the verification time of \name{} is faster all other systems except libSTANK and lib SNARK. The reason is that the verifiers in libSTANK and libSNARK only have constant cost. For Merkle tree, when the leaves of Merkle tree is 256, our verification time is 3x faster than Hyrax and 2x faster than but libSTARK remains the constant. 
+	\item \textbf{proof size}: For proof size, our system is smaller than other systems except for Bulletproofs since the proof size of Bulletproofs is constant while ours is logarithmic. For Merkel tree, when the number of leaves are 256, Hyrax's proof size is about 5x larger than ours while libSTARK's proof size is 10x larger than ours, but Bulletproofs' proof size remains constant.  
+	\item \textbf{memory consumption}: LibSTARK, libSNARK and Bulletproofs are all high memory consumed. They run out of RAM for the medium size of the test data for matrix multiplication and Merkle tree. Our system is comparable with Hyrax and Ligero.
 \end{itemize}
 
 \subsection{Discussion}
