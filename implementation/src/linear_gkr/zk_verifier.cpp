@@ -415,6 +415,17 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 		int second_half_g = C.circuit[depth].bit_length - first_half_g;
 		int first_half_uv = C.circuit[depth - 1].bit_length / 2;
 		int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+
+		prime_field::field_element *tmp_u_val = new prime_field::field_element[1 << C.circuit[depth - 1].bit_length];
+		prime_field::field_element zero_v;
+		zero_v.value = (beta_v_first_half[0].value * beta_v_second_half[0].value % prime_field::mod);
+		for(int i = 0; i < (1 << C.circuit[depth - 1].bit_length); ++i)
+		{
+			int u_first_half = i & ((1 << first_half_uv) - 1);
+			int u_second_half = i >> first_half_uv;
+			tmp_u_val[i].value = (beta_u_first_half[u_first_half].value * beta_u_second_half[u_second_half].value % prime_field::mod) * zero_v.value % prime_field::mod;
+		}
+
 		for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 		{
 			int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
@@ -529,12 +540,7 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 				{
 					int g_first_half = g & ((1 << first_half_g) - 1);
 					int g_second_half = (g >> first_half_g);
-					int u_first_half = u & ((1 << first_half_uv) - 1);
-					int u_second_half = u >> first_half_uv;
-					int v_first_half = v & ((1 << first_half_uv) - 1);
-					int v_second_half = v >> first_half_uv;
-					ret[10].value = ret[10].value + (beta_g_r0_first_half[g_first_half].value * beta_g_r0_second_half[g_second_half].value + beta_g_r1_first_half[g_first_half].value * beta_g_r1_second_half[g_second_half].value) % prime_field::mod * 
-								(beta_u_first_half[u_first_half].value * beta_u_second_half[u_second_half].value % prime_field::mod) % prime_field::mod * (beta_v_first_half[v_first_half].value * beta_v_second_half[v_second_half].value % prime_field::mod);
+					ret[10].value = ret[10].value + (beta_g_r0_first_half[g_first_half].value * beta_g_r0_second_half[g_second_half].value + beta_g_r1_first_half[g_first_half].value * beta_g_r1_second_half[g_second_half].value) % prime_field::mod * tmp_u_val[u].value;
 					ret[10].value = ret[10].value % prime_field::mod;
 					break;
 				}
