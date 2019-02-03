@@ -4,10 +4,11 @@
 #include "linear_gkr/zk_prover.h"
 #include "linear_gkr/prime_field.h"
 #include <iostream>
+#include <cassert>
 zk_verifier v;
 zk_prover p;
 
-int main()
+int main(int argc, char** argv)
 {
 	//std::cout << "hello world" << std::endl;
 
@@ -15,10 +16,11 @@ int main()
 	p.total_time = 0;
 	v.get_prover(&p);
 	//std::cout << "come in" << std::endl;
-	v.read_circuit("test_circuit.txt");
+	assert(argc == 4);
+	v.read_circuit(argv[1], argv[2]);
 	//std::cout << "after readfile" << std::endl;
 	p.get_circuit(v.C);
-	bool result = v.verify();
+	bool result = v.verify(argv[3]);
 	printf("%s\n", result ? "Pass" : "Fail");
 	return 0;
 }

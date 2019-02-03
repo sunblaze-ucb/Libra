@@ -1,4 +1,4 @@
-CC=clang++
+CC=g++
 CFLAGS=-Wall -march=native
 CDBG_FLAGS=-g
 INCLUDE=-I include -I include/ate-pairing/include

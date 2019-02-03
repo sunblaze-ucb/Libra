@@ -30,8 +30,8 @@ public:
 	const prime_field::field_element* r_u, const prime_field::field_element* r_v, 
 	const prime_field::field_element* one_minus_r_0, const prime_field::field_element* one_minus_r_1, 
 	const prime_field::field_element* one_minus_r_u, const prime_field::field_element* one_minus_r_v);
-	void read_circuit(const char *);
-	bool verify();
+	void read_circuit(const char *, const char*);
+	bool verify(const char*);
 	void get_prover(zk_prover*);
 	void delete_self();
 	vector<prime_field::field_element> predicates(int depth, prime_field::field_element *r_0, prime_field::field_element *r_1, prime_field::field_element *r_u, prime_field::field_element *r_v, prime_field::field_element alpha, prime_field::field_element beta);

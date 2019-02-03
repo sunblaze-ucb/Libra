@@ -12,13 +12,13 @@ void zk_verifier::get_prover(zk_prover *pp)
 	p = pp;
 }
 
-void zk_verifier::read_circuit(const char *path)
+void zk_verifier::read_circuit(const char *path, const char *meta_path)
 {
 	int d;
 	FILE *circuit_in;
 	FILE *meta_in;
 
-	meta_in = fopen("meta_data_linear.txt", "r");
+	meta_in = fopen(meta_path, "r");
 	circuit_in = fopen(path, "r");
 
 	fscanf(circuit_in, "%d", &d);
@@ -59,10 +59,20 @@ void zk_verifier::read_circuit(const char *path)
 			fscanf(circuit_in, "%d%d%lld%lld", &ty, &g, &u, &v);
 			if(ty != 3)
 			{
-				if(!(u >= 0 && u < (1 << C.circuit[i - 1].bit_length)))
-					cout << ty << " " << g << " " << u << " " << v << " " << (1 << C.circuit[i - 1].bit_length) << endl;
-				assert(u >= 0 && u < (1 << C.circuit[i - 1].bit_length));
-				assert(v >= 0 && v < (1 << C.circuit[i - 1].bit_length));
+				if(ty == 5)
+				{
+					assert(u >= 0 && u < (1 << C.circuit[i - 1].bit_length));
+					assert(v > u && v <= (1 << C.circuit[i - 1].bit_length));
+				}
+				else
+				{
+					if(!(u >= 0 && u < (1 << C.circuit[i - 1].bit_length)))
+						cout << ty << " " << g << " " << u << " " << v << " " << (1 << C.circuit[i - 1].bit_length) << endl;
+					assert(u >= 0 && u < (1 << C.circuit[i - 1].bit_length));
+					if(!(v >= 0 && v < (1 << C.circuit[i - 1].bit_length)))
+						cout << ty << " " << g << " " << u << " " << v << " " << (1 << C.circuit[i - 1].bit_length) << endl;
+					assert(v >= 0 && v < (1 << C.circuit[i - 1].bit_length));
+				}
 			}
 			if(ty == 6)
 			{
@@ -761,7 +771,7 @@ prime_field::field_element zk_verifier::V_in(const prime_field::field_element* r
 	return ret;
 }
 
-bool zk_verifier::verify()
+bool zk_verifier::verify(const char* output_path)
 {
 	int proof_size = 0;
 	double verification_time = 0;
@@ -1115,7 +1125,7 @@ bool zk_verifier::verify()
 		std::cerr << "Verification gate time " << predicates_calc_time << std::endl;
 		std::cerr << "Verification rdl time " << verification_rdl_time << std::endl;
 		std::cerr << "Proof size(bits) " << proof_size << std::endl;
-		FILE *result = fopen("result.txt", "w");
+		FILE *result = fopen(output_path, "w");
 		fprintf(result, "%lf %lf %lf %lf %d\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, proof_size);
 		fclose(result);
 	}
