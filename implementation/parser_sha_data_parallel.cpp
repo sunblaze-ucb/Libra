@@ -444,6 +444,7 @@ void read_rdl(ifstream &rdl_in)
 	rdl.layers.resize(2);
 	rdl.depth = 2;
 	int min_output_id = 0x3f3f3f3f;
+	map<int, int> output_gate_mapping;
     while(getline(rdl_in, source_line))
 	{
 		if(std::regex_match(source_line, base_match, constant_assign_gate))
@@ -471,6 +472,7 @@ void read_rdl(ifstream &rdl_in)
 			output_count++;
             //doesn't need to do anything
             sscanf(source_line.c_str(), "P O%d = V%lld E", &tgt, &src0);
+            output_gate_mapping[src0] = tgt;
             min_output_id = min(min_output_id, tgt);
 			continue;
 		}
@@ -504,8 +506,8 @@ void read_rdl(ifstream &rdl_in)
     		g.layered_id = layer_count[0]++;
     	else
 		{
-			int block_num = (g.id.second - min_output_id) / input_count;
-			int id = block_num * sha256.layers[0].gates.size() + (g.id.second - min_output_id) % input_count;
+			int block_num = (output_gate_mapping[g.id.second] - min_output_id) / input_count;
+			int id = block_num * sha256.layers[0].gates.size() + (output_gate_mapping[g.id.second] - min_output_id) % input_count;
 			g.layered_id = id;
 		}
     }
