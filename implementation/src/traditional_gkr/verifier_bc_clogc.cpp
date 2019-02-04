@@ -14,38 +14,42 @@ void verifier::set_blocks(int num_blocks, int binary_bn)
 	C.total_blocks = num_blocks;
 	C.total_blocks_binary_length = binary_bn;
 }
-void verifier::read_circuit_from_string(char* file, int block_id)
+void verifier::read_circuit(const char* path, int n_copy)
 {
 	int d;
 	static char str[300];
-	int offset;
-	sscanf(file, "%d%n", &d, &offset);
-	file += offset;
+	FILE *input_file = fopen(path, "r");
+	fscanf(input_file, "%d", &d);
 	int n;
-	C.blocks[block_id].circuit = new layer[d];
-	C.blocks[block_id].total_depth = d;
+	for(int i = 0; i < n_copy; ++i)
+	{
+		C.blocks[i].circuit = new layer[d];
+		C.blocks[i].total_depth = d;
+	}
 	int max_bit_length = -1;
 	for(int i = 0; i < d; ++i)
 	{
-		sscanf(file, "%d%n", &n, &offset);
-		file += offset;
-		if(n == 1)
-			C.blocks[block_id].circuit[i].gates = new gate[2];
-		else
-			C.blocks[block_id].circuit[i].gates = new gate[n];
+		fscanf(input_file, "%d", &n);
+		for(int blk_id = 0; blk_id < n_copy; ++blk_id)
+		{
+			if(n == 1)
+				C.blocks[blk_id].circuit[i].gates = new gate[2];
+			else
+				C.blocks[blk_id].circuit[i].gates = new gate[n];
+		}
 		int max_gate = -1;
 		int previous_g = -1;
 		for(int j = 0; j < n; ++j)
 		{
 			int ty, g, u, v;
-			sscanf(file, "%d%d%d%d%n", &ty, &g, &u, &v, &offset);
-			file += offset;
+			fscanf(input_file, "%d%d%d%d", &ty, &g, &u, &v);
 			if(g != previous_g + 1)
 			{
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
 			}
 			previous_g = g;
-			C.blocks[block_id].circuit[i].gates[g] = gate(ty, u, v);
+			for(int blk_id = 0; blk_id < n_copy; ++blk_id)
+				C.blocks[blk_id].circuit[i].gates[g] = gate(ty, u, v);
 		}
 		max_gate = previous_g;
 		int cnt = 0;
@@ -69,16 +73,23 @@ void verifier::read_circuit_from_string(char* file, int block_id)
 		if(n == 1)
 		{
 			//add a dummy gate to avoid ill-defined layer.
-			C.blocks[block_id].circuit[i].gates[max_gate] = gate(2, 0, 0);
-			C.blocks[block_id].circuit[i].bit_length = cnt;
+			for(int blk_id = 0; blk_id < n_copy; ++blk_id)
+			{
+				C.blocks[blk_id].circuit[i].gates[max_gate] = gate(2, 0, 0);
+				C.blocks[blk_id].circuit[i].bit_length = cnt;
+			}
 		}
 		else
 		{
-			C.blocks[block_id].circuit[i].bit_length = cnt - 1;
+			for(int blk_id = 0; blk_id < n_copy; ++blk_id)
+				C.blocks[blk_id].circuit[i].bit_length = cnt - 1;
 		}
 	//	fprintf(stderr, "layer %d, bit_length %d\n", i, C.blocks[block_id].circuit[i].bit_length);
-		if(C.blocks[block_id].circuit[i].bit_length > max_bit_length)
-			max_bit_length = C.blocks[block_id].circuit[i].bit_length;
+		for(int blk_id = 0; blk_id < n_copy; ++blk_id)
+		{
+			if(C.blocks[blk_id].circuit[i].bit_length > max_bit_length)
+				max_bit_length = C.blocks[blk_id].circuit[i].bit_length;
+		}
 	}
 	p -> init_array(max_bit_length, C.total_blocks_binary_length);
 
@@ -86,6 +97,7 @@ void verifier::read_circuit_from_string(char* file, int block_id)
 	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
 	beta_v = new prime_field::field_element[(1 << max_bit_length)];
 	beta_u = new prime_field::field_element[(1 << max_bit_length)];
+	fclose(input_file);
 }
 
 prime_field::field_element verifier::add(int depth)
@@ -402,7 +414,7 @@ bool verifier::verify()
 		for(int i = 0; i < (1 << C.blocks[blk].circuit[0].bit_length); ++i)
 		{
 			int g = blk * blk_size + i;
-			if(C.blocks[blk].circuit[0].gates[i].ty == 3)
+			if(C.blocks[blk].circuit[0].gates[i].ty == 3 || C.blocks[blk].circuit[0].gates[i].ty == 2)
 			{
 				input[g] = prime_field::field_element(C.blocks[blk].circuit[0].gates[i].u);
 			}

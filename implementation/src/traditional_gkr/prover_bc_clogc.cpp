@@ -60,7 +60,7 @@ prime_field::field_element* prover::evaluate()
 			u = C.blocks[blk].circuit[0].gates[g].u;
 			v = C.blocks[blk].circuit[0].gates[g].v;
 			ty = C.blocks[blk].circuit[0].gates[g].ty;
-			assert(ty == 3);
+			assert(ty == 3 || ty == 2);
 			circuit_value[blk][0][g] = prime_field::field_element(u);
 		}
 		for(int i = 1; i < C.blocks[blk].total_depth; ++i)

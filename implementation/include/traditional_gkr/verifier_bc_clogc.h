@@ -27,7 +27,7 @@ public:
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, 
 									const prime_field::field_element*, const prime_field::field_element*, 
 									prime_field::field_element*, int, int, int);
-	void read_circuit_from_string(char*, int);
+	void read_circuit(const char*, int);
 };
 
 #endif
