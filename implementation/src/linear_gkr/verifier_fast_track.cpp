@@ -461,11 +461,13 @@ prime_field::field_element verifier::relay_gate(const int depth)
 		int g_second_half = (g >> first_half_g);
 		if(C.circuit[depth].gates[i].ty == 10)
 		{
-			ret.value = ret.value + (beta_g_r0[g].value + beta_g_r1[g].value) % prime_field::mod * 
-			(beta_u[u].value % prime_field::mod) * (beta_v[0].value) % prime_field::mod;
-			ret.value = ret.value % prime_field::mod;
+			assert(v == 0);
+			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * (beta_u[u]) * (beta_v[v]);
 		}
 	}
+	ret.value = ret.value % prime_field::mod;
+	if(ret.value < 0)
+		ret.value = ret.value + prime_field::mod;
 	return ret;
 }
 

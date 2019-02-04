@@ -506,6 +506,7 @@ void prover::sumcheck_phase2_init(prime_field::field_element previous_random, co
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
 				addV_array[v].b.value = (addV_array[v].b.value + tmp * v_u.value) % prime_field::mod;
+				assert(v == 0);
 				break;
 			}
 			default:
