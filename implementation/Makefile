@@ -34,7 +34,7 @@ bclogc: src/traditional_gkr/bclogc.cpp
 	$(CC) $(CFLAGS) $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_traditional.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bclogc.cpp -g -o bin/main_bclogc $(OPT) -lgmp -lgmpxx
 
 bc_clogc:
-	$(CC) $(CFLAGS) $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_bc_clogc.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_bc_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bc_clogc.cpp -g -o bin/main_bc_clogc $(OPT) -lgmp -lgmpxx
+	$(CC) $(CFLAGS) $(INCLUDE) -std=c++11 src/traditional_gkr/verifier_bc_clogc.cpp src/linear_gkr/prime_field.cpp src/traditional_gkr/prover_bc_clogc.cpp src/linear_gkr/polynomial.cpp src/traditional_gkr/bc_clogc.cpp -g -o bin/main_bc_clogc -lgmp -lgmpxx
 
 
 
