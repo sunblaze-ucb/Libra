@@ -42,19 +42,19 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 \centering
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
-\multirow{3}{*}{\shortstack{Matrix\\ multiplication}} &Matrix size & 16x16 & 32x32 & 64x64 & 128x128\\ 
+\multirow{3}{*}{\shortstack{Matrix\\ multiplication}} &Matrix size & 4x4 & 16x16 & 64x64 & 256x256\\ 
 \cline{2-6}
-{} & \cite{JT_Thesis} & 3 & 4 & 5 & 6\\
+{} & \cite{JT_Thesis} & 0.0003s & 0.0065s & 0.3923s & 28.9632s\\
 \cline{2-6}
-{} & Ours & 3 & 4 & 5 & 6\\
+{} & Ours & 0.0004s & 0.0158s & 0.8663s & 55.1185s\\
 \hline
-\multirow{3}{*}{Image scaling} & \#pixels & 112x112 & 304x304 &560x560 & 1072x1072\\ 
+\multirow{3}{*}{Image scaling} & \#pixels & 112x112 & 176x176 &560x560 & 1072x1072\\ 
 \cline{2-6}
-{} & \cite{wahby2017full} & 3 & 4 & 5 & 6\\
+{} & \cite{wahby2017full} & 0.4848s & 0.8341s & 7.8867s & 30.7184s\\
 \cline{2-6}
-{} & Ours & 3 & 4 & 5 & 6\\
+{} & Ours & 1.0865s & 4.1596s & 67.572s & 264.3290s\\
 \hline
-\multirow{3}{*}{\shortstack{Image scaling with\\ different parameters}} & \#pixels & 112x112 & 304x304 &560x560 & 1072x1072\\
+\multirow{3}{*}{\shortstack{Image scaling with\\ different parameters}} & \#pixels & 112x112 & 176x176 &560x560 & 1072x1072\\
 \cline{2-6}
 {} & \cite{zhang2017vsql} & 3 & 4 & 5 & 6\\
 \cline{2-6}
