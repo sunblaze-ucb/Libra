@@ -466,6 +466,7 @@ prime_field::field_element verifier::relay_gate(const int depth)
 			ret.value = ret.value % prime_field::mod;
 		}
 	}
+	return ret;
 }
 
 bool verifier::verify()
