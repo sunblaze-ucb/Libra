@@ -103,6 +103,6 @@ plt.subplots_adjust(left=0.17, bottom=0.22, top=0.97, right=0.95)
 figManager = plt.get_current_fig_manager()
 #figManager.window.showMaximized()
 fig.set_size_inches(16,10)
-plt.savefig('/Users/cusgadmin/Desktop/Figures/fig1.pdf')
+plt.savefig('fig1.pdf')
 
 #plt.show()
