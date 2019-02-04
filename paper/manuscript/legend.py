@@ -17,7 +17,7 @@ plt.rc('font', family='serif', size=26)
 
 #leg = ax.legend( (rects1[0],rects2[0],rects4[0],rects6[0]), ('Ours', 'vnTinyRAM', 'Buffet (ptr chase)', 'Buffet (KMP)'),loc='upper left', borderpad=0.1,bbox_to_anchor=[-0.03, 1.07],fontsize = 45)
 #lines = ax.plot(range(10), pylab.randn(10), range(10), pylab.randn(10))
-figlegend.legend((rects1[0], rects2[0], rects3[0], rects4[0], rects5[0], rects6[0]), ('Ours', 'Hyrax', 'Ligero', 'Bulletproofs', 'libSNARK', 'libSTARK'), 'center', ncol = 6, fontsize = 25)
+figlegend.legend((rects1[0], rects2[0], rects3[0], rects4[0], rects5[0], rects6[0]), ('Ours', 'Hyrax', 'Bulletproofs', 'Ligero', 'libSNARK', 'libSTARK'), 'center', ncol = 6, fontsize = 25)
 fig.show()
 figlegend.show()
 figlegend.savefig('legend.pdf') 
