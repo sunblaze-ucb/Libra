@@ -56,15 +56,15 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 \hline
 \multirow{3}{*}{\shortstack{Image scaling with\\ different parameters}} & \#pixels & 112x112 & 176x176 &560x560 & 1072x1072\\
 \cline{2-6}
-{} & \cite{zhang2017vsql} & 5.989001 & 23.970003 & 383.183502 & 1541.7906\\
+{} & \cite{zhang2017vsql} & 5.989001s & 23.970003s & 383.183502s & 1541.7906s\\
 \cline{2-6}
 {} & Ours & 1.2122s & 3.9056s & 57.7635s & 229.8793s\\
 \hline
 \multirow{3}{*}{Random circuit} & \#gates per layer& $2^8$ & $2^{12}$ & $2^{16}$ & $2^{20}$\\ 
 \cline{2-6}
-{} & \cite{CMT} & 3 & 4 & 5 & 6\\
+{} & \cite{CMT} & 0.0090765s & 0.19723s & 4.20471s & 91.201s\\
 \cline{2-6}
-{} & Ours & 3 & 4 & 5 & 6\\
+{} & Ours & 0.0366618s & 0.0889080s & 0.780485s & 12.4869s\\
 \hline
 \end{tabular}
 \caption{\label{GKRCom}Comparison of the performance of \name{} versus various previous GKR systems.}
