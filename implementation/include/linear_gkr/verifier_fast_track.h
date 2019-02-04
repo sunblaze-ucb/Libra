@@ -31,6 +31,7 @@ public:
 	prime_field::field_element xor_gate(int depth);
 	prime_field::field_element NAAB_gate(int depth);
 	prime_field::field_element sum_gate(int depth);
+	prime_field::field_element relay_gate(int depth);
 	void read_circuit_from_string(char*);
 };
 

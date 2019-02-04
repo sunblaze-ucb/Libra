@@ -447,6 +447,24 @@ prime_field::field_element verifier::V_in(const prime_field::field_element* r_0,
 	return ret;
 }
 
+prime_field::field_element verifier::relay_gate(const int depth)
+{
+	int first_half_g = C.circuit[depth].bit_length / 2;
+	int second_half_g = C.circuit[depth].bit_length - first_half_g;
+	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
+	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
+	prime_field::field_element ret = prime_field::field_element(0);
+	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
+	{
+		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
+		int g_first_half = g & ((1 << first_half_g) - 1);
+		int g_second_half = (g >> first_half_g);
+		ret.value = ret.value + (beta_g_r0[g].value + beta_g_r1[g].value) % prime_field::mod * 
+		(beta_u[u].value % prime_field::mod) * (beta_v[0].value) % prime_field::mod;
+		ret.value = ret.value % prime_field::mod;
+	}
+}
+
 bool verifier::verify()
 {
 	prime_field::init_random();
@@ -558,8 +576,9 @@ bool verifier::verify()
 		auto xor_value = xor_gate(i);
 		auto naab_value = NAAB_gate(i);
 		auto sum_value = sum_gate(i);
+		auto relay_value = relay_gate(i);
 
-		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v + direct_relay_value * v_u + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u)
+		if(alpha_beta_sum != add_value * (v_u + v_v) + mult_value * v_u * v_v + direct_relay_value * v_u + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u + relay_value * v_u)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;
