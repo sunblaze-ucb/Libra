@@ -238,7 +238,7 @@ Because of the full rank of the matrix, the four evaluations are linearly indepe
 \end{proof}
 
 \subsection{Zero knowledge VPD}\label{subsec::our_zkvpd}
-In this section, we present the instantiation of the zkVPD protocol, as defined in Definition~\ref{def::zkpd}. We start with the one used for the input layer. Recall that at the end of the GKR protocol, $\V$ receives two evaluations of the polynomial $\dot{V}_d(z)=\tV_d(z)+Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$ at $z=u^{(d)}$ and $z=v^{(d)}$. In our zero knowledge proof protocol, which will be presented in Section~\ref{subsec::zkall}, $\P$ commits to $\dot{V}_d(z)$ using the zkVPD at the beginning, and opens it to the two points selected by $\V$ using the zkVPD.
+In this section, we present the instantiation of the zkVPD protocol, as defined in Definition~\ref{def::zkvpd}. We start with the one used for the input layer. Recall that at the end of the GKR protocol, $\V$ receives two evaluations of the polynomial $\dot{V}_d(z)=\tV_d(z)+Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$ at $z=u^{(d)}$ and $z=v^{(d)}$. In our zero knowledge proof protocol, which will be presented in Section~\ref{subsec::zkall}, $\P$ commits to $\dot{V}_d(z)$ using the zkVPD at the beginning, and opens it to the two points selected by $\V$ using the zkVPD.
 
 
 Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cite{zkvpd}. The protocol in~\cite{zkvpd} works for any polynomial with $\ell$ variables and any variable degree, and is particularly efficient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and preserves the efficiency. Note that though $\dot{V}_d(z)$ is a low degree extension of the input, it can be decomposed to the sum of $\tV_d(z)$, a multilinear polynomial, and $Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$. Moreover, $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$ can be computed directly by $\V$. Therefore, in our construction, $\P$ commits to $\tV_d(z)$ and $\sum\limits_{w \in\binary} R_d(z_1,w)$ separately, and later opens the sum together given $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$, which is naturally supported because of the homomorphic property of the commitment. Another optimization is that unlike other layers of the circuit, $R_d(z_1,w)$ itself is not opened at two points ($\V$ does not receive $R_d(u^{(d)},c^{(d)})$ and $R_d(v^{(d)},c^{(d)})$ in Protocol~\ref{??}). Therefore, it suffices to set $\dot{V}_d(z)=\tV_d(z)+Z_d(z)R_d(z_1)$, where $R_d$ is a univariate linear polynomial.
@@ -253,11 +253,11 @@ Let $\mathbb{F}$ be a prime-order finite field. Let $\dot{V}(x): \F^\ell\rightar
 \item $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell)$: Select $\alpha, t_1, t_2, \cdots, t_l, t_{\ell+1} \in \F$ uniformaly at random, run $\mathsf{bp} \leftarrow \mathsf{BilGen}(1^{\lambda})$ and compute $\pp = (\mathsf{bp},g^\alpha, g^{t_{\ell+1}}, g^{\alpha t_{\ell+1}}, \{g^{\prod_{i\in W}t_i}, g^{\alpha\prod_{i\in W}t_i}\}_{W\in \mathcal{W}_\ell})$, where $\mathcal{W}_\ell$ is the set of all subsets of $\{1,\ldots, \ell\}$. Set $\vp = (\mathsf{bp},g^{t_1}, \ldots, g^{t_{\ell+1}}, g^\alpha)$.
 
 
-\item $\comm \leftarrow \Commit(\tV, r_V, R, r_R, \pp)$: Compute $c_1 = g^{\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1}}$, $c_2 = g^{\alpha(\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1})}$, $c_3 = g^{R(t_1)+r_Rt_{\ell+1}}$ and $c_4 = g^{\alpha(R(t_1)+r_Rt_{\ell+1})}$  output the commitment $\comm = (c_1, c_2,c_3,c_4)$.
+\item $\comm \leftarrow \Commit(\dot{V}, r_V, r_R, \pp)$: Compute $c_1 = g^{\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1}}$, $c_2 = g^{\alpha(\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1})}$, $c_3 = g^{R(t_1)+r_Rt_{\ell+1}}$ and $c_4 = g^{\alpha(R(t_1)+r_Rt_{\ell+1})}$  output the commitment $\comm = (c_1, c_2,c_3,c_4)$.
 
 \item $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$: Output $\accept$ if $e(c_1, g^\alpha) = e(c_2,g)$ and $e(c_3, g^\alpha) = e(c_4,g)$. Otherwise, output $\reject$.
 
-\item $(y,\pi)\leftarrow\Open(\tV, r_V, R, r_R, Z, u,\pp)$: Choose $r_1,\ldots, r_\ell\in\F$ at random, and compute polynomials $q_i$ such that
+\item $(y,\pi)\leftarrow\Open(\dot{V}, r_V, r_R, u,\pp)$: Choose $r_1,\ldots, r_\ell\in\F$ at random, and compute polynomials $q_i$ such that
 \[
 \tV(x)+r_Vx_{\ell+1}+Z(u)(R(x_1)+r_Rx_{\ell+1}) -(\tV(u)+Z(u)R(u_1)) =
 \]
@@ -265,7 +265,7 @@ Let $\mathbb{F}$ be a prime-order finite field. Let $\dot{V}(x): \F^\ell\rightar
 \]   
 Set $\pi = (\{g^{q_i(t_i\ldots, t_\ell)+r_it_{\ell+1}}, g^{\alpha(q_i(t_i\ldots, t_\ell)+r_it_{\ell+1})}\}_{i\in[1,\ell]}, g^{r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(t_i-u_i)}, g^{\alpha(r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(t_i-u_i))})$ and $y = \tV(u)+Z(u)R(u_1)$.
 
-\item $\{\accept,\reject\}\leftarrow\Verify(\comm,u,y,\pi,Z,\vp)$: Parse $\pi$ as $(\pi_i,\pi_{\alpha i})$ for $i\in[1,\ell+1]$. Check $e(\pi_i,g^\alpha) = e(\pi_{\alpha i},g)$ for $i\in[1,\ell+1]$. Check $e(c_1c_3^{Z(u)}/g^y, g) = \prod_{i=1}^\ell e(\pi_i, g^{t_i-u_i}) \cdot e(g^{\pi_{\ell+1}},g^{t_{\ell+1}})$. Output $\accept$ if all the checks pass, otherwise, output $\reject$.
+\item $\{\accept,\reject\}\leftarrow\Verify(\comm,u,y,\pi,\vp)$: Parse $\pi$ as $(\pi_i,\pi_{\alpha i})$ for $i\in[1,\ell+1]$. Check $e(\pi_i,g^\alpha) = e(\pi_{\alpha i},g)$ for $i\in[1,\ell+1]$. Check $e(c_1c_3^{Z(u)}/g^y, g) = \prod_{i=1}^\ell e(\pi_i, g^{t_i-u_i}) \cdot e(g^{\pi_{\ell+1}},g^{t_{\ell+1}})$. Output $\accept$ if all the checks pass, otherwise, output $\reject$.
 
 
 \end{itemize} 
@@ -292,13 +292,13 @@ In this section, we present our zero knowledge argument scheme. At a high level,
 		
 		\item $\langle\P(\pk,w), \V(\vk)\rangle(x)$: Let $C$ be a layered arithmetic circuit over $\F$ with $d$ layers, input $x$ and witness $w$ such that $|x|+|w|\le n$, $|C|\le S$ and $C(x;w) =1$. Without loss of generality, assume $|w|/|x| = 2^m -1$ for some $m\in\N$.
 		\begin{enumerate}
-			\item $\P$ selects a random bivariate polynomial $R_d$ with variable degree 2 and commits to the input of $C$ by sending $\comm_d\leftarrow\VPD_1.\Commit(\tV_d, r_V, R_d, r_R, \pp_1)$ to $\V$, where $\tV_d$ is the multilinear extension of array $(x;w)$.
+			\item $\P$ selects a random bivariate polynomial $R_d$ with variable degree 2 and commits to the input of $C$ by sending $\comm_d\leftarrow\VPD_1.\Commit(\dot{V}_d, r_V, r_R, \pp_1)$ to $\V$, where $\tV_d$ is the multilinear extension of array $(x;w)$ and $\dot{V}_d=\tV_d+R_d$
 			\item $\V$ runs $\VPD_1.\CheckComm(\comm_d,\vp_1)$. If it outputs $\reject$, $\V$ aborts and outputs $\reject$.  
 			\item $\P$ and $\V$ execute Step 1-5 of the zero knowledge GKR protocol in Protocol~\ref{??}, with the zkVPDs instantiated with $\VPD_2$ and $\VPD_3$. If Protocol~\ref{??} rejects, $\V$ outputs $\reject$ and aborts. Otherwise, by the end of this step, $\V$ receives two claims of $\dot{V}_d$ at $u^{(d)}$ and $v^{(d)}$.
-			\item $\P$ runs $(y_1,\pi_1)\leftarrow\VPD_1.\Open(\tV_d, r_V, R_d, r_R, Z, u^{(d)},\pp_1)$,  $(y_2,\pi_2)\leftarrow\VPD_1.\Open(\tV_d, r_V, R_d, r_R, Z, v^{(d)},\pp_1)$ and sends $y_1,\pi_1,y_2,\pi_2$ to $\V$.
-			\item $\V$ runs $\Verify(\comm_d,u^{(d)},y_1,\pi_1,Z,\vp_1)$ and $\Verify(\comm_d,v^{(d)},y_2,\pi_2,Z,\vp_1)$ and output $\reject$ if either check fails. Otherwise, $\V$ checks $\dot{V}_d(u^{(d)}) = y_1$ and $\dot{V}_d(v^{(d)}) = y_2$, and rejects if either fails.
+			\item $\P$ runs $(y_1,\pi_1)\leftarrow\VPD_1.\Open(\dot{V}, r_V, r_R,u^{(d)},\pp_1)$,  $(y_2,\pi_2)\leftarrow\VPD_1.\Open(\dot{V}, r_V, r_R, v^{(d)},\pp_1)$ and sends $y_1,\pi_1,y_2,\pi_2$ to $\V$.
+			\item $\V$ runs $\Verify(\comm_d,u^{(d)},y_1,\pi_1,\vp_1)$ and $\Verify(\comm_d,v^{(d)},y_2,\pi_2,\vp_1)$ and output $\reject$ if either check fails. Otherwise, $\V$ checks $\dot{V}_d(u^{(d)}) = y_1$ and $\dot{V}_d(v^{(d)}) = y_2$, and rejects if either fails.
 			\item $\V$ computes the multilinear extension of input $x$ at a random point $r_x\in\F^{\log |x|}$ and sends $r_x$ to $\P$.
-			\item $\P$ pads $r_x$ to $r'_x\in\F^{\log |x|}\times 0^{\log |w|}$ with $\log |w|$ 0s and sends $\V$ $(y_x,\pi_x)\leftarrow\VPD_1.\Open(\tV_d, r_V, R_d, r_R, Z, r'_x,\pp_1)$. $\V$ checks $\Verify(\comm_d,r'_x,y_x,\pi_x,Z,\vp_1)$ and $y_x$ equals the evaluation of the multilinear extension on $x$. $\V$ outputs $\reject$ if the checks fail. Otherwise, $\V$ outputs $\accept$.
+			\item $\P$ pads $r_x$ to $r'_x\in\F^{\log |x|}\times 0^{\log |w|}$ with $\log |w|$ 0s and sends $\V$ $(y_x,\pi_x)\leftarrow\VPD_1.\Open(\tV_d, r_V, r_R, r'_x,\pp_1)$. $\V$ checks $\Verify(\comm_d,r'_x,y_x,\pi_x,\vp_1)$ and $y_x$ equals the evaluation of the multilinear extension on $x$. $\V$ outputs $\reject$ if the checks fail. Otherwise, $\V$ outputs $\accept$.
 		\end{enumerate}
 		
 	\end{itemize}
