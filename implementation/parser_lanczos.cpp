@@ -24,52 +24,6 @@ regex pass_gate("P V[0-9]+ = V[0-9]+ PASS V[0-9]+ E");
 
 smatch base_match;
 
-/*
-while(getline(rdl_in, source_line))
-{
-    if(std::regex_match(source_line, base_match, add_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = V%d + V%d E", &tgt, &src0, &src1);
-        G.add(src0, tgt);
-        G.add(src1, tgt);
-    }
-    else if(std::regex_match(source_line, base_match, mult_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = V%d * V%d E", &tgt, &src0, &src1);
-        G.add(src0, tgt);
-        G.add(src1, tgt);
-    }
-    else if(std::regex_match(source_line, base_match, constant_assign_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = %d E", &tgt, &src0);
-    }
-    else if(std::regex_match(source_line, base_match, input_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = I%d E", &tgt, &src0);
-        src0 += 500000;
-        G.add(src0, tgt);
-        input_gates.push_back(src0);
-    }
-    else if(std::regex_match(source_line, base_match, output_gate))
-    {
-        sscanf(source_line.c_str(), "P O%d = V%d E", &tgt, &src0);
-        tgt += 1000000;
-        G.add(src0, tgt);
-    }
-    else if(std::regex_match(source_line, base_match, pass_gate))
-    {
-        sscanf(source_line.c_str(), "P V%d = V%d PASS V%d E", &tgt, &src0, &src1);
-        tgt += 1000000;
-        G.add(src0, tgt);
-    }
-    else
-    {
-        cout << source_line << endl;
-        assert(false);
-    }
-}
-*/
-
 enum gate_types
 {
     add = 0,

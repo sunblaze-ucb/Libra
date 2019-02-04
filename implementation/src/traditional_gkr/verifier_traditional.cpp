@@ -9,95 +9,19 @@ void verifier::get_prover(prover *pp)
 	p = pp;
 }
 
-void verifier::read_circuit(const char *path)
-{
-	int d;
-	static char str[300];
-	FILE *circuit_in;
-	circuit_in = fopen(path, "r");
-
-	fscanf(circuit_in, "%d", &d);
-	int n;
-	C.circuit = new layer[d];
-	C.total_depth = d;
-	int max_bit_length = -1;
-	for(int i = 0; i < d; ++i)
-	{
-		fscanf(circuit_in, "%d", &n);
-		if(n == 1)
-			C.circuit[i].gates = new gate[2];
-		else
-			C.circuit[i].gates = new gate[n];
-		int max_gate = -1;
-		int previous_g = -1;
-		for(int j = 0; j < n; ++j)
-		{
-			int ty, g, u, v;
-			fscanf(circuit_in, "%d%d%d%d", &ty, &g, &u, &v);
-			if(g != previous_g + 1)
-			{
-				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
-			}
-			previous_g = g;
-			C.circuit[i].gates[g] = gate(ty, u, v);
-		}
-		max_gate = previous_g;
-		int cnt = 0;
-		while(max_gate)
-		{
-			cnt++;
-			max_gate >>= 1;
-		}
-		max_gate = 1;
-		while(cnt)
-		{
-			max_gate <<= 1;
-			cnt--;
-		}
-		int mx_gate = max_gate;
-		while(mx_gate)
-		{
-			cnt++;
-			mx_gate >>= 1;
-		}
-		if(n == 1)
-		{
-			//add a dummy gate to avoid ill-defined layer.
-			C.circuit[i].gates[max_gate] = gate(2, 0, 0);
-			C.circuit[i].bit_length = cnt;
-		}
-		else
-		{
-			C.circuit[i].bit_length = cnt - 1;
-		}
-		//fprintf(stderr, "layer %d, bit_length %d\n", i, C.circuit[i].bit_length);
-		if(C.circuit[i].bit_length > max_bit_length)
-			max_bit_length = C.circuit[i].bit_length;
-	}
-	p -> init_array(max_bit_length);
-
-	beta_g_r0 = new prime_field::field_element[(1 << max_bit_length)];
-	beta_g_r1 = new prime_field::field_element[(1 << max_bit_length)];
-	beta_v = new prime_field::field_element[(1 << max_bit_length)];
-	beta_u = new prime_field::field_element[(1 << max_bit_length)];
-	fclose(circuit_in);
-}
-
-void verifier::read_circuit_from_string(char* file)
+void verifier::read_circuit_from_FILE(FILE* file)
 {
 	int d;
 	static char str[300];
 	int offset;
-	sscanf(file, "%d%n", &d, &offset);
-	file += offset;
+	fscanf(file, "%d", &d);
 	int n;
 	C.circuit = new layer[d];
 	C.total_depth = d;
 	int max_bit_length = -1;
 	for(int i = 0; i < d; ++i)
 	{
-		sscanf(file, "%d%n", &n, &offset);
-		file += offset;
+		fscanf(file, "%d", &n);
 		if(n == 1)
 			C.circuit[i].gates = new gate[2];
 		else
@@ -107,8 +31,7 @@ void verifier::read_circuit_from_string(char* file)
 		for(int j = 0; j < n; ++j)
 		{
 			int ty, g, u, v;
-			sscanf(file, "%d%d%d%d%n", &ty, &g, &u, &v, &offset);
-			file += offset;
+			fscanf(file, "%d%d%d%d", &ty, &g, &u, &v);
 			if(g != previous_g + 1)
 			{
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1].");
