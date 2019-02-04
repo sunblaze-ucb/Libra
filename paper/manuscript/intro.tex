@@ -3,13 +3,59 @@
 \paragraph{Our contributions.} In this paper, we propose a new zero-knowledge proof scheme. Our scheme is based on the doubly efficient interactive proof proposed by Goldwasser et al. in~\cite{GKR} (referred as \emph{GKR} protocol in this paper), and the verifiable polynomial delegation scheme proposed by Zhang et al. in~\cite{zhang2017vsql}. Our main contributions are:
 \begin{itemize}
 	\item \textbf{GKR with linear prover time.} We develop a new algorithm to generate the proof in the GKR protocol for arbitrary layered arithmetic circuit in linear time. Our prover time is asymptotically the same as evaluating the circuit and is optimal. Our algorithm does not require any pattern in the circuit and this result subsumes all existing improvements on the GKR prover assuming special circuit structures, such as regular circuits in~\cite{t13}, data parallel circuits in~\cite{t13,wahby2017full}, circuits with different sub-copies in~\cite{vram}. See related work for more details. 
-	\item \textbf{Efficient ZKP protocol.}
-	\item Implementation
+	\item \textbf{Efficient zero knowledge proof protocol.} We propose an approach to turn the argument system based on GKR and VPD to zero knowledge efficiently. In particular, we show a way to mask the protocols with small random polynomials such that the zero knowledge variant of the protocol introduces minimal overhead compared to the original scheme. 
+	\item \textbf{Implementation and evaluations.} We implement a zero knowledge proof system, \name, based on our new protocol. \name takes an arithmetic circuit with varies types of gates (fan-in 2 and degree $\le 2$, such as $+,-,\times$, AND, XOR, etc.) and turns it into a zero knowledge proof protocol. We conduct thorough comparisons to all existing zero knowledge proof systems and show that \name is competitive in all measurements: prover time, prover memory, proof size and verification time. We plan to release our system as an open-source tool.
 \end{itemize}
 
-\paragraph{Comparing to other ZKP systems.}
+\paragraph{Comparing to other ZKP systems.} Table~\ref{tab:zkpall} shows the highlight of the comparisons to existing ZKP systems. For the prover time, \name and Bulletproof are the only two systems with linear complexity, and in practice \name is much faster than Bulletproof as Bulletproof requires cryptographic operations for every gate of the circuit. This is one of the major contributions of our work. \name has logarithmic verification time for log-space uniform circuits and is one of the best systems in practice. Comparing to Hyrax, which is based on the same technique of GKR and VPD, \name improves the performance in all aspects. One can refer to Section~\ref{sec:eval} for our experimental settings and more detailed comparisons. Finally, in all the systems, SNARK requires a trusted setup phase for every circuit, and \name requires a one-time trusted setup for an upper bound on the input size. See Section~\ref{subsec::discuss} for a discussion on removing the trusted setup in \name. 
+\yupeng{update after the numbers.}
 
-\paragraph{Our techniques.}
+
+
+\begin{table}[h]
+	\centering
+	{\footnotesize
+	\begin{tabular}{|c|c|c|c|c|c|c|c|}
+		
+		\hline
+		&SNARK&Ligero&Bulletproof&Hyrax&STARK&Aurora&\name\\
+		\hline
+		\hline
+		Setup&$O(C)$&\multicolumn{5}{c|}{NA}&$O(n)$\\
+		\hline
+		Prover&$O(C\log^2C)$&$O(C\log C)$&$O(C)$&$O(C\log C)$&$O(C\log^2 C)$&$O(C\log C)$ &$O(C)$\\
+		\hline
+		Verifier&$O(1)$&$O(C)$&$O(C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$&$O(C)$&$O(d\log C)$\\
+		\hline
+		Proof&$O(1)$&$O(\sqrt{C})$&$O(\log C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$& $O(\log^2 C)$&$O(d\log C)$\\
+		\hline
+		\hline
+		Setup&&\multicolumn{5}{c|}{NA}&\\
+		\hline
+		Prover&&&&&&&\\
+		\hline
+		Verifier&&&&&&&\\
+		\hline
+		Proof&&&&&&&\\
+		\hline
+	\end{tabular}
+}
+\caption{Comparisons to existing zero knowledge proof systems. The numbers are for a circuit computing the root of a Merkle tree with ?? leaves (?? SHA256).\protect\footnotemark}\label{tab:zkpall}
+\end{table}
+\footnotetext{STARK is in the random access machine (RAM) model. To compare the performance, we can convert a circuit of size $C$ to a RAM program with $T=\Theta(C)$ steps. In addition, the verification time of Hyrax, STARK and \name is also linear to a description of the circuit (RAM program). In the worst case, the description is $O(C)$.}
+
+\subsection{Our Techniques}
+Our main technical contributions are a GKR protocol with linear prover time and an efficient approach to turn the GKR protocol into zero knowledge. We summarize the key ideas behind these two contributions. The detailed protocols are presented in Section~\ref{sec::gkrlin} and~\ref{sec:zkp} respectively.
+
+\paragraph{GKR with linear prover.} In~\cite{GKR}, Goldwasser et al. showed an approach to model the evaluation of a layered circuit as a sequence of summations on polynomials defined by values in consecutive layers of the circuit. Using the famous sumcheck protocol (see Section~\ref{subsec::sumcheck}), they developed the GKR protocol allowing the verifier to validate the circuit evaluation in logarithmic time with a logarithmic size proof. However, the polynomials in the protocol are multivariate with $2s$ variables, where $S$ is the number of gates in one layer of the circuit and $s = \log S$. Naively running the sumcheck protocol on these polynomials incurs $S^2$ prover time, as there are at least $2^{2s}=S^2$ monomials in a $2s$-variate polynomial. Later, Cormode et al.~\cite{CMT} observed that these polynomials are sparse, containing only $S$ nonzero monomials and improved the prover time to $S\log S$.
+
+In our new approach, we divide the protocol into two separate sumchecks. In each sumcheck, the polynomial only contains $s$ variables, and can be expressed as the product of two multilinear polynomials. Utilizing the sparsity of the circuit, we develop new algorithms to scan through each gate of the circuit and compute the close form of all these multilinear polynomials explicitly, which takes $O(S)$ time. With this new way of representation, the prover can deploy a dynamic programming technique to generate the proofs in each sumcheck in $O(S)$ time, resulting in a total prover time of $O(S)$. 
+
+\paragraph{Efficient zero knowledge GKR.} The original GKR protocol is not zero knowledge, as the messages in the proof can be viewed as weighed sums of the values in the circuit and leak information. In~\cite{zkvpd,hyrax}, the authors proposed to turn the GKR protocol into zero knowledge by hiding the messages in homomorphic commitments, which incurs a big overhead on the verification time. In~\cite{zksumcheck}, Chiesa et al. proposed an alternative approach by masking the protocol with random polynomials. However, the masking polynomials are as big as the original ones and the prover time becomes exponential, making the approach mainly of theoretical interest. 
+
+In our scheme, we first show that in order to make the sumcheck protocol zero knowledge, the prover can mask it with a "small" polynomial. In particular, the masking polynomial only contains logarithmically many random coefficients. The intuition is that though the original polynomial has $O(2^\ell)$ or more terms ($\ell$ is the number of variables in the polynomial), the prover only sends $O(\ell)$ messages in the sumcheck protocol. Therefore, it suffices to mask the original polynomial with a random one with $O(\ell)$ coefficients to achieve zero knowledge. In particular, we set the masking polynomial as the sum of $\ell$ univariate random polynomials with the same variable-degree. In Section~\ref{subsec:zksumcheck}, we show that the entropy of this mask exactly counters the leakage of the sumcheck, proving that it is efficient and optimal.
+
+Besides the sumcheck, the GKR protocol additional leaks two evaluations of the polynomial defined by values in each layer of the circuit. To make these evaluations zero knowledge, we mask the polynomial by a special low-degree random polynomial. In particular, we show that after the mask, the verifier in total learns 4 messages related to the evaluations of the masking polynomial and we can prove zero knowledge by making these messages linearly independent. Therefore, the masking polynomial is of constant size: it consists of 2 variables with variable degree 2.
 
 
 \subsection{Related Work}
