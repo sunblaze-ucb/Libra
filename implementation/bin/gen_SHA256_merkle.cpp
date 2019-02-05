@@ -101,7 +101,7 @@ void construct_bit_ops(int n_leaf)
 			int input_instance_B;
 			input_instance_B = i * 2 + 1;
 			auto outB_var = update_info[63][j];
-			int addrB = var_to_aux_addr[make_pair(input_instance_B, outA_var)];
+			int addrB = var_to_aux_addr[make_pair(input_instance_B, outB_var)];
 			int addr_self = var_to_aux_addr[make_pair(i, make_pair('W', j + 8))];
 			for(int k = 0; k < 32; ++k)
 			{
@@ -119,7 +119,7 @@ void construct_bit_ops(int n_leaf)
 			auto w15_r7 = rotate_instr(i, j - 15, 7);
 			auto w15_r18 = rotate_instr(i, j - 15, 18);
 			auto w15_r3 = rotate_instr(i, j - 15, 3);
-			for(int j = 0; j < 32; ++j)
+			
 		}
 	}
 }

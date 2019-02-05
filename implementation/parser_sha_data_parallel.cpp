@@ -26,7 +26,7 @@ regex xor_gate("P V[0-9]+ = V[0-9]+ XOR V[0-9]+ E");
 regex minus_gate("P V[0-9]+ = V[0-9]+ minus V[0-9]+ E");
 regex naab_gate("P V[0-9]+ = V[0-9]+ NAAB V[0-9]+ E");
 regex not_gate("P V[0-9]+ = V[0-9]+ NOT V[0-9]+ E");
-
+regex summation_gate("P V[0-9]+ = V[0-9]+ SS V[0-9]+ E");
 smatch base_match;
 int repeat_num;
 
@@ -36,6 +36,7 @@ enum gate_types
     mult = 1,
     dummy = 2,
     input = 3,
+	sum_gate = 5,
     not_gate_id = 6, 
     minus_gate_id = 7,
     xor_gate_id = 8,
@@ -240,6 +241,14 @@ void DAG_to_layered()
 				add_relay(id, input0, 0);
 				break;
 			}
+			case sum_gate:
+			{
+				for(int i = g.input0.second; i <= g.input1.second; ++i)
+				{
+					assert(sha256_dag_copy.circuit[id].layered_lvl == sha256_dag_copy.circuit[make_pair('V', i)].layered_lvl + 1);
+				}
+				break;
+			}
 		}
 	}
 	layer_gate_count.resize(max_lvl + 1);
@@ -426,6 +435,21 @@ void read_circuit(ifstream &circuit_in)
             sha256_dag.circuit[g.input0].outputs.push_back(g.id);
             sha256_dag.circuit[g.input1].outputs.push_back(g.id);
         }
+		else if(std::regex_match(source_line, base_match, summation_gate))
+		{
+			sscanf(source_line.c_str(), "P V%d = V%lld SS V%lld E", &tgt, &src0, &src1);
+            DAG_gate g;
+            g.is_output = false;
+            g.ty = sum_gate;
+            g.id = make_pair((int)'V', (int)tgt);
+            g.input0 = make_pair((int)'V', (int)src0);
+            g.input1 = make_pair((int)'V', (int)src1);
+            sha256_dag.circuit[make_pair((int)'V', tgt)] = g;
+			for(int i = src0; i <= src1; ++i)
+			{
+				sha256_dag.circuit[make_pair('V', i)].outputs.push_back(g.id);
+			}
+		}
         else
         {
             cout << source_line << endl;
@@ -643,6 +667,10 @@ void merge_and_output()
 				}
 				else
 				{
+					if(sha256.layers[i].gates[j].ty == sum_gate)
+					{
+						printf("%lld %lld\n", sha256.layers[i].gates[j].u, sha256.layers[i].gates[j].v + 1);
+					}
 					fprintf(sha256_circuit_file, "%d %d %015lld %lld ", sha256.layers[i].gates[j].ty, sha256.layers[i].gates[j].g + r * block_size, sha256.layers[i].gates[j].u + r * prev_block_size, sha256.layers[i].gates[j].v + r * prev_block_size);
 				}
 			}
