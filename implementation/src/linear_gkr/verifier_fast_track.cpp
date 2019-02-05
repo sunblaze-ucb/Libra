@@ -128,7 +128,6 @@ void verifier::read_circuit(const char *path)
 void verifier::read_circuit_from_string(char* file)
 {
 	int d;
-	static char str[300];
 	int offset;
 	sscanf(file, "%d%n", &d, &offset);
 	file += offset;
@@ -236,10 +235,6 @@ prime_field::field_element verifier::mult(int depth)
 
 prime_field::field_element verifier::not_gate(int depth)
 {
-	int first_half_g = C.circuit[depth].bit_length / 2;
-	int second_half_g = C.circuit[depth].bit_length - first_half_g;
-	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
-	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
@@ -247,12 +242,6 @@ prime_field::field_element verifier::not_gate(int depth)
 		if(C.circuit[depth].gates[i].ty == 6)
 		{
 			assert(v == 0);
-			int g_first_half = g & ((1 << first_half_g) - 1);
-			int g_second_half = (g >> first_half_g);
-			int u_first_half = u & ((1 << first_half_uv) - 1);
-			int u_second_half = u >> first_half_uv;
-			int v_first_half = v & ((1 << first_half_uv) - 1);
-			int v_second_half = v >> first_half_uv;
 			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
@@ -261,22 +250,12 @@ prime_field::field_element verifier::not_gate(int depth)
 
 prime_field::field_element verifier::xor_gate(int depth)
 {
-	int first_half_g = C.circuit[depth].bit_length / 2;
-	int second_half_g = C.circuit[depth].bit_length - first_half_g;
-	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
-	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 8)
 		{
-			int g_first_half = g & ((1 << first_half_g) - 1);
-			int g_second_half = (g >> first_half_g);
-			int u_first_half = u & ((1 << first_half_uv) - 1);
-			int u_second_half = u >> first_half_uv;
-			int v_first_half = v & ((1 << first_half_uv) - 1);
-			int v_second_half = v >> first_half_uv;
 			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
@@ -285,22 +264,12 @@ prime_field::field_element verifier::xor_gate(int depth)
 
 prime_field::field_element verifier::minus_gate(int depth)
 {
-	int first_half_g = C.circuit[depth].bit_length / 2;
-	int second_half_g = C.circuit[depth].bit_length - first_half_g;
-	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
-	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 7)
 		{
-			int g_first_half = g & ((1 << first_half_g) - 1);
-			int g_second_half = (g >> first_half_g);
-			int u_first_half = u & ((1 << first_half_uv) - 1);
-			int u_second_half = u >> first_half_uv;
-			int v_first_half = v & ((1 << first_half_uv) - 1);
-			int v_second_half = v >> first_half_uv;
 			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
@@ -312,22 +281,12 @@ prime_field::field_element verifier::minus_gate(int depth)
 
 prime_field::field_element verifier::NAAB_gate(int depth)
 {
-	int first_half_g = C.circuit[depth].bit_length / 2;
-	int second_half_g = C.circuit[depth].bit_length - first_half_g;
-	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
-	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
 		if(C.circuit[depth].gates[i].ty == 9)
 		{
-			int g_first_half = g & ((1 << first_half_g) - 1);
-			int g_second_half = (g >> first_half_g);
-			int u_first_half = u & ((1 << first_half_uv) - 1);
-			int u_second_half = u >> first_half_uv;
-			int v_first_half = v & ((1 << first_half_uv) - 1);
-			int v_second_half = v >> first_half_uv;
 			ret = ret + (beta_g_r0[g] + beta_g_r1[g]) * beta_u[u] * beta_v[v];
 		}
 	}
@@ -339,10 +298,6 @@ prime_field::field_element verifier::NAAB_gate(int depth)
 
 prime_field::field_element verifier::sum_gate(int depth)
 {
-	int first_half_g = C.circuit[depth].bit_length / 2;
-	int second_half_g = C.circuit[depth].bit_length - first_half_g;
-	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
-	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
@@ -433,8 +388,6 @@ prime_field::field_element verifier::V_in(const prime_field::field_element* r_0,
 		output[i] = output_raw[i];
 	for(int i = 0; i < r_0_size; ++i)
 	{
-		int last_gate;
-		int cnt = 0;
 		for(int j = 0; j < (output_size >> 1); ++j)
 			output[j] = output[j << 1] * (one_minus_r_0[i]) + output[j << 1 | 1] * (r_0[i]);
 		output_size >>= 1;
@@ -449,16 +402,10 @@ prime_field::field_element verifier::V_in(const prime_field::field_element* r_0,
 
 prime_field::field_element verifier::relay_gate(const int depth)
 {
-	int first_half_g = C.circuit[depth].bit_length / 2;
-	int second_half_g = C.circuit[depth].bit_length - first_half_g;
-	int first_half_uv = C.circuit[depth - 1].bit_length / 2;
-	int second_half_uv = C.circuit[depth - 1].bit_length - first_half_uv;
 	prime_field::field_element ret = prime_field::field_element(0);
 	for(int i = 0; i < (1 << C.circuit[depth].bit_length); ++i)
 	{
 		int g = i, u = C.circuit[depth].gates[i].u, v = C.circuit[depth].gates[i].v;
-		int g_first_half = g & ((1 << first_half_g) - 1);
-		int g_second_half = (g >> first_half_g);
 		if(C.circuit[depth].gates[i].ty == 10)
 		{
 			assert(v == 0);
@@ -503,7 +450,6 @@ bool verifier::verify()
 	std::chrono::duration<double> ts = std::chrono::duration_cast<std::chrono::duration<double>>(t_b - t_a);
 	std::cerr << "	Time: " << ts.count() << std::endl;
 	a_0 = alpha * a_0;
-	prime_field::field_element a_1 = prime_field::field_element(0); //* beta
 
 	prime_field::field_element alpha_beta_sum = a_0; //+ a_1
 	prime_field::field_element direct_relay_value;

@@ -319,7 +319,7 @@ namespace prime_field
 						   
 		ret.hi = (__uint128_t)a.mid * (__uint128_t)b.mid + carry2;
 	}
-	u512b u512b::operator * (const u512b &x) const
+	inline u512b u512b::operator * (const u512b &x) const
 	{
 		if(x.mid == 0 && x.lo == 0)
 			return x;
