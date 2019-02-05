@@ -2,43 +2,59 @@
 
 \section{Implementations and Evaluations}\label{sec:eval}
 
-\textbf{Settings.} We use C++ to implement our zero knowledge protocol including circuit generator, zk-GKR and zk-VPD. Besides, we write a new large integer class named u512 combined with GMP\cite{GNU} for field arithmetic. For the binary pairing, we use the ate-pairing\cite{ate-pairing} library on a 254-bit elliptic curve.\\
-We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of RAM and an Intel Xeon E5-2686v4 CPU with eight 2.3GHz virtual cores. Our implementations are not parallelized and only use a single CPU core.\\
+\paragraph{Software.} We fully implement \name, our new zero knowledge proof system in C++. There are around 3000 lines of code for the zkGKR protocol, 1000 lines for the zkVPD protocol and 700 lines for circuit generators. Our system provides an interface to take a generic layered arithmetic circuit and turn it into a zero knowledge proof. We implement a new class for large integers named u512, and use it together with the GMP\cite{GNU} library for large numbers and field arithmetic. We use the ate-pairing\cite{ate-pairing} library on a 254-bit elliptic curve for the bilinear map used in zkVPD. We plan to open-source our system.
+
+\paragraph{Hardware.} We run all of the experiments on Amazon EC2 m4.2xlarge instances with 32GB of RAM and Intel Xeon E5-2686v4 CPU with eight 2.3GHz virtual cores. Our implementations are not parallelized and we only use a single CPU core in the experiments. We report the average time of 10 runs in the table and figures. We omit the standard deviation as it is always less than 3\% of the average in our experiments.
+
+
+Before presenting the experimental results, we describe three concrete optimizations we used in the implementation that further improve the performance of our system.
 
 \paragraph{Key generation with lookup tables.}
 
 \paragraph{More gate types with no overhead.}
 
+\paragraph{Reducing the number of zkVPD invocations.}
+
 \subsection{Improvements on GKR protocols}\label{subsec:expGKR}
-\paragraph{Methodology.} In the section, we would compare our GKR system with previous various GKR system on several types of the circuit listed below to verify the optimal prove time in practice. In order to obtain the unbiased result, we reimplement all of these GKR systems in C++ with the same C++ library. 
+
+In this section, we first show the performance of our new GKR protocol with linear prover time and compare it with all variants of GKR in the literature on different circuits.
+
+\paragraph{Methodology and benchmarks.} For fair comparisons, we reimplement all of these variants in C++ with the same libraries. The variants include: (1) $O(C)$ for regular circuits, proposed in~\cite{t13}, where the two inputs of a gate can be described by two mapping functions with constant size in constant time. See~\cite{t13} for the formal definition of regular circuits. (2) $O(C+C'\log C')$ for data parallel circuits with a small copy of size $C'$, proposed in~\cite{wahby2017full}. (3) $O(C\log C')$ for circuits with non-connected different copies of size $C'$, proposed in~\cite{vram}. (4) $O(C\log C)$ for arbitrary circuits, proposed in~\cite{CMT}.
+
+We compare our GKR protocol to each of these variants on the following benchmarks:
+\begin{itemize}
+	\item
+	\textbf{Matrix multiplication:} $\P$ proves to $\V$ that it knows two matrices whose product equals a public matrix. The representation of this function with an arithmetic circuit is highly regular\footnote{We use the circuit representation of matrix multiplication with $n^3$ gates for fair comparisons. Thaler~\cite{t13} proposed a way to validate the matrix multiplication using a single sumcheck with prover complexity $n^2$. We do not apply this optimization when comparing to other systems.}. We evaluate on different dimensions from $4\times4$ to $256\times256$. 
+	\item
+	\textbf{Image scaling:} It computes a low-resolution image by scaling from a high-resolution image. We use the classic Lanczos resampling\cite{Lanczos} method. It computes each pixel of the output as the convolution of the input with a sliding window and a kernel function defined as:
+	\begin{equation}
+	k(x)=\left\{
+	\begin{aligned}
+	&\text{sinc}(x)/\text{sinc}(ax), &\text{if} -a < x < a\\
+	&0, &\text{otherwise}\\
+	\end{aligned}
+	\right.
+	\end{equation}
+	where $a$ is the scaling parameter and $\text{sinc}(x) = \text{sin}(x)/x$. This function is data parallel, where each sub-circuit computes the same function to generate one pixel of the output image. We evaluate fix the window as $16\times15$ and increase the image size from 112x112 to 1072x1072.
+	\item
+	\textbf{Image scaling of different parameters:} It is the same computation with different scaling parameters in the kernal function for different pixels.
+	The circuit of this function consists of different sub-copies. We evaluate it with the same size of image scaling.
+	\item
+	\textbf{Random circuit:} It is randomly generated layered circuit. We randomly sample the type of each gate, input value and the connection between adjacent layers. We fix the depth as 3 and increase the number of gates per layer from $2^8$ to $2^{20}$.
+\end{itemize}
+To be consistent with the next section, all the protocols are executed on a 254-bit prime field. This does not affect the comparison at all, as all the protocols are in the same field. In Table~\ref{tab:GKRCom}, we report the prover time of the protocols. The proof size and the verification time of all the variants are similar.
+
+\ignore{
 \begin{itemize}
 	\item Regular circuit is the circuit that has a very good structure. More general, there are two map funtions that take the arbitrary gate as the input and output the corresponding two input gates of this gate. The prove time could be improved to linear of the circiut size\cite{JT_Thesis}.
 	\item Single-instruction multi-data circuit means the circuit $C$ could be divided into several parallel copies of sub circuit $C'$, whose maximum number of gates at any layer is $S'$. Suppose the total number of copies is $B$, then the prove time could be $\mathcal{O}(BC'\log S')$ proposed by Zhang \etal \cite{zhang2017vsql}, then improved to $\mathcal{O}(BC' + C'\log S')$ by Wahby \etal \cite{wahby2017full}.   
 	\item Multi-instruction multi-data circuit is similar to the above circuit but its parallel copies are not the same. The prove time of this circuit maintains $\mathcal{O}(BC'\log S')$.
 	\item Generic circuit is the general layered arithmetic circuit, which is equivalent to the Turing machine. The previous best prove time of generic cuicuit is $\mathcal{C\log C}$, where $C$ is the size of the circuit\cite{CMT}.
 \end{itemize}
-\paragraph{Benchmarks.} We evaluate all of these systems on several benchmarks below. Considering some of these systems' efficiency only hold on suitable circuits, we choose corresponding functions subject to these properties. 
- \begin{itemize}
-	\item
-	\textbf{Matrix multiplication} means $\mathbb{P}$ proves to $\mathbb{V}$ that it knows two matrics whose product equals the public input. It is a basic function whose corresponding arithmetic cuicuit is regular and the depth is very small. We evaluate this function for matric of different sizes from 16x16 to 128x128. 
-	\item
-	\textbf{Image scaling} forces $\mathbb{P}$ to prove to $\mathbb{V}$ a low-definition image is a scaled version of a high-definition image. And we use a standard and classic image transformation method named Lanczos resampling\cite{Lanczos} to extend the picture. It uses the convolution of input image and windowed kernel function to produce the output pixels. And we use convolutional kernel function:
-	\begin{equation}
-	k(x)=\left\{
-	\begin{aligned}
-	&sinc(x)/sinc(ax), &\text{if} -a < x < a\\
-	&0, &\text{otherwise}\\
-	\end{aligned}
-	\right.
-	\end{equation}
-	where $a$ is the parameter and $sinc(x) = sin(x)/x$. This function is data parallel where each sub-AC computes the same function to generate one pixel of the output image. We evaluate 16x scaling function on various sizes of pixels from 112x112 to 1072x1072.
-	\item
-	\textbf{Image scaling of different parameters} is very similar to the previous scaling. The only difference is that the parameter of the kernal function changes with window moves.
-	So sub-ACs are still parallel but do not compute the same function. We evaluate the function with the same size of image scaling.
-	\item
-	\textbf{Random circuit} is an arithmatic circuit with depth three and constant gates for every layer. And we randomly sample the type of each gate, input value and the connection between adjacent circuit layers. We evaluate the random circuits of varying numbers of gates per layer from $2^{10}$ to $2^{20}$.
-\end{itemize}
-\begin{table*}[t!]
+}
+
+ 
+\begin{table}[t!]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
@@ -67,30 +83,46 @@ We run all of the experiments on an Amazon EC2 m4.2xlarge machine having 32GB of
 {} & Ours & 0.0366618s & 0.0889080s & 0.780485s & 12.4869s\\
 \hline
 \end{tabular}
-\caption{\label{GKRCom}Comparison of the performance of \name{} versus various previous GKR systems.}
-\end{table*}
-\paragraph{Results.} As all of these systems implement the same protocol, proof size and verification time are exactly the same. Therefore, we only need to focus on the prove time of them. Experimental results are shown in Table \ref{GKRCom}. In conclusion, our protocol is comparable with previous protocols for regular circuit and data parallel circuit while much faster for multi-instruction multi-data circuit and random circuit. To be specific, for matrix multiplication, when the matrix size is 128x128, our protocol is about a litter slower than Thaler's protocol, that is because the constant coefficient of our protocol is larger. For image scaling, when the size of pixels are 112x112, our protocol is also a bit slower than Wahby's protocol, the same reason remains since the number of sub copies circuits are large. For image scaling with different parameters, when the number of pixels are 112x112, our protocol is 5x speed up since our algorithm is linear. 
-For random circuit, when the number of gates per layer are $2^{20}$, our protocol is at least 10x speed up and this gap must be larger with circuit size grows.  
+\caption{\label{tab:GKRCom}Prover time of our linear GKR and previous GKR variants.}
+\end{table}
+
+
+
+\paragraph{Results.} As shown in Table~\ref{tab:GKRCom}, the performance of our GKR protocol is comparable to those special protocols for structured circuits, and much better that the state-of-the-art on generic circuits. For example, for matrix multiplication, our protocol is slower by $1.3-2.4\times$, because the protocol in~\cite{t13} writes the wiring of matrix multiplication explicitly and does not need to compute $\tadd$ and $\tmult$. For image scaling, our protocol is slower by $2.5-4\times$. This gap would become even smaller when the size of each sub-copy is larger. Here we use a small $16\times16$ block, while the number of copies is 49--4489.
+
+For image scaling with different parameters and generic random circuits, our protocol has a speedup of $4-8\times$, and the speedup will increase with the scale of the circuits, as indicated by the complexity.
+
+Besides the speedup on complicated circuits, a significant advantage of the our new GKR protocol is on the prover interface of the system. In prior work such as~\cite{wahby2017full,vram}, as the protocols are particularly efficient for structured circuits, the circuits must be represented as small copies and the numbers of each copy. Even worse, the structure is explored per layer of the circuit, making the numbers of each copy potentially be different in different layers. (E.g., 6 gates may be considered 3 copies with 2 gates and 2 copies with 3 gates in two different layers for efficiency purposes.) This constrain makes the interface of these systems hard to use and generalize. Our result gives a unified solution for arbitrary circuits, and it is the main reason that our prover can take the description of any layered arithmetic circuit potentially generated by other tools like Verilog. 
+
+
 \subsection{Comparing to Other ZKP Schemes}\label{subsec:expZKP}
-\textbf{Baselines.} In this section, we compare \name{} with previous state-of-the-art zero-knowledge argument systems with similar properties including Hyrax\cite{hyrax}, Ligero\cite{ligero}, Bulletproofs\cite{bulletproofs}, libSTARK\cite{libstark} and libSNARK\cite{libsnark}.
+
+In this section, we show the performance of \name as a whole and compare it with several state-of-the-art zero knowledge proof systems.
+
+\paragraph{Methodology.} We compare with the following systems: libSNARK~\cite{libsnark}, Ligero\cite{ligero}, libSTARK\cite{libstark}, Hyrax\cite{hyrax},  Bulletproofs\cite{bulletproofs} and Aurora~\cite{}. See Section~\ref{sec:intro} for more explanations of these systems and their asymptotics. 
 \begin{itemize}
-\item
-\textbf{Hyrax} is a zero-knowledge argument with quasi linear prove time, sublinear verification time, low communication complexity and no trusted setup. The implementation of their system is open source. Hence, we just run Hyrax under the same setting of our system.
-\item
-\textbf{Bulletproofs} is a zero knowledge argument with logarithmic prove time for range query. Since hyrax has implemented this system and released the code, we use the hyrax's implementation directly.
-\item
-\textbf{Ligero:} we report on the authors' C++ implementation.
-\item
-\textbf{libSTARK:} we report on the author's C++ implementation.
-\item
-\textbf{libSNARK:} we download their open source library and run their system on the same environment.
+\item \textbf{libSNARK:} We use jsnark~\cite{jsnark} to write the circuits (R1CS constrains), which compiles them to zero knowledge proofs using the libSNARK backend~\cite{??}. 
+
+\item\textbf{Ligero:} As the system is not open-source, we use the same number reported in~\cite{ligero} on computing hashes.
+
+\item\textbf{libSTARK:} We tried the implementation of the system and failed to run it on the functions we consider in this section after communications with the authors. We use the numbers reported in~\cite{libstark} on computing hashes. 
+
+\item\textbf{Hyrax:} We use the open-source implementation the system at~\cite{??}.
+
+\item\textbf{Bulletproofs:} We use the system reimplemented by~\cite{hyrax} at~\cite{??}.
+
+
+\item\textbf{Aurora:} As a recently accepted paper, the system is not available and we extrapolate its performance using the numbers reported in the paper for circuits with $2^{10}-2^{20}$ R1CS constrains.
+
 \end{itemize}
-\paragraph{Benchmarks.} We evaluate \name{}, Hyrax, Bulletproofs, Ligero, libSNARK and libSTARK on matrix multiplication, image scaling and Merkle Tree\cite{merkletree}. Considering various properties of different systems and some constrains on implementation(\ie we do not have the sourse code of some systems), for each benchmark, we only evaluate the systems that is senseful and suitable for this benchmark.
-\begin{itemize}
-	\item
-	\textbf{Merkle tree} means $\mathbb{P}$ proves to $\mathbb{V}$ it knows the value of the leaves of a Merkle tree\cite{merkletree} that computes the public root's value\cite{blum1994checking}. Same as the previous work, we use SHA-256 for the hash function. Besides, each sub-computation is one instance of the hash function which makes it data parallel. Therefore, if the Merkle tree has $M$ leaves, then we need $2M - 1$ sub-computations. We evaluate this function of varying number of leaves from 16 to 256.
-\end{itemize}
-\paragraph{Methodology.} For each benchmarks, we construct the corresponding arithmetic circuits of different sizes. Then we feed the circuit as the input into these zero knowledge systems. These systems would generate the proof and verify the proof itself. We measure the runtime using standard system clock.\\
+
+
+\paragraph{Benchmarks.} We evaluate the systems on three benchmarks: matrix multiplication, image scaling and Merkle Tree\cite{merkletree}, which are used in~\cite{hyrax}. Matrix multiplication and image scaling are the same as explained in Section~\ref{subsec:expGKR}. In the third benchmark, $\P$ proves to $\V$ that it knows the value of the leaves of a Merkle tree\cite{merkletree} that computes to a public root value\cite{blum1994checking}. We use SHA-256 for the hash function. We implement it with a flat circuit where each sub-computation is one instance of the hash function. The consistency of the input and output of corresponding hashes are then checked by the circuit. There are $2M - 1$ SHA256 invocations for a Merkle tree with $M$ leaves. We increase the number of leaves from 16 to 256. We only show the performance of Ligero and libSTARK on the third benchmark.
+
+We report the prover time, proof size and verification time in Figure~\ref{fig:Allcom}.
+
+
+
 \begin{figure}[htbp]
 %\centering
 \subfigure[Proof size: 64x64 matrix multiplication]{
@@ -168,7 +200,7 @@ For random circuit, when the number of gates per layer are $2^{20}$, our protoco
 \quad
 \centering
 \includegraphics[width = 6.5in]{legend.pdf}
-\caption{\label{ZKGKR}Comparison of the performance of \name{} versus other zero knowledge systems.}
+\caption{\label{fig:Allcom}Comparisons of prover time, proof size and verification time between \name{} and existing zero knowledge proof systems.}
 \end{figure}
 
 \paragraph{Experimental results.} All of experimental results are summarized in Figure \ref{ZKGKR}. We would analyse the consequences from four perspectives: prove time, verification time, proof size and memory consumption.
@@ -178,11 +210,3 @@ For random circuit, when the number of gates per layer are $2^{20}$, our protoco
 	\item \textbf{proof size}: For proof size, our system is smaller than other systems except for Bulletproofs since the proof size of Bulletproofs is constant while ours is logarithmic. For Merkel tree, when the number of leaves are 256, Hyrax's proof size is about 5x larger than ours while libSTARK's proof size is 10x larger than ours, but Bulletproofs' proof size remains constant.  
 	\item \textbf{memory consumption}: LibSTARK, libSNARK and Bulletproofs are all high memory consumed. They run out of RAM for the medium size of the test data for matrix multiplication and Merkle tree. Our system is comparable with Hyrax and Ligero.
 \end{itemize}
-
-\subsection{Discussion}
-
-\paragraph{Improving verification time.}
-
-VPD for each layer
-
-\paragraph{Removing trusted setup.}
