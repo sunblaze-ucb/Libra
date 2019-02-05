@@ -1,8 +1,9 @@
 %\documentclass[conference]{IEEEtran}
 %\documentclass[sigconf, anonymous]{acmart}
 %\documentclass[11pt,letterpaper]{book}
-\documentclass[11pt,letterpaper]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass{llncs}
+\pagestyle{plain}
+%\usepackage[margin=1in]{geometry}
 %\usepackage{times}
 % \renewcommand*\sfdefault{cmss}
 %\usepackage{amssymb,amsmath,amsfonts}
@@ -245,7 +246,10 @@
 \usepackage{color}
 \usepackage{xspace}
 %\usepackage{multirow}
+\let\proof\relax 
+\let\endproof\relax
 \usepackage{amsmath,amsthm,amstext,amssymb,amsfonts,latexsym}
+
 %\usepackage{wrapfig}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
@@ -393,20 +397,20 @@
 
 
 \newtheorem{protocol}{Protocol}
-\newtheorem{theorem}{Theorem}
-\newtheorem{remark}{Remark}
-\newtheorem{conjecture}{Conjecture}
-\newtheorem{corollary}{Corollary}
-\newtheorem{lemma}{Lemma}
-\newtheorem{proposition}{Proposition}
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{remark}{Remark}
+%\newtheorem{conjecture}{Conjecture}
+%\newtheorem{corollary}{Corollary}
+%\newtheorem{lemma}{Lemma}
+%\newtheorem{proposition}{Proposition}
 \newtheorem{fact}{Fact}
-\newtheorem{claim}{Claim}
+%\newtheorem{claim}{Claim}
 \newtheorem{assumption}{Assumption}
 
-{
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}
-}
+%{
+%\theoremstyle{definition}
+%\newtheorem{definition}{Definition}
+%}
 
 
 
@@ -694,7 +698,8 @@ elaine: \\
 \input{evaluation.tex}
 \input{discussion.tex}
 
-\bibliographystyle{siam}
+%\bibliographystyle{siam}
+\bibliographystyle{splncs04}
 \bibliography{tiancx,ip}
 
 \end{document}
