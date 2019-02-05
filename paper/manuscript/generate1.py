@@ -12,6 +12,9 @@ x=(16,32,64,128,256)
 time2 = (21.296, 30.733, 42.594, 57.483)
 x2 = (16,32,64,128)
 
+time10 = (3, 3.2, 3.4, 3.6, 3.8)
+x10 = (16,32,64,128, 256)
+
 #time3 = (192.246441, 1755.425)
 #x3 = (128, 256)
 
@@ -52,7 +55,7 @@ rects2 = ax.plot(x2, time2, color='r',linewidth=5,marker='^',markersize=30,fills
 #rects7 = ax.plot(x7, time7,color='k',linestyle='-',linewidth=5)
 #rects8 = ax.plot(x8, time8,color='m',linewidth=5,marker='p',markersize=30,fillstyle='full')
 #rects9 = ax.plot(x9, time9,color='m',linestyle='-',linewidth=5)
-#rects10 = ax.plot(x10, time10,color='g',linewidth=5,marker='v',markersize=30,fillstyle='full')
+rects10 = ax.plot(x10, time10,color='g',linewidth=5,marker='v',markersize=30,fillstyle='full')
 #rects11 = ax.plot(x11, time11,color='g',linestyle='-',linewidth=5)
 #rects4 = ax.plot(x, time4,color='k',linewidth=5,marker='s',markersize=30,fillstyle='full')
 #rects3 = ax.plot(x, planar,color='r',linewidth=3,marker='s',markersize=20,fillstyle='full')
