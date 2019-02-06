@@ -404,7 +404,7 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 			}
 			for(int j = 0; j < 11; ++j)
 			{
-				if(j == 6 || j == 10)
+				if(j == 6 || j == 10 || j == 5)
 				{
 					ret_para[j].value = ret_para[j].value + prefix_alpha_v0.value * one_block_alpha[j].value + prefix_beta_v0.value * one_block_beta[j].value;
 					ret_para[j].value = ret_para[j].value % prime_field::mod;
