@@ -781,8 +781,8 @@ bool zk_verifier::verify(const char* output_path)
 	p -> proof_init();
 
 	auto result = p -> evaluate();
-
-	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length);
+	double key_gen_time = 0;
+	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length, key_gen_time);
 	proof_size += sizeof(bn::Ec1) * (digest_input.first.size() + digest_input.second.size());
 
 	prime_field::field_element alpha, beta;
@@ -1126,7 +1126,7 @@ bool zk_verifier::verify(const char* output_path)
 		std::cerr << "Verification rdl time " << verification_rdl_time << std::endl;
 		std::cerr << "Proof size(bits) " << proof_size << std::endl;
 		FILE *result = fopen(output_path, "w");
-		fprintf(result, "%lf %lf %lf %lf %d\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, proof_size);
+		fprintf(result, "%lf %lf %lf %lf %lf %d\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, key_gen_time, proof_size);
 		fclose(result);
 	}
 	p -> delete_self();

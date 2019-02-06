@@ -162,9 +162,13 @@ vector<bn::Ec1> zk_prover::generate_maskpoly_pre_rho(int length, int degree)
 	return ret;
 }
 
-std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_commit(int input_bit_length)
+std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > zk_prover::keygen_and_commit(int input_bit_length, double &key_gen_time)
 {
+	std::chrono::high_resolution_clock::time_point t0_keygen = std::chrono::high_resolution_clock::now();
 	input_vpd::KeyGen(input_bit_length);
+	std::chrono::high_resolution_clock::time_point t1_keygen = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> time_span_keygen = std::chrono::duration_cast<std::chrono::duration<double>>(t1_keygen - t0_keygen);
+	key_gen_time = time_span_keygen.count();
 	//no key gen time
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	std::vector<bn::Ec1> ret, ret2;

@@ -87,7 +87,7 @@ public:
 	void sumcheck_maskpoly_init();
 	std::vector<mpz_class> input_mpz, maskr_mpz;
 	std::vector<prime_field::field_element> maskr;
-	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > keygen_and_commit(int input_bit_length);
+	std::pair<std::vector<bn::Ec1>, std::vector<bn::Ec1> > keygen_and_commit(int input_bit_length, double &key_gen_time);
 
 };
 
