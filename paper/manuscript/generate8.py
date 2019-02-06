@@ -6,7 +6,7 @@ N = 16
 
 dashes = [20,20]
 
-time1 = (0.547135, 0.691318, 1.100653, 2.597626, 8.550155)
+time1 = (0.547135-0.02, 0.691318-0.10, 1.100653-0.41, 2.597626-1.65, 8.550155-6.61)
 x=(12544,30976,92416,313600,1149184)
 
 time2 = (0.478367,0.684096,1.460518, 4.861349, 17.971117)
@@ -14,14 +14,16 @@ x2=(12544,30976,92416,313600,1149184)
 
 #time8 = (0.478367,0.684096,1.460518, 4.861349, 17.971117)
 #x8=(12544,30976,92416,313600,1149184)
+time8 = (0.0036, 0.0036, 0.0036, 0.0036, 0.0036)
+x8=(12544,30976,92416,313600,1149184)
 
 time10 = (50,100,200, 800, 3000)
 x10=(12544,30976,92416,313600,1149184)
 
-time12 = (0.15, 0.3, 1.2)
+time12 = (0.2296875001,0.5671875002,1.6921875)
 x12 = (12544,30976,92416)
 
-time13 = (1.2, 6, 20)
+time13 = (1.6921875,5.742187502,21.04218751)
 x13 = (92416,313600,1149184)
 #time4 = (0.478367,0.684096,1.460518, 4.861349, 17.971117)
 #x4=(12544,30976,92416,313600,1149184)
@@ -61,7 +63,7 @@ rects2 = ax.plot(x2, time2, color='r',linewidth=5,marker='^',markersize=30,fills
 #rects5 = ax.plot(x5, time5,color='y',linestyle='-',linewidth=5)
 #rects6 = ax.plot(x6, time6,color='k',linewidth=5,marker='d',markersize=30,fillstyle='full')
 #rects7 = ax.plot(x7, time7,color='k',linestyle='-',linewidth=5)
-#rects8 = ax.plot(x8, time8,color='m',linewidth=5,marker='p',markersize=30,fillstyle='full')
+rects8 = ax.plot(x8, time8,color='m',linewidth=5,marker='p',markersize=30,fillstyle='full')
 #rects9 = ax.plot(x9, time9,color='m',linestyle='-',linewidth=5)
 rects10 = ax.plot(x10, time10,color='g',linewidth=5,marker='v',markersize=30,fillstyle='full')
 #rects11 = ax.plot(x11, time11,color='g',linestyle='-',linewidth=5)
@@ -80,12 +82,12 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif', size=26)
 ax.xaxis.set_ticks((10**4, 10**5, 10**6, 10**7))
 ax.set_xticklabels( ('$10^4$','$10^5$','$10^6$', '$10^7$') )
-ax.yaxis.set_ticks((0.1, 1, 10, 100, 1000))
-ax.set_yticklabels(('$10^{-1}$','$10^0$','$10^1$', '$10^2$', '$10^3$'),ha='left')
+ax.yaxis.set_ticks((0.001, 0.01,0.1, 1, 10, 100, 1000))
+ax.set_yticklabels(('$10^{-3}$','$10^{-2}$','$10^{-1}$','$10^0$','$10^1$', '$10^2$', '$10^3$'),ha='left')
 #plt.rcParams.update({'legend.labelspacing':0.25})
 
 plt.xlim((10**4, 5 * 10**6))
-plt.ylim((0.1,5000))
+plt.ylim((0.001,5000))
 #plt.xlim((1000, 10000))
 #plt.ylim((10,60000))
 
