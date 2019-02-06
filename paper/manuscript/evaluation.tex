@@ -216,7 +216,7 @@ Other than these two systems, the verification time of \name is faster, as it gr
 
 \paragraph{Proof size.} We report the proof size in Figure~\ref{fig:Allcom}(g)(h)(i). Our proof size is much bigger than libSNARK, which is 170 bytes for all circuits, and Bulletproof, which ranges in $2-5.5$KBs. The proof size in \name is in the range of 30-60KBs, except for the matrix multiplications where it reduces to $5-9$KBs. This is better than Aurora, Hyrax and libSTARK, which also have polylogarithmic proof size to the circuit. Finally, the proof size in Ligero is $O(\sqrt{C})$ and grows to several megabytes in practice.
 
-\paragraph{Setup time.} Among all the systems, only \name and libSNARK require trusted setup. Thanks to the optimization described in the beginning of this section, it only takes 202s to generate the public parameters in our largest instance with $n = 2^24$. \name only needs to perform this setup once and it can be used for all benchmarks and all circuits with no more inputs. libSNARK requires a per-circuit setup. For example, it takes 500s for the Merkle tree with 256 leaves, and takes 50s for $64\times 64$ matrix multiplications. \yupeng{update after exp.}
+\paragraph{Setup time.} Among all the systems, only \name and libSNARK require trusted setup. Thanks to the optimization described in the beginning of this section, it only takes 202s to generate the public parameters in our largest instance with $n = 2^24$. \name only needs to perform this setup once and it can be used for all benchmarks and all circuits with no more inputs. libSNARK requires a per-circuit setup. For example, it takes 1027s for the Merkle tree with 256 leaves, and takes 200s for $64\times 64$ matrix multiplications. \yupeng{update after exp.}
 
 
 \ignore{
