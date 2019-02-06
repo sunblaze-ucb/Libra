@@ -50,6 +50,8 @@ void pre_input(std::vector<mpz_class>& input){
 			}
 		}
 	}
+	for(int i = 0; i < input.size(); ++i)
+		input[i] = rand() % 2;
 }
 
 void precompute_g1(){
