@@ -7,13 +7,12 @@
 \paragraph{Hardware.} We run all of the experiments on Amazon EC2 m4.2xlarge instances with 32GB of RAM and Intel Xeon E5-2686v4 CPU with eight 2.3GHz virtual cores. Our implementations are not parallelized and we only use a single CPU core in the experiments. We report the average time of 10 runs in the table and figures. We omit the standard deviation as it is always less than 3\% of the average in our experiments.
 
 
-Before presenting the experimental results, we describe three concrete optimizations we used in the implementation that further improve the performance of our system.
+Before presenting the experimental results, we describe two concrete optimizations we used in the implementation that further improve the performance of our system.
 
 \paragraph{Key generation with lookup tables.}
 
 \paragraph{More gate types with no overhead.}
 
-\paragraph{Reducing the number of zkVPD invocations.}
 
 \subsection{Improvements on GKR protocols}\label{subsec:expGKR}
 

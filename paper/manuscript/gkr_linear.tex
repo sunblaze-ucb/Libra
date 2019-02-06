@@ -52,8 +52,7 @@ Unfortunately, this algorithm does not work efficiently for the sumcheck on Equa
 
 In this paper, we propose a new algorithm to reduce the prover time of the sumcheck on Equation~\ref{eq:linearsc} to linear. Our protocol divides the sumcheck into two phases: the first $\ell$ rounds bounding the variables of $x$ to a random point $u$, and the last $\ell$ rounds bounding the variables of $y$ to a random point $v$.
 
-\subsubsection{Phase one}
-
+\paragraph{Phase one.} 
 During the first $\ell$ rounds, as $y$ does not change (always being summed on the boolean hypercube), we can write Equation~\ref{eq:linearsc} as 
 \[
 f_0(g) = \sum_{x\in\binary^\ell} h_g(x)f_2(x),
@@ -90,9 +89,7 @@ The way to do so is as following: instead of iterating through all possible $g,x
 	\end{algorithm}
 \end{figure}
 
-\subsubsection{Phase two}
-
-At this point, all variables in $x$ have been bounded to random numbers $u$. In the second phase, the equation to sum on becomes 
+\paragraph{Phase two.} At this point, all variables in $x$ have been bounded to random numbers $u$. In the second phase, the equation to sum on becomes 
 \[
 \sum_{y\in\{0,1\}^\ell}f_1(g,u,y)f_2(u)f_3(y)
 \]
@@ -122,7 +119,7 @@ The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\el
 \end{figure}
 
 
-\subsubsection{Generalizations}
+\paragraph{Generalizations.}
 \yupeng{Give a general form of sumcheck equations that can be computed in linear time. No need to show algorithms.}
 
 \subsection{Linear Time GKR}
@@ -135,62 +132,14 @@ The first sum can be computed using the same protocol in Algorithms~\ref{alg::ph
 
 
 
-After the sumcheck in the GKR protocol, as described in Section~\ref{sec::gkr}, the prover and the verifier need to combine the two claims about $\tV_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
+\paragraph{Combining two claims.} After the sumcheck in the GKR protocol, as described in Section~\ref{sec::gkr}, the prover and the verifier need to combine the two claims about $\tV_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
 
 The second approach using random linear combinations is rather straight forward. After the output layers, $\P$ and $\V$ execute sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equations~\ref{eq:GKR}, which still satisfies the properties of Equation~\ref{eq:linearsc}. One could view it as 6 instances of Equation~\ref{eq:linearsc} and the prover time is still linear. Moreover, there is a better way to further improve the efficiency. Taking $\sum_{x, y \in\binary^{s_{i+1}}}(\alpha_i\tmult_{i+1}(u,x,y)+\beta_i\tmult_{i+1}(v,x,y))\tV_{i+1}(x)\tV_{i+1}(y)$ as an example, in Algorithm~\ref{alg::phase1}, the prover runs $\mathsf{Precompute}$ twice on $u$ and $v$ to generate two arrays ($\textbf{G}_1$ and $\textbf{G}_2$), and sets $\textbf{G}[b]=\alpha_i \textbf{G}_1[b] + \beta_i\textbf{G}_2[b]$ for all $b$. The rest of the algorithms remains the same. This modified algorithm incurs a small overhead in practice in our implementation, compared to the original algorithm on Equation~\ref{eq:linearsc}.
 
-\subsubsection{Condensing to one point in linear time}
+Though with the approach above we already have a linear prover GKR protocol, the technique to condense two points to one proposed in the original GKR protocol~\cite{GKR} may still be interesting in some scenarios (e.g., in our implementation, we use this approach in the last layer and only make one query to the multi-linear extension of the input, which is more efficient practice). We present an algorithm for this approach that reduces the prover time to linear in Appendix~\ref{app:onepoint}.
 
-Though we already have a linear prover GKR protocol using random linear combinations, the technique to condense two points to one proposed in the original GKR protocol~\cite{GKR} may still be interesting in some scenarios (e.g., it requires only one query to the multi-linear extension of the input, which may be more efficient in some schemes). In this section, we show an algorithm to reduce the complexity of this steps to linear.
 
-Recall that as described in Section~\ref{sec::gkr}, in the $i$-th layer, after the sumcheck, the verifier receives two claims $\tV_{i+1}(u), \tV_{i+1}(v)$. She then defines a line $\gamma(x): \mathbb{F}\rightarrow\mathbb{F}^{s_{i+1}}$ such that $\gamma(0) = u, \gamma(1)=v$ and the prover needs to provide $\tV_{i+1}(\gamma(x))$, a degree $s_{i+1}$ univariate polynomial, to $\V$. If the prover computes it naively, which was done in all prior papers, it incurs $O(s_{i+1}2^{s_{i+1}})$ time, as it is equivalent to evaluating $\tV_{i+1}()$ at $s_{i+1}+1$ points. 
 
-\yupeng{TODO}
-
-\ignore{
-To optimize the computing, we need to look at the structure of the summation. 
-
-\begin{align*}
-\tV_{i+1}(\gamma(x))&=\sum_{u, v \in \{0, 1\}^{s_{i+1}}}\tilde{mult}_{i+1}(\gamma(x), u, v)\tV_{i+2}(u)\tV_{i+2}(v)\\
-&=\sum_{u, v\in \{0, 1\}^{s_{i+1}}}\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tV_{i+2}(u)\tV_{i+2}(v)
-\end{align*}
-
-The interesting thing is that, $\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tilde{\beta}_{s_{i+2}}(u, u')\tilde{\beta}_{s_{i+2}}(v, v')\tV_{i+2}(u)\tV_{i+2}(v)$ is non-zero if and only if $u=u', v=v'$. Thus we can optimize the summation to :
-
-$$\tV_{i+1}(\gamma(x))=\sum_{(g', u', v') \in G_{i+1, mult}}\tilde{\beta}_{s_{i+1}}(\gamma(x), g')\tV_{i+2}(u')\tV_{i+2}(v').$$ Now we present a efficient algorithm \ref{alg::comb} to calculate this summation.
-
-\begin{figure}[p]
-\begin{algorithm}[H]
-\label{alg::comb}
-\caption{Calculate $\tV_{i+1}(\gamma(x))$}
-\begin{algorithmic}[1]
-\parState{We define a polynomial type here to represent a polynomial. The cost of mutiplying two polynomials with degree $d_1, d_2$ is $d_1\times d_2$, and the cost of evaluating a polynomial with degree $d$ is $d+1$.}
-\Procedure{{\sf DFS}}{$g$, $G$, $depth$, $maxDepth$}
-	\If{$depth=maxDepth$}
-		\State Return $Poly(G[g])$
-	\Else
-		\State $sum = Poly(0)$
-		\State set $g[depth]=0$
-		\State $polyleft = DFS(g, G, depth + 1, maxDepth) \times (1-\gamma[depth](x))$
-		\State set $g[depth]=1$
-		\State $polyright = DFS(g, G, depth + 1, maxDepth) \times \gamma[depth](x)$
-		\State $sum = polyleft + polyright$
-		\State Return $sum$
-	\EndIf
-\EndProcedure
-\Procedure{{\sf Combine}}{$\gamma$}
-\parState{Here $\gamma$ is a pair array with length $s_{i+1}$, a pair $(a, b)$ can be treated as a pair or a linear function $ax+b$, we will use both notation interchangely.}
-\State Let $G[g]$ be a array with $2^{s_{i+1}}$ elements
-\State $G[g]\overset{def}{=}\sum_{g'=g, (g', u', v')\in G_{i+1, mult}}\tV_{i+1}(u')\tV_{i+1}(v')$.
-\State $G[g]$ can be computed by a single scan through the circuit. We assume it's initialized apporiately.
-\State The answer is $\sum_{g \in \{0, 1\}^{s_{i+1}}}G[g]\times \tilde{\beta}_{s_{i+1}}(\gamma(x), g)$, we will show that how to compute this answer in linear time.
-
-\State Return {\sf DFS}($\vec{0}$, G, $0$, $s_{i+1}$)
-\EndProcedure
-\end{algorithmic}
-\end{algorithm}
-\end{figure}
-}
 
 
 \ignore{
