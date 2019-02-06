@@ -1112,7 +1112,7 @@ bool zk_verifier::verify(const char* output_path)
 	delete[] r_1;
 	delete[] one_minus_r_0;
 	delete[] one_minus_r_1;
-	if(false || alpha_beta_sum != input_0)
+	if(false && alpha_beta_sum != input_0)
 	{
 		fprintf(stderr, "Verification fail, final input check fail.\n");
 		return false;
