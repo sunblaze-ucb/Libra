@@ -50,8 +50,6 @@ void pre_input(std::vector<mpz_class>& input){
 			}
 		}
 	}
-	for(int i = 0; i < input.size(); ++i)
-		input[i] = rand() % 2;
 }
 
 void precompute_g1(){
@@ -425,7 +423,6 @@ bool verify(vector<mpz_class> r, Ec1 digest, Ec1 digest2, mpz_class Z, mpz_class
 	}
 
 	cout << "Input VPD verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
-	return true;
 	return flag;
 	
 }
