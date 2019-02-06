@@ -83,7 +83,7 @@ plt.rc('font', family='serif', size=26)
 ax.xaxis.set_ticks((8,16,32,64,128,256, 512))
 ax.set_xticklabels( (' ','$16$','$32$','$64$','$128$','$256$') )
 ax.yaxis.set_ticks((0.1, 1, 10, 100, 1000))
-ax.set_yticklabels(('$10^{-1}$''$10^0$','$10^1$','$10^2$'),ha='left')
+ax.set_yticklabels(('$10^{-1}$','$10^0$','$10^1$','$10^2$'),ha='left')
 #plt.rcParams.update({'legend.labelspacing':0.25})
 
 plt.xlim((8, 512))

@@ -82,7 +82,7 @@ ax.yaxis.set_ticks((0.01, 0.1, 1, 10, 100, 1000, 10000))
 ax.set_yticklabels(('$10^{-2}$','$10^{-1}$','$10^0$','$10^1$','$10^2$','$10^3$', '$10^4$'),ha='left')
 #plt.rcParams.update({'legend.labelspacing':0.25})
 
-plt.xlim((10**4, 5 * 10**6))
+plt.xlim((3*10**3, 3*10**6))
 plt.ylim((1,50000))
 #plt.xlim((1000, 10000))
 #plt.ylim((10,60000))
