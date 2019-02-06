@@ -17,6 +17,12 @@ x2=(12544,30976,92416,313600,1149184)
 
 time10 = (50,100,200, 800, 3000)
 x10=(12544,30976,92416,313600,1149184)
+
+time12 = (0.15, 0.3, 1.2)
+x12 = (12544,30976,92416)
+
+time13 = (1.2, 6, 20)
+x13 = (92416,313600,1149184)
 #time4 = (0.478367,0.684096,1.460518, 4.861349, 17.971117)
 #x4=(12544,30976,92416,313600,1149184)
 
@@ -61,7 +67,8 @@ rects10 = ax.plot(x10, time10,color='g',linewidth=5,marker='v',markersize=30,fil
 #rects11 = ax.plot(x11, time11,color='g',linestyle='-',linewidth=5)
 #rects4 = ax.plot(x, time4,color='k',linewidth=5,marker='s',markersize=30,fillstyle='full')
 #rects3 = ax.plot(x, planar,color='r',linewidth=3,marker='s',markersize=20,fillstyle='full')
-
+rects12 = ax.plot(x12, time12, color='c',linewidth=5,marker='>',markersize=30,fillstyle='full')
+rects13 = ax.plot(x13, time13, color='c',linestyle = '--', linewidth=5,marker='>',markersize=30,fillstyle='full')
 #rects3[0].set_dashes(dashes)
 #rects5[0].set_dashes(dashes)
 #rects7[0].set_dashes(dashes)
