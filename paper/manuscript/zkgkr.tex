@@ -18,8 +18,11 @@ In this paper, we show that it suffices to mask $f$ with a small polynomial to a
 The intuition of our improvement is that the prover sends $O(d\ell)$ messages in total to the verifier during the sumcheck protocol, thus a polynomial $g$ with $O(d\ell)$ random coefficients is sufficient to mask all the messages and achieve zero-knowledge. We present the full protocol below. \yupeng{find a protocol package}
 
 
-\medskip\noindent\textbf{Protocol.}
-
+\begin{figure}[t!]
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{construction}
 We assume the existence of a zkVPD protocol defined in Section~\ref{subsec::zkvpd}. For simplicity, we omit the randomness $r_f$ and public parameters $\pp,\vp$ without any ambiguity. To prove the claim $H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$:
 \begin{enumerate}
 
@@ -31,7 +34,8 @@ $$H + \rho G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}(f(x_1, x_2, \c
 \item $\V$ computes $h_\ell(r_\ell)-\rho g(r_1,\ldots,r_\ell)$ and compares it with the oracle access of $f(r_1,\ldots, r_\ell)$.
 
 \end{enumerate}
-
+\end{construction}}}}}
+\end{figure}
 The completeness of the protocol holds obviously. The soundness of the protocol follows the soundness of the sumcheck protocol and the random linear combination in step 2 and 3, as proven in~\cite{zksumcheck}. We give a proof of zero-knowledge here.
 
 \begin{theorem}[Zero knowledge]\label{thm:zksc}
@@ -95,9 +99,12 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 
 The full protocol is presented below. Here we use superscriptions (e.g., $u^{(i)}$) to denote random numbers or vectors for the $i$-th layer of the circuit.
 
-
-
-\medskip\noindent\textbf{Protocol.}
+\begin{figure}[t!]
+\label{zkgkr}
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{construction}
 \begin{enumerate} 
 \item On a layered arithmetic circuit $C$ with $d$ layers and input $\mathsf{in}$, the prover $\P$ sends the output of the circuit $\mathsf{out}$ to the verifier $\V$.
 
@@ -140,9 +147,10 @@ If $u_1^{(1)} = v_1^{(1)}$, $\P$ aborts. At the end of the protocol, $\V$ receiv
 \item At the input layer $d$, $\V$ has two claims $\dot{V}_{d}(u^{(d)})$ and $\dot{V}_{d}(v^{(d)})$. $\V$ opens $R_d$ at 4 points $R_d(u_1^{(d)},0),R_d(u_1^{(d)},1),R_d(v_1^{(d)},0),R_d(v_1^{(d)},1)$ and checks that $\dot{V}_{d}(u^{(d)}) = \tV_d(u^{(d)})+Z_d(u^{(d)})\sum\limits_{w \in \binary}R_d(u_1^{(d)},w)$ and $\dot{V}_{d}(v^{(d)}) = \tV_d(v^{(d)})+Z_d(v^{(d)})\sum\limits_{w \in \binary}R_d(v_1^{(d)},w)$, given oracle access to two evaluates of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$. If the check passes, output $\accept$; otherwise, output $\reject$.
 
 \end{enumerate}
-
+\end{construction}}}}}
+\end{figure}
 \begin{theorem}
-	Protocol~\ref{??} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$.
+	Protocol~\ref{zkgkr} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$.
 \end{theorem}
 
 The completeness follows from the construction explained above and the completeness of the zero knowledge sumcheck. The soundness follows the soundness of the GKR protocol with low degree extensions, as proven in~\cite{GKR} and~\cite{zksumcheck}. \yupeng{think more about the proof.}

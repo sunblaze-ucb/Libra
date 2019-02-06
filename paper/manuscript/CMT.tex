@@ -10,8 +10,11 @@ In~\cite{GKR}, Goldwasser et al. proposed an efficient interactive proof protoco
 \label{subsec::sumcheck}
 The sumcheck problem is a fundamental problem that serves as a building block for varies applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\limits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
 Directly computing the sum requires exponential time in $\ell$, as there are $2^\ell$ combinations of $b_1,\ldots,b_\ell$. Lund et al.~\cite{sumcheck} proposed a \emph{sumcheck} protocol that allows a verifier $\mathcal{V}$ to delegate the computation to a computationally unbounded prover $\mathcal{P}$, who can convince $\mathcal{V}$ that $H$ is the correct sum. We provide a description of the sumcheck protocol.
-
-\begin{protocol}[\textbf{Sumcheck}]
+\begin{figure}[t!]
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{construction}[\textbf{Sumcheck}]
 	\label{prot::sumcheck}
 	The protocol proceeds in $\ell$ rounds. 
 	\begin{itemize}
@@ -21,8 +24,8 @@ Directly computing the sum requires exponential time in $\ell$, as there are $2^
 		$\V$ checks $f_{i-1}(r_{i-1})=f_{i}(0)+f_{i}(1)$, and sends a random challenge $r_{i}\in\mathbb{F}$ to $\P$.
 		\item In the $\ell$-th round, $\P$ sends a univariate polynomial $$f_{\ell}(x_{\ell})\overset{def}{=}f(r_1, r_2, ..., r_{l-1}, x_{\ell})\, ,$$ $\V$ checks $f_{\ell-1}(r_{\ell-1})=f_{\ell}(0)+f_{\ell}(1)$. The verifier generates a random challenge $r_{\ell}\in\mathbb{F}$. Given oracle access to an evaluation $f(r_1, r_2, ..., r_\ell)$ of $f$, $\V$ will accept if and only if $f_{\ell}(r_\ell) = f(r_1, r_2, ..., r_\ell)$. The instantiation of the oracle access depends on the application of the sumcheck protocol.
 	\end{itemize}
-\end{protocol}
-
+\end{construction}}}}}
+\end{figure}
 The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial for each variable in $f$, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
 
 \subsubsection{Multilinear Extension}
@@ -127,9 +130,12 @@ where $g\in\mathbb{F}^{s_i}$ is a random vector.
 $\V$ and $\P$ then execute the sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equation~\ref{eq:GKR}. At the end of the sumcheck protocol, $\V$ still receives two claims about $\tV_{i+1}$, computes their random linear combination and proceeds to an layer above recursively until the input layer.
 
 In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Figure~\ref{protocol::CMT}.
-
-\begin{protocol}
-	\label{protocol::CMT}
+\begin{figure}[t!]
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{construction}
+	%\label{protocol::CMT}
 	Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ wants to convince that $\mathsf{out}=C(\mathsf{in})$ where $\mathsf{in}$ is the input from $\V$, and $\mathsf{out}$ is the output. Without loss of generality, assume $n$ and $k$ are both powers of 2 and we can pad them if not.
 
 	\begin{itemize}
@@ -166,7 +172,7 @@ In our new ZKP scheme, we will mainly use the second approach. The full GKR prot
 		\item At the input layer $d$, $\V$ has two claims $\tV_{d}(u^{(d)})$ and $\tV_{d}(v^{(d)})$. $\V$ queries the oracle of evaluations of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$ and checks that they are the same as the two claims. If yes, output $\accept$; otherwise, output $\reject$.
 		
 	\end{itemize}
-\end{protocol}
-
+\end{construction}}}}}
+\end{figure}
 \begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::CMT} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {|C|}}{|\mathbb{F}|})$. It uses $O(d \log |C|)$ rounds of interaction and running time of the prover $\mathcal{P}$ is $O(|C|\log |C|)$. Let the optimal computation time for all $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of $\V$ is $O(n+k+d\log |C|+T)$. For log-space uniform circuits, $T=\poly{\log |C|}$.
 \end{theorem}
