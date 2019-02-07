@@ -253,7 +253,12 @@ Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cit
 
 The full protocol is presented in Protocol~\ref{??}.
 
-\medskip\noindent\textbf{Protocol.}
+%\medskip\noindent\textbf{Protocol.}
+\begin{figure}[t!]
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{construction}
 Let $\mathbb{F}$ be a prime-order finite field. Let $\dot{V}(x): \F^\ell\rightarrow \F$ be an $\ell$-variate polynomial such that $\dot{V}(x) = \tV(x)+Z(x)R(x_1)$, where $\tV(x)$ is a multilinear polynomial, $Z(x) = \prod_{i=1}^\ell x_i(1-x_i)$ and $R(x_1) = a_0+a_1x_1$. 
 
 
@@ -278,7 +283,8 @@ Set $\pi = (\{g^{q_i(t_i\ldots, t_\ell)+r_it_{\ell+1}}, g^{\alpha(q_i(t_i\ldots,
 
 \end{itemize} 
 
-
+\end{construction}}}}}
+\end{figure}
 \begin{theorem}\label{thm:zkvpd}
 	Protocol~\ref{??} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkvpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
 \end{theorem}
@@ -292,8 +298,12 @@ Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{s
 \subsection{Putting Everything Together}\label{subsec::zkall}
 
 In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,wahby2018doubly,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Protocol~\ref{??}, which combines our zero knowledge GKR and zkVPD protocols. Similar to the protocols in~\cite{zkvpd,hyrax}, Step 6 and 7 are to check that $\P$ indeed uses $x$ as the input to the circuit.
-
-\begin{protocol}
+\begin{figure}[t!]
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{construction}
+%\begin{protocol}
 	Let $\lambda$ be the security parameter, $\F$ be a prime field, $n$ be an upper bound on input size, and $S$ be an upper bound on circuit size. We use $\VPD_1, \VPD_2, \VPD_3$ to denote the zkVPD protocols for input layer, masking polynomials $g_i$ and $R_i$ described in Protocol~\ref{??}.
 	\begin{itemize}
 		\item $\mathcal{G}(1^\lambda, n, S)$: run $(\pp_1,\vp_1)\leftarrow\VPD_1.\KeyGen(1^\lambda, \log n)$, $(\pp_2,\vp_2)\leftarrow\VPD_2.\KeyGen(1^\lambda, \log S)$, $(\pp_3,\vp_3)\leftarrow\VPD_3.\KeyGen(1^\lambda)$. Output $\pk = (\pp_1, \pp_2, \pp_3)$ and $\vk = (\vp_1, \vp_2, \vp_3)$.
@@ -310,8 +320,9 @@ In this section, we present our zero knowledge argument scheme. At a high level,
 		\end{enumerate}
 		
 	\end{itemize}
-\end{protocol}
-
+%\end{protocol}
+\end{construction}}}}}
+\end{figure}
 \begin{theorem}\label{theorem:main}
 	For an input size $n$ and a finite field $\F$, Protocol~\ref{??} is a zero knowledge argument for the relation
 	\[
