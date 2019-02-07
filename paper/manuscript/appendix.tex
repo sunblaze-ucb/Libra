@@ -35,10 +35,10 @@ The second assumption is a generalization of the $q$-PKE assumption~\cite{groth2
 
 In this section, we present an algorithm to reduce two claims about $\tV_{i+1}$ to one in linear time. Recall that as described in Section~\ref{subsec::GKR}, in the $i$-th layer, after the sumcheck, the verifier receives two claims $\tV(u), \tV(v)$. (Again we omit the superscript and subscript of $i$ for the ease of interpretation.) She then defines a line $\gamma(x): \mathbb{F}\rightarrow\mathbb{F}^{s}$ such that $\gamma(0) = u, \gamma(1)=v$ and the prover needs to provide $\tV(\gamma(x))$, a degree $s$ univariate polynomial, to $\V$. If the prover computes it naively, which was done in all prior papers, it incurs $O(s2^{s})$ time, as it is equivalent to evaluating $\tV()$ at $s+1$ points. 
 
-\begin{figure}[t!]
+\begin{figure}[H]
 	\begin{algorithm}[H]
-		\label{alg::comb}
-		\caption{Compute $\tV(\gamma(x)) = \sum_{y\in\binary^s}I(\gamma(x), y)\tV(y)$}
+		
+		\caption{Compute $\tV(\gamma(x)) = \sum_{y\in\binary^s}I(\gamma(x), y)\tV(y)$}\label{alg::comb}
 		\begin{algorithmic}[1]
 			\State Initialize a binary tree $T$ with $s$ levels. We use $T_j[b]$ to denote the $b$-th node at level $j$.
 			\For{$b\in\binary^s$}

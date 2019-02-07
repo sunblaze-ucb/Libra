@@ -100,7 +100,7 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 
 The full protocol is presented in Construction~\ref{construction:zkgkr}. Here we use superscriptions (e.g., $u^{(i)}$) to denote random numbers or vectors for the $i$-th layer of the circuit.
 
-\begin{figure}[t!]
+\begin{figure}[H]
 
 \small{
 \centering{\centering
@@ -250,7 +250,23 @@ Because of the full rank of the matrix, the four evaluations are linearly indepe
 In this section, we present the instantiation of the zkVPD protocol, as defined in Definition~\ref{def::zkvpd}. We start with the one used for the input layer. Recall that at the end of the GKR protocol, $\V$ receives two evaluations of the polynomial $\dot{V}_d(z)=\tV_d(z)+Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$ at $z=u^{(d)}$ and $z=v^{(d)}$. In our zero knowledge proof protocol, which will be presented in Section~\ref{subsec::zkall}, $\P$ commits to $\dot{V}_d(z)$ using the zkVPD at the beginning, and opens it to the two points selected by $\V$ using the zkVPD.
 
 
-\begin{figure}[t!]
+
+
+Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cite{zkvpd}. The protocol in~\cite{zkvpd} works for any polynomial with $\ell$ variables and any variable degree, and is particularly efficient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and preserves the efficiency. Note that though $\dot{V}_d(z)$ is a low degree extension of the input, it can be decomposed to the sum of $\tV_d(z)$, a multilinear polynomial, and $Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$. Moreover, $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$ can be computed directly by $\V$. Therefore, in our construction, $\P$ commits to $\tV_d(z)$ and $\sum\limits_{w \in\binary} R_d(z_1,w)$ separately, and later opens the sum together given $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$, which is naturally supported because of the homomorphic property of the commitment. Another optimization is that unlike other layers of the circuit, $R_d(z_1,w)$ itself is not opened at two points ($\V$ does not receive $R_d(u^{(d)},c^{(d)})$ and $R_d(v^{(d)},c^{(d)})$ in Construction~\ref{construction:zkgkr}). Therefore, it suffices to set $\dot{V}_d(z)=\tV_d(z)+Z_d(z)R_d(z_1)$, where $R_d$ is a univariate linear polynomial.
+
+The full protocol is presented in Construction~\ref{construction::zkVPD}.
+
+
+
+
+\begin{theorem}\label{thm:zkvpd}
+	Construction~\ref{construction::zkVPD} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkvpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
+\end{theorem}
+
+The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit. Using the same algorithms proposed in in~\cite{vram,zkvpd}, the running time of $\KeyGen$, $\Commit$ and $\Open$ is $O(2^\ell)$, $\Verify$ takes $O(\ell)$ time and the proof size is $O(\ell)$.
+
+
+\begin{figure}[H]
 	\small{
 		\centering{\centering
 			\framebox{\parbox{.99\linewidth}{
@@ -283,19 +299,6 @@ In this section, we present the instantiation of the zkVPD protocol, as defined 
 	\end{construction}}}}}
 \end{figure}
 
-Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cite{zkvpd}. The protocol in~\cite{zkvpd} works for any polynomial with $\ell$ variables and any variable degree, and is particularly efficient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and preserves the efficiency. Note that though $\dot{V}_d(z)$ is a low degree extension of the input, it can be decomposed to the sum of $\tV_d(z)$, a multilinear polynomial, and $Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$. Moreover, $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$ can be computed directly by $\V$. Therefore, in our construction, $\P$ commits to $\tV_d(z)$ and $\sum\limits_{w \in\binary} R_d(z_1,w)$ separately, and later opens the sum together given $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$, which is naturally supported because of the homomorphic property of the commitment. Another optimization is that unlike other layers of the circuit, $R_d(z_1,w)$ itself is not opened at two points ($\V$ does not receive $R_d(u^{(d)},c^{(d)})$ and $R_d(v^{(d)},c^{(d)})$ in Construction~\ref{construction:zkgkr}). Therefore, it suffices to set $\dot{V}_d(z)=\tV_d(z)+Z_d(z)R_d(z_1)$, where $R_d$ is a univariate linear polynomial.
-
-The full protocol is presented in Construction~\ref{construction::zkVPD}.
-
-
-
-
-\begin{theorem}\label{thm:zkvpd}
-	Construction~\ref{construction::zkVPD} is a zero-knowledge verifiable polynomial delegation scheme as defined by Definition~\ref{def::zkvpd}, under Assumption~\ref{asp::qSDH} and~\ref{asp::dlEPKE}.
-\end{theorem}
-
-The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit. Using the same algorithms proposed in in~\cite{vram,zkvpd}, the running time of $\KeyGen$, $\Commit$ and $\Open$ is $O(2^\ell)$, $\Verify$ takes $O(\ell)$ time and the proof size is $O(\ell)$.
-
 \paragraph{zkVPD for other layers.}
 Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{subsec::zkgkr}, we also use a zkVPD protocol to commit and open the masking polynomials $g_i(x), R_i(z_1, w)$ for each intermediate layer $i$. We use the same zkVPD protocol for these polynomials as in~\cite{zkvpd} in our construction. In fact, as we show in the previous sections, these polynomials are very small ($g_i$ is the sum of univariate polynomials with constant degrees and $R_i$ has 2 variables with variable degree 2), the zkVPD protocols become very simple. The complexity of $\KeyGen, \Commit, \Open, \Verify$ and proof size are all $O(s_i)$ for $g_i$ and are all $O(1)$ for $R_i$. We give the full protocols in Appendix~\ref{app:zkvpd}.
 
@@ -303,7 +306,7 @@ Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{s
 \subsection{Putting Everything Together}\label{subsec::zkall}
 
 In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,wahby2018doubly,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Construction~\ref{construction::all}, which combines our zero knowledge GKR and zkVPD protocols. Similar to the protocols in~\cite{zkvpd,hyrax}, Step 6 and 7 are to check that $\P$ indeed uses $x$ as the input to the circuit.
-\begin{figure}[t!]
+\begin{figure}[H]
 \small{
 \centering{\centering
 \framebox{\parbox{.99\linewidth}{
