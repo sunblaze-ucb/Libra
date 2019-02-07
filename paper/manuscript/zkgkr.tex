@@ -23,6 +23,7 @@ The intuition of our improvement is that the prover sends $O(d\ell)$ messages in
 \centering{\centering
 \framebox{\parbox{.99\linewidth}{
 \begin{construction}
+\label{construction::zksumcheck}
 We assume the existence of a zkVPD protocol defined in Section~\ref{subsec::zkvpd}. For simplicity, we omit the randomness $r_f$ and public parameters $\pp,\vp$ without any ambiguity. To prove the claim $H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$:
 \begin{enumerate}
 
@@ -259,6 +260,7 @@ The full protocol is presented in Protocol~\ref{??}.
 \centering{\centering
 \framebox{\parbox{.99\linewidth}{
 \begin{construction}
+\label{construction::zkVPD}
 Let $\mathbb{F}$ be a prime-order finite field. Let $\dot{V}(x): \F^\ell\rightarrow \F$ be an $\ell$-variate polynomial such that $\dot{V}(x) = \tV(x)+Z(x)R(x_1)$, where $\tV(x)$ is a multilinear polynomial, $Z(x) = \prod_{i=1}^\ell x_i(1-x_i)$ and $R(x_1) = a_0+a_1x_1$. 
 
 
@@ -304,6 +306,7 @@ In this section, we present our zero knowledge argument scheme. At a high level,
 \framebox{\parbox{.99\linewidth}{
 \begin{construction}
 %\begin{protocol}
+\label{construction::all}
 	Let $\lambda$ be the security parameter, $\F$ be a prime field, $n$ be an upper bound on input size, and $S$ be an upper bound on circuit size. We use $\VPD_1, \VPD_2, \VPD_3$ to denote the zkVPD protocols for input layer, masking polynomials $g_i$ and $R_i$ described in Protocol~\ref{??}.
 	\begin{itemize}
 		\item $\mathcal{G}(1^\lambda, n, S)$: run $(\pp_1,\vp_1)\leftarrow\VPD_1.\KeyGen(1^\lambda, \log n)$, $(\pp_2,\vp_2)\leftarrow\VPD_2.\KeyGen(1^\lambda, \log S)$, $(\pp_3,\vp_3)\leftarrow\VPD_3.\KeyGen(1^\lambda)$. Output $\pk = (\pp_1, \pp_2, \pp_3)$ and $\vk = (\vp_1, \vp_2, \vp_3)$.
