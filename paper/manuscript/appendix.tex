@@ -1,0 +1,43 @@
+\newpage
+
+\appendix
+
+\section{Condensing to One Point in Linear Time}\label{app:onepoint}
+
+
+In this section, we present an algorithm to reduce two claims about $\tV_{i+1}$ to one in linear time. Recall that as described in Section~\ref{sec::gkr}, in the $i$-th layer, after the sumcheck, the verifier receives two claims $\tV(u), \tV(v)$. (Again we omit the superscript and subscript of $i$ for the ease of interpretation.) She then defines a line $\gamma(x): \mathbb{F}\rightarrow\mathbb{F}^{s}$ such that $\gamma(0) = u, \gamma(1)=v$ and the prover needs to provide $\tV(\gamma(x))$, a degree $s$ univariate polynomial, to $\V$. If the prover computes it naively, which was done in all prior papers, it incurs $O(s2^{s})$ time, as it is equivalent to evaluating $\tV()$ at $s+1$ points. 
+
+\begin{figure}[t!]
+	\begin{algorithm}[H]
+		\label{alg::comb}
+		\caption{Compute $\tV(\gamma(x)) = \sum_{y\in\binary^s}I(\gamma(x), y)\tV(y)$}
+		\begin{algorithmic}[1]
+			\State Initialize a binary tree $T$ with $s$ levels. We use $T_j[b]$ to denote the $b$-th node at level $j$.
+			\For{$b\in\binary^s$}
+				\State $T_s[b] = \tV(b)$.
+				\State Multiply $T_s[b]$ with $b_s(c_s x+ d_s)+(1-b_s)(1-c_s x- d_s)$.
+			\EndFor
+			\For{$j = s-1, \ldots, 1$} 
+				\For{$b\in\binary^{j}$}
+					\State $T_j[b] = T_{j+1}[b,0]+T_{j+1}[b,1]$.
+					\State $T_j[b] = T_j[b] \cdot (b_j(c_j x+ d_j)+(1-b_j)(1-c_j x- d_j))$. 
+				\EndFor
+			\EndFor
+			\State Output $T_1[0]$.
+		\end{algorithmic}
+	\end{algorithm}
+\end{figure}
+
+
+In our new algorithm, we write $\tV(\gamma(x)) = \sum_{y\in\binary^s}I(\gamma(x), y)\tV(y)$, where $I(a,b)$ is an identity polynomial $I(a,b)=0$ iff $a=b$. This holds by inspection of both sides on the boolean hypercube. We then evaluate the right side in linear time with a binary tree structure. The key observation is that the identity polynomial can be written as $I(a,b) = \prod_{j=1}^s (a_jb_j+(1-a_j)(1-b_j))$, and we can process one variable ($a_j,b_j$) at a time and multiply them together to get the final result. 
+
+We construct a binary tree with $2^s$ leaves and initialize each leaf $b\in\binary^s$ with $\tV(b)$. As $\gamma(x)$ is a linear polynomial, we write it as $\gamma(x) = [c_1, \ldots, c_s]^T x+ [d_1, \ldots, d_s]^T$. At the leaf level, we only consider the last variable of $I(\gamma(x), y)$. For each leaf $b\in\binary^s$, we multiply the value with $b_s(c_s x+ d_s)+(1-b_s)(1-c_s x- d_s)$, the result of which is a linear polynomial. For a node $b\in\binary^j$ in the intermediate level $j$, we add the polynomials from its two children, and multiply it with $b_j(c_j x+ d_j)+(1-b_j)(1-c_j x- d_j)$, the part in $I$ that corresponds to the $j$-th variable. In this way, each node in the $j$-th level stores a degree $j$ polynomial. Eventually, the root is the polynomial on the right side of degree $s$, which equals to $\tV(\gamma(x))$. The algorithm is given in Algorithm~\ref{alg::comb}. 
+
+To see the complexity of Algorithm~\ref{alg::comb}, both the storage and the polynomial multiplication at level $j$ is $O(s-j+1)$ in each node. So the total time is $O(\sum_{j=1}^s 2^j (s-j+1)) = O(2^s)$, which is linear to the number of gates in the layer.
+
+An alternative way to interpret this result is to add an additional layer for each layer of the circuit in GKR relaying the values. That is, $$\tV_{i}(g) = \sum_{x\in\binary^{s_i}}I(g,x)\tV_{i+1}(x),$$ where $\tV_i = \tV_{i+1}$. Then when using the random linear combination approach, the sumcheck is executed on $$\alpha\tV_{i}(u)+\beta\tV_i(v) = \sum_{x\in\binary^{s_i}}(\alpha I(u,x)+\beta I(v,x))\tV_{i+1}(x).$$
+At the end of the sumcheck, the verifier receives a single claim on $\tV_{i+1} = \tV_{i}$. The sumchek can obviously run in linear time, and the relay layers do not change the result of the circuit. This approach is actually the same as the condensing to one point in linear time above conceptually. 
+
+
+
+
