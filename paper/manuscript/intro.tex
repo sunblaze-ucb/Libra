@@ -46,7 +46,8 @@ Finally, among all the systems, SNARK requires a trusted setup phase for every c
 	\begin{tabular}{|c|c|c|c|c|c|c|c|}
 		
 		\hline
-		&SNARK&Ligero&Bulletproof&Hyrax&STARK&Aurora&\name\\
+		&\textbf{SNARK}&\textbf{Ligero}&\textbf{Bulletproof}&\textbf{Hyrax}&\textbf{STARK}&\textbf{Aurora}&\name\\
+		&\cite{libsnark}&\cite{ligero}&\cite{bulletproofs}&\cite{hyrax}&\cite{libstark}&\cite{aurora}&\\
 		\hline
 		\hline
 		$\mathcal{G}$&$O(C)$&\multicolumn{5}{c|}{NA}&$O(n)$\\
@@ -96,7 +97,7 @@ Besides the sumcheck, the GKR protocol additional leaks two evaluations of the p
 
 \paragraph{STARK.} Following the seminal work of Kilian~\cite{Kilian92} and Micali~\cite{Micali00}, Ben-Sasson et al.~\cite{libstark} built a zero knowledge transparent argument of knowledge (zkSTARK) using short probabilistically checkable proof (PCP), which does not rely on trusted setup. STARK executes on the random access machine (RAM) model, and its verification time is only linear to the description of the RAM program, and succinct (logarithmic) on the time of the program.  However, due to the heavy machinery of PCPs, the prover time and memory usage is big in practice (see~\cite{hyrax} and Section~\ref{sec:eval}). 
 
-\paragraph{IOP.} Based on "secure multi-party computations (MPC)-in-the-head" introduced in~\cite{ishai2007zero,giacomelli2016zkboo,chase2017post}, Ames et al.~\cite{ligero} proposed a zero knowledge proof scheme called Ligero. It only uses symmetric key operations and the prover time is fast in practice. However, it generates proofs of size $O(\sqrt{C})$, which is several megabytes in practice for moderate size circuits. In addition, the verification time is quasi-linear to the size of the circuit. Both of these drawbacks make it hard to be applied to applications like blockchain. It is categorized as interactive PCPs, which is a special case of interactive oracle proofs (IOPs). Recently, Ben-Sasson et al. proposed a new zero knowledge scheme in the IOP model named Aurora, which improves the proof size to $\log^2 C$.   
+\paragraph{IOP.} Based on "secure multi-party computations (MPC)-in-the-head" introduced in~\cite{ishai2007zero,giacomelli2016zkboo,chase2017post}, Ames et al.~\cite{ligero} proposed a zero knowledge proof scheme called Ligero. It only uses symmetric key operations and the prover time is fast in practice. However, it generates proofs of size $O(\sqrt{C})$, which is several megabytes in practice for moderate size circuits. In addition, the verification time is quasi-linear to the size of the circuit. Both of these drawbacks make it hard to be applied to applications like blockchain. It is categorized as interactive PCPs, which is a special case of interactive oracle proofs (IOPs). Recently, Ben-Sasson et al.~\cite{aurora} proposed a new zero knowledge scheme in the IOP model named Aurora, which improves the proof size to $\log^2 C$.   
 
 \paragraph{Discrete log.} Building on the work of Groth~\cite{groth2009linear}, Bayer and Groth~\cite{bayer2012efficient} and Bootle et al.~\cite{bootle2016efficient,bootle2017linear}, B{\"u}nz et al.~\cite{bulletproofs} proposed Bulletproof, a zero knowledge arguments based on discrete logarithm assumptions. To the best of our knowledge, this is the only line of work that achieves a linear prover time. The proof size in Bulletproof is $O(\log C)$, and is small in practices (several KBs). However, both the prover and the verification involve several cryptographic operations per gate of the circuit, which limits the size it can handle.
 

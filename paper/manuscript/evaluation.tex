@@ -106,7 +106,7 @@ Besides the speedup on complicated circuits, a significant advantage of the our 
 
 In this section, we show the performance of \name as a whole and compare it with several state-of-the-art zero knowledge proof systems.
 
-\paragraph{Methodology.} We compare with the following systems: libSNARK~\cite{libsnark}, Ligero\cite{ligero}, libSTARK\cite{libstark}, Hyrax\cite{hyrax},  Bulletproofs\cite{bulletproofs} and Aurora~\cite{}. See Section~\ref{sec:intro} for more explanations of these systems and their asymptotics. 
+\paragraph{Methodology.} We compare with the following systems: libSNARK~\cite{libsnark}, Ligero\cite{ligero}, libSTARK\cite{libstark}, Hyrax\cite{hyrax},  Bulletproofs\cite{bulletproofs} and Aurora~\cite{aurora}. See Section~\ref{sec:intro} for more explanations of these systems and their asymptotics. 
 \begin{itemize}
 \item \textbf{libSNARK:} We use jsnark~\cite{jsnark} to write the circuits (rank one constrain system (R1CS)), which compiles them to zero knowledge proofs using the libSNARK backend~\cite{??}. 
 
@@ -119,7 +119,7 @@ In this section, we show the performance of \name as a whole and compare it with
 \item\textbf{Bulletproofs:} We use the system reimplemented by~\cite{hyrax} at~\cite{??}.
 
 
-\item\textbf{Aurora:} As a recently accepted paper, the system is not available and we extrapolate its performance using the numbers reported in the paper for circuits with $2^{10}-2^{20}$ R1CS constrains.
+\item\textbf{Aurora:} As a recently accepted paper, the system is not available and we extrapolate its performance using the numbers reported in the paper~\cite{aurora} for circuits with $2^{10}-2^{20}$ R1CS constrains.
 
 \end{itemize}
 
