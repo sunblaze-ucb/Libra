@@ -6,38 +6,10 @@
 
 polynomials, PPT, vectors, ,binary, array, security parameter, $\neg$,
 
-\subsection{Cryptographic Assumptions}
 
-\paragraph{Bilinear pairing.} Let $\lambda$ be the security parameter, $\mathbb{G}, \mathbb{G}_T$ be two groups of order $p$ and $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map.
+\paragraph{Bilinear pairing.} Let $\lambda$ be the security parameter, $\mathbb{G}, \mathbb{G}_T$ be two groups of order $p$ and $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map. Our scheme relies on the $q$-Strong Bilinear Diffie-Hellman ($q$-SBDH) assumption and an extended version of the Power Knowledge of Exponent (PKE) assumption. We present the assumptions formally in Appendix~\ref{app:assume}.
 
-Our scheme relies on the following assumptions.
 
-\begin{assumption}[$q$-Strong Diffie-Hellman]
-	\label{asp::qSDH}
-	For any probabilistic polynomial time (PPT) adversary $\mathcal{A}$, the following holds:
-	
-	\[\Pr\left[ \begin{aligned}
-	&\mathsf{bp} \leftarrow \mathsf{BilGen}(1^\lambda) & \\
-	&s \overset{R}{\leftarrow} \mathbb{Z}^{*}_{p} & : (x, e(g, g)^{\frac{1}{s+x}}) \leftarrow \mathcal{A}(1^\lambda, \sigma)\\
-	&\sigma = (\mathsf{bp}, g^s, ..., g^{s^q})
-	\end{aligned} \right] \le \negl{(\lambda)}\]
-\end{assumption}
-
-The second assumption is a generalization of the $q$-PKE assumption~\cite{groth2010short} to multivariate polynomials, proposed in~\cite{zhang2017vsql,zkvpd}. Let $\mathcal {W}_ {\ell,d}$ be the set of all multisets of $\{1, . . . , \ell\}$ with the cardinality of each element being at most $d$. 
-
-\begin{assumption}[$(d,\ell)$-Extended Power Knowledge of Exponent]
-	\label{asp::dlEPKE}
-	For any PPT adversary $\mathcal{A}$, there is a polynomial time algorithm $\mathcal{E}$ (takes the same randomness of $\mathcal{A}$ as input) such that for all benign auxiliary inputs $z \in \{0,1\}^{\poly({\lambda})}$ the following probability is negligible:
-	\[\Pr\left[ \begin{aligned}
-	\mathsf{bp} \leftarrow \mathsf{BilGen}(1^\lambda) && \\
-	s_1, ..., s_\ell, s_{\ell + 1}, \alpha \overset{R}{\leftarrow} Z_{p}^*, s_0=1 && \\
-	\sigma_1 = (\{g^{\prod_{i\in W}s_i}\}_{W\in \mathcal{W}_{\ell, d}, g^{s_{\ell+1}}}) &&\hspace*{10pt} e(h, g^\alpha)=e(\tilde{h}, g)\\
-	\sigma_2 = (\{g^{\alpha\prod_{i\in Ws_i}}\}_{W\in \mathcal{W}_{\ell, d}}, g^{\alpha s_{\ell+1}}) && : \prod_{W\in \mathcal{W}_{\ell, d}}g^{a_{W}\prod_{i\in W}s_i}g^{b{s_{\ell+1}}}\neq h\\
-	\sigma = (\mathsf{bp}, \sigma_1, \sigma_2, g^{\alpha}) && \\
-	\mathbb{G} \times \mathbb{G} \ni (h, \tilde{h}) \leftarrow \mathcal{A} \left(1^{\lambda}, \sigma, z\right)&& \\
-	\left( a _ { 0 } , \dots , a _ { \left| \mathcal { W } _ { \ell , d } \right| } , b \right) \leftarrow \mathcal { E } \left( 1 ^ { \lambda } , \sigma , z \right) &&
-	\end{aligned}\right] \le \negl{(\lambda)}\]
-\end{assumption}
 
 \subsection{Interactive Proof and Zero-knowledge Arguments}
 

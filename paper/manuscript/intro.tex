@@ -41,29 +41,29 @@ Finally, among all the systems, SNARK requires a trusted setup phase for every c
 
 \begin{table}[h]
 	\centering
-	{\footnotesize
+	{\fontsize{8}{8}
 	\begin{tabular}{|c|c|c|c|c|c|c|c|}
 		
 		\hline
 		&SNARK&Ligero&Bulletproof&Hyrax&STARK&Aurora&\name\\
 		\hline
 		\hline
-		Setup&$O(C)$&\multicolumn{5}{c|}{NA}&$O(n)$\\
+		$\mathcal{G}$&$O(C)$&\multicolumn{5}{c|}{NA}&$O(n)$\\
 		\hline
-		Prover&$O(C\log^2C)$&$O(C\log C)$&$O(C)$&$O(C\log C)$&$O(C\log^2 C)$&$O(C\log C)$ &$O(C)$\\
+		$\P$&$O(C\log^2C)$&$O(C\log C)$&$O(C)$&$O(C\log C)$&$O(C\log^2 C)$&$O(C\log C)$ &$O(C)$\\
 		\hline
-		Verifier&$O(1)$&$O(C\log C)$&$O(C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$&$O(C\log C)$&$O(d\log C)$\\
+		$\V$&$O(1)$&$O(C\log C)$&$O(C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$&$O(C\log C)$&$O(d\log C)$\\
 		\hline
-		Proof&$O(1)$&$O(\sqrt{C})$&$O(\log C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$& $O(\log^2 C)$&$O(d\log C)$\\
+		$|\pi|$&$O(1)$&$O(\sqrt{C})$&$O(\log C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$& $O(\log^2 C)$&$O(d\log C)$\\
 		\hline
 		\hline
-		Setup&500s&\multicolumn{5}{c|}{NA}&210s\\
+		$\mathcal{G}$&500s&\multicolumn{5}{c|}{NA}&210s\\
 		\hline
-		Prover&360s&400s&13,000s&1,041s&30,000s&600s&504s\\
+		$\P$&360s&400s&13,000s&1,041s&30,000s&600s&504s\\
 		\hline
-		Verifier&0.003s&4s&900s&9.9s&0.02s&1.5s&1.07s\\
+			$\V$&0.003s&4s&900s&9.9s&0.02s&1.5s&1.07s\\
 		\hline
-		Proof&0.28KB&1,500KB&5.5KB&185KB&500KB&120KB&51KB\\
+		$|\pi|$&0.28KB&1,500KB&5.5KB&185KB&500KB&120KB&51KB\\
 		\hline
 	\end{tabular}
 }

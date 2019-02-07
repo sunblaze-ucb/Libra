@@ -52,26 +52,17 @@ Unfortunately, this algorithm does not work efficiently for the sumcheck on Equa
 
 In this paper, we propose a new algorithm to reduce the prover time of the sumcheck on Equation~\ref{eq:linearsc} to linear. Our protocol divides the sumcheck into two phases: the first $\ell$ rounds bounding the variables of $x$ to a random point $u$, and the last $\ell$ rounds bounding the variables of $y$ to a random point $v$.
 
-\paragraph{Phase one.} 
-During the first $\ell$ rounds, as $y$ does not change (always being summed on the boolean hypercube), we can write Equation~\ref{eq:linearsc} as 
-\[
-f_0(g) = \sum_{x\in\binary^\ell} h_g(x)f_2(x),
-\]
-where $h_g(x) = \sum_{y\in\binary^\ell}f_1(g,x,y)f_3(y)$. Note here that both $h_g(x)$ and $f_2(x)$ contain only $\ell$ variables. We can use algorithm $\mathsf{Update}$ in Algorithm~\ref{alg::dynamic} on both to compute the messages in this phase in linear time. However, $\mathsf{Update}$ requires an array initialized with $h_g(b)$ for all $b\in\binary^\ell$. Here we utilize the sparsity of $f_1$ to develop an efficient algorithm for the initialization.
-
-The way to do so is as following: instead of iterating through all possible $g,x,y$s, we only go through the nonzero elements that defines $f_1$. We first compute an array \textbf{G} where $\textbf{G}[b] = \prod_{i=1}^\ell ((1-g_i)(1-b_i)+g_ib_i)$ for $b\in\binary^\ell$. This can be computed in $O(2^\ell)$ as shown in Algorithm~\ref{alg::phase1}. Then for each nonzero element in the array of $f_1$, let its index be $(b_1,b_2,b_3) \in\binary^{3\ell}$, add $\textbf{G}[b_1]\cdot f_3(b_3)$ to $\textbf{H}[b_2]$. One can see that by doing so, $\textbf{H}[b] = h_g(b)$ $\forall b\in\binary^\ell$. After initializing $\textbf{H}$, we can use the dynamic programming in Algorithm~\ref{alg::dynamic} to generate the messages and update both $h_g(x)$ and $f_2(x)$. In this way, the prover runs in $O(2^\ell)$ in phase one. The full protocol is presented in Algorithm~\ref{alg::phase1}.
-
-\begin{figure}[ht!]
+\begin{figure}[b!]
 	\begin{algorithm}[H]
 		\caption{Phase 1 in sumcheck}\label{alg::phase1}
 		\begin{algorithmic}[1]
 			\Procedure{{\sf Precompute}}{$g$}
 			\State Set $\textbf{G}[0] = 1$
 			\For{$i=0,\ldots,\ell-1$}
-				\For{$b\in\binary^i$}
-				\State $\textbf{G}[b,0] = \textbf{G}[b]\cdot(1-g_{i+1})$
-				\State $\textbf{G}[b,1] = \textbf{G}[b]\cdot g_{i+1}$
-				\EndFor
+			\For{$b\in\binary^i$}
+			\State $\textbf{G}[b,0] = \textbf{G}[b]\cdot(1-g_{i+1})$
+			\State $\textbf{G}[b,1] = \textbf{G}[b]\cdot g_{i+1}$
+			\EndFor
 			\EndFor
 			\EndProcedure
 			\Procedure{{\sf Init\_PhaseOne}}{$\textbf{G}, f_3$}
@@ -89,6 +80,18 @@ The way to do so is as following: instead of iterating through all possible $g,x
 	\end{algorithm}
 \end{figure}
 
+
+
+\paragraph{Phase one.} 
+During the first $\ell$ rounds, as $y$ does not change (always being summed on the boolean hypercube), we can write Equation~\ref{eq:linearsc} as 
+\[
+f_0(g) = \sum_{x\in\binary^\ell} h_g(x)f_2(x),
+\]
+where $h_g(x) = \sum_{y\in\binary^\ell}f_1(g,x,y)f_3(y)$. Note here that both $h_g(x)$ and $f_2(x)$ contain only $\ell$ variables. We can use algorithm $\mathsf{Update}$ in Algorithm~\ref{alg::dynamic} on both to compute the messages in this phase in linear time. However, $\mathsf{Update}$ requires an array initialized with $h_g(b)$ for all $b\in\binary^\ell$. Here we utilize the sparsity of $f_1$ to develop an efficient algorithm for the initialization.
+
+The way to do so is as following: instead of iterating through all possible $g,x,y$s, we only go through the nonzero elements that defines $f_1$. We first compute an array \textbf{G} where $\textbf{G}[b] = \prod_{i=1}^\ell ((1-g_i)(1-b_i)+g_ib_i)$ for $b\in\binary^\ell$. This can be computed in $O(2^\ell)$ as shown in Algorithm~\ref{alg::phase1}. Then for each nonzero element in the array of $f_1$, let its index be $(b_1,b_2,b_3) \in\binary^{3\ell}$, add $\textbf{G}[b_1]\cdot f_3(b_3)$ to $\textbf{H}[b_2]$. One can see that by doing so, $\textbf{H}[b] = h_g(b)$ $\forall b\in\binary^\ell$. After initializing $\textbf{H}$, we can use the dynamic programming in Algorithm~\ref{alg::dynamic} to generate the messages and update both $h_g(x)$ and $f_2(x)$. In this way, the prover runs in $O(2^\ell)$ in phase one. The full protocol is presented in Algorithm~\ref{alg::phase1}.
+
+
 \paragraph{Phase two.} At this point, all variables in $x$ have been bounded to random numbers $u$. In the second phase, the equation to sum on becomes 
 \[
 \sum_{y\in\{0,1\}^\ell}f_1(g,u,y)f_2(u)f_3(y)
@@ -98,7 +101,7 @@ Note here that $f_2(u)$ is merely a single value which we already computed in ph
 The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\ell ((1-u_i)(1-b_i)+u_ib_i)$ using procedure $\mathsf{Precompute}(u)$ in Algorithm~\ref{alg::phase1}. Then for each nonzero element with index $b_1,b_2,b_3$ that defines $f_1$, add $\textbf{G}[b_1]\cdot\textbf{U}[b_2]$ to $\textbf{A}_1[b_3]$. In this way, $\textbf{A}_1[b_3]=f_1(g,u,b_3)$ $\forall b_3\in\binary^\ell$. Then we use Algorithm~\ref{alg::dynamic} on both $\textbf{A}_1$ and $f_3(y)$ to run the sumcheck in this phase in linear time. The protocol is presented in Algorithm~\ref{alg::phase2}.
 
 
-\begin{figure}[ht!]
+\begin{figure}[b!]
 	\begin{algorithm}[H]
 		\caption{Phase 2 in sumcheck}\label{alg::phase2}
 		\begin{algorithmic}[1]
@@ -132,7 +135,7 @@ The first sum can be computed using the same protocol in Algorithms~\ref{alg::ph
 
 
 
-\paragraph{Combining two claims.} After the sumcheck in the GKR protocol, as described in Section~\ref{sec::gkr}, the prover and the verifier need to combine the two claims about $\tV_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
+\paragraph{Combining two claims.} After the sumcheck in the GKR protocol, as described in Section~\ref{subsec::GKR}, the prover and the verifier need to combine the two claims about $\tV_{i+1}$ received at the end of the sumcheck protocol to one to avoid the exponential blow-up. There are two ways to combine the two claims and we show how to do each of them in linear time. 
 
 The second approach using random linear combinations is rather straight forward. After the output layers, $\P$ and $\V$ execute sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equations~\ref{eq:GKR}, which still satisfies the properties of Equation~\ref{eq:linearsc}. One could view it as 6 instances of Equation~\ref{eq:linearsc} and the prover time is still linear. Moreover, there is a better way to further improve the efficiency. Taking $\sum_{x, y \in\binary^{s_{i+1}}}(\alpha_i\tmult_{i+1}(u,x,y)+\beta_i\tmult_{i+1}(v,x,y))\tV_{i+1}(x)\tV_{i+1}(y)$ as an example, in Algorithm~\ref{alg::phase1}, the prover runs $\mathsf{Precompute}$ twice on $u$ and $v$ to generate two arrays ($\textbf{G}_1$ and $\textbf{G}_2$), and sets $\textbf{G}[b]=\alpha_i \textbf{G}_1[b] + \beta_i\textbf{G}_2[b]$ for all $b$. The rest of the algorithms remains the same. This modified algorithm incurs a small overhead in practice in our implementation, compared to the original algorithm on Equation~\ref{eq:linearsc}.
 
