@@ -82,7 +82,7 @@ ax.yaxis.set_ticks((0.01, 0.1, 1, 10, 100, 1000, 10000))
 ax.set_yticklabels(('$10^{-2}$','$10^{-1}$','$10^0$','$10^1$','$10^2$','$10^3$', '$10^4$'),ha='left')
 #plt.rcParams.update({'legend.labelspacing':0.25})
 
-plt.xlim((3*10**3, 3*10**6))
+plt.xlim((7*10**3, 1.5*10**6))
 plt.ylim((1,50000))
 #plt.xlim((1000, 10000))
 #plt.ylim((10,60000))
@@ -106,13 +106,13 @@ for tick in ax.xaxis.get_major_ticks():
                 tick.label.set_fontsize(70) 
 for tick in ax.yaxis.get_major_ticks():
                 tick.label.set_fontsize(70)
-ax.set_ylabel('prove time, seconds', fontsize=50)
-ax.set_xlabel('high-resolution image size, pixels', fontsize=50)
+ax.set_ylabel('prover time(s)', fontsize=60)
+ax.set_xlabel('\#pixel', fontsize=60)
 
-plt.subplots_adjust(left=0.17, bottom=0.22, top=0.97, right=0.95)
+plt.subplots_adjust(left=0.19, bottom=0.22, top=0.97, right=0.98)
 figManager = plt.get_current_fig_manager()
 #figManager.window.showMaximized()
-fig.set_size_inches(16,10)
+fig.set_size_inches(14,10)
 plt.savefig('fig5.pdf')
 
 #plt.show()
