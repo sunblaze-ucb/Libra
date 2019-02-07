@@ -8,16 +8,17 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 
 \begin{itemize}
 			\item \textbf{Perfect Completeness}
-				For any polynomial $f \in \mathcal{F}$ and value $t$,
+				For any polynomial $f \in \mathcal{F}$ and value $t$, the following probability is 1.
 				\[\Pr_{r_f}\left[
 					\begin{aligned}
 						(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \\
 						\comm \leftarrow \Commit(f, r_f, \pp) &:&  \CheckComm(\comm, \vp)=\accept \hspace*{5pt}\land \\
 						(y, \pi) \leftarrow \Open(f, t, r_f, \pp) && \hspace*{10pt}\Verify(\comm, t, y, \pi, \vp)=\accept\\
 					\end{aligned}
-				\right]=1\]
+				\right]\]
 			\item \textbf{Binding}
-			For any PPT adversary $\mathcal{A}$ and benign auxilary input $z_1, z_2$ the following holds:
+			For any PPT adversary $\mathcal{A}$ and benign auxilary input $z_1, z_2$ the following probability is negligible of $\lambda$:
+			{\footnotesize
 			\[\Pr \left[
 				\begin{aligned}
 					(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \CheckComm(\comm^*, \vp)=\accept \hspace*{5pt}\land\\
@@ -26,8 +27,10 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 					&& (y^*, \pi^*) = \Open(f^*, t^*, r_f^*, \pp) \hspace*{5pt} \land \\
 					&& f^*(t^*) \neq y^*\\
 				\end{aligned}
-			\right]\le \negl{(\lambda)}\]
+			\right]\]
+			}
 			\item \textbf{Zero Knowledge} For security parameter $\lambda$, polynomial $f$, advserary $\mathcal{A}$, and simulator $\S$, consider the following two experiments:
+			{\footnotesize
 				\begin{align*}
 					\begin{minipage}{.5\linewidth}
 						$\mathsf{Real}_{\A, f}(1^\lambda)$:
@@ -38,7 +41,7 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 							\item $k\leftarrow \mathcal{A}(1^\lambda, \comm, \vp)$
 							\item \text{For $i=1,...,k$ repeat}
 							\begin{enumerate}
-								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1, ..., y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
+								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1,...,y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
 								\item $(y_i, \pi_i) \leftarrow \Open(f, t_i, r_f, \pp)$
 							\end{enumerate}
 							\item $b \leftarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
@@ -56,11 +59,12 @@ Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate 
 								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1, ..., y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
 								\item $(y_i, \pi_i, \sigma) \leftarrow \mathsf{Sim}(t_i, \sigma, \pp)$
 							\end{enumerate}
-							\item $b \leftarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
+							\item $b \shortrightarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
 							\item \text{Output b}
 						\end{enumerate}
 					\end{minipage}
 				\end{align*}
+				}
 				For any PPT adversary $\A$ and all polynomial $f\in\F$, there exists simulator $\S$ such that
 				\[
 				|\Pr[\mathsf{Real}_{\A, f}(1^\lambda)=1] - \Pr[\mathsf{Ideal}_{\A, \S}(1^\lambda)=1]|\le \negl(\lambda).

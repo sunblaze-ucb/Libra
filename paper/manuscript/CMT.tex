@@ -48,7 +48,10 @@ Using the sumcheck protocol as a building block, Goldwasser et al.~\cite{GKR} sh
 
 \paragraph{Notations.} Before describing the GKR protocol, we introduce some additional notations. We denote the number of gates in the $i$-th layer as $S_i$ and let $s_i = \ceil{\log S_i}$. (For simplicity, we assume $S_i$ is a power of 2, and we can pad the layer with dummy gates otherwise.) We then define a function $V_i:\binary^{s_i}\rightarrow\mathbb{F}$ that takes a binary string $b\in\binary^{s_i}$ and returns the output of gate $b$ in layer $i$, where $b$ is called the gate label. With this definition, $V_0$ corresponds to the output of the circuit, and $V_d$ corresponds to the input layer. Finally, we define two additional functions $add_i, mult_i: \binary^{s_{i-1}+2s_i}\rightarrow\binary$, referred as \emph{wiring predicates} in the literature. $add_i$ ($mult_i$) takes one gate label $z\in\binary^{s_{i-1}}$ in layer $i-1$ and two gate labels $x,y\in\binary^{s_i}$ in layer $i$, and outputs 1 if and only if gate $z$ is an addition (multiplication) gate that takes the output of gate $x,y$ as input. With these definitions, $V_i$ can be written as follows:
 \begin{equation}
-	V_i(z)=\sum_{x, y \in\binary^{s_{i+1}}}(add_{i+1}(z,x,y)(V_{i+1}(x)+V_{i+1}(y))+mult_{i+1}(z,x,y)(V_{i+1}(x)V_{i+1}(y)))
+    \begin{aligned}
+	V_i(z)=\sum_{x, y \in\binary^{s_{i+1}}}(add_{i+1}(z,x,y)(V_{i+1}(x)+V_{i+1}(y))\\
+	+mult_{i+1}(z,x,y)(V_{i+1}(x)V_{i+1}(y)))
+	\end{aligned}
 \end{equation}
 for any $z\in\binary^{s_i}$. 
 
@@ -108,8 +111,9 @@ $$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_
 
 In the equation above, $V_i$ is expressed as a summation, so $\V$ can use the sumcheck protocol to check that it is computed correctly. As the sumcheck protocol operates on polynomials defined on $\mathbb{F}$, we rewrite the equation with their multilinear extensions:
 \begin{align}\label{eq:GKR}
-\tV_i(g)&=\sum_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
-&=\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(g,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))
+\tV_i(g)=&\sum_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
+=&\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
+&+\tmult_{i+1}(g,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))
 \end{align}
 where $g\in\mathbb{F}^{s_i}$ is a random vector. 
 
@@ -143,16 +147,16 @@ where $g\in\mathbb{F}^{s_i}$ is a random vector.
 								$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
 								\begin{align*}
 								\sum_{x, y\in \binary^{s_{i+1}}}&((\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)\tV_{i+1}(y))\\
-								&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber
+								+&(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber
 								\end{align*}
 								
 								\item At the end of the sumcheck protocol, $\P$ sends $\V$ $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$.
 								
 								
-								\item $\V$ computes the following and checks if it equals to the last message of the sumcheck.
+								\item $\V$ computes the following and checks if it equals to the last message of the sumcheck. For simplicity, let $Mult_{i+1}(x) = \tilde{mult}_{i+1}(x, u^{(i+1)}, v^{(i+1)})$ and $Add_{i+1}(x) = \tilde{add}_{i+1}(x, u^{(i+1)}, v^{(i+1)})$.
 								\begin{align*}
-								&(\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)}))(\tV_{i+1}(u^{(i+1)})\tV_{i+1}(v^{(i+1)}))+\\
-								&(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)}))(\tV_{i+1}(u^{(i+1)})+\tV_{i+1}(v^{(i+1)}))
+								&(\alpha^{(i)}Mult_{i+1}(u^{(i)})+\beta^{(i)}Mult_{i+1}(v^{(i)})(\tV_{i+1}(u^{(i+1)})\tV_{i+1}(v^{(i+1)}))+\\
+						        &(\alpha^{(i)}\tilde{Add}_{i+1}(u^{(i)})+\beta^{(i)}\tilde{Add}_{i+1}(v^{(i)})(\tV_{i+1}(u^{(i+1)})+\tV_{i+1}(v^{(i+1)}))
 								\end{align*}
 								If all checks in the sumcheck pass, $V$ uses $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
 								
@@ -164,13 +168,14 @@ where $g\in\mathbb{F}^{s_i}$ is a random vector.
 \end{figure}
 
 \smallskip\noindent\textbf{Combining two claims: random linear combination.}  In~\cite{zksumcheck}, Chiesa et al. proposed an alternative approach using random linear combinations. Upon receiving the two claims $\tV_i(u)$ and $\tV_i(v)$, $\V$ selects $\alpha_i, \beta_i\in\mathbb{F}$ randomly and computes $\alpha_i\tV_i(u)+\beta_i\tV_i(v)$. Based on Equation~\ref{eq:GKR}, this random linear combination can be written as
+{\footnotesize
 \begin{align}\label{eq:randomGKR}
 &\alpha_i\tV_i(u)+\beta_i\tV_i(v)\nonumber\\
-=&\alpha_i\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(u,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(u,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\
-&+\beta_i\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(v,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(v,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\
+=&\alpha_i\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(u,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(u,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\+&\beta_i\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(v,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(v,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\
 =&\sum_{x, y \in\binary^{s_{i+1}}}((\alpha_i\tadd_{i+1}(u,x,y)+\beta_i\tadd_{i+1}(v,x,y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
 &+(\alpha_i\tmult_{i+1}(u,x,y)+\beta_i\tmult_{i+1}(v,x,y))(\tV_{i+1}(x)\tV_{i+1}(y)))
 \end{align}
+}
 $\V$ and $\P$ then execute the sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equation~\ref{eq:GKR}. At the end of the sumcheck protocol, $\V$ still receives two claims about $\tV_{i+1}$, computes their random linear combination and proceeds to an layer above recursively until the input layer.
 
 In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Protocol~\ref{protocol::GKR}.
