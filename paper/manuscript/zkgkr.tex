@@ -100,56 +100,63 @@ In this section, we show that we can set $R_i$ to be a small polynomial to achie
 
 The full protocol is presented in Construction~\ref{construction:zkgkr}. Here we use superscriptions (e.g., $u^{(i)}$) to denote random numbers or vectors for the $i$-th layer of the circuit.
 
-\begin{figure}[H]
+%\begin{figure}[H]
 
-\small{
-\centering{\centering
-\framebox{\parbox{.99\linewidth}{
-\begin{construction}\label{construction:zkgkr}
-\begin{enumerate} 
-\item On a layered arithmetic circuit $C$ with $d$ layers and input $\mathsf{in}$, the prover $\P$ sends the output of the circuit $\mathsf{out}$ to the verifier $\V$.
+%{\small
+%\centering{\centering
+%\framebox{\parbox{.99\linewidth}{
+\begin{mdframed}[nobreak=false]
+	\begin{construction}\label{construction:zkgkr}
+		\begin{enumerate} 
+			\item On a layered arithmetic circuit $C$ with $d$ layers and input $\mathsf{in}$, the prover $\P$ sends the output of the circuit $\mathsf{out}$ to the verifier $\V$.
+			
+			\item $\P$ randomly selects polynomials $R_1(z_1, w), \ldots, R_d(z_1, w): \F^2\rightarrow \F$ with variable degree 2. $\P$ commits to these polynomials by sending $\comm_i\leftarrow\Commit(R_i)$ to $\V$ for $i\in[1,d]$.
+			
+			\item $\V$ defines $\dot{V}_0(z)= \tV_0(z)$, where $\tV_0(z)$ is the multilinear extension of $\mathsf{out}$. $\dot{V}_0(z)$ can be viewed as a special case with $R_0(z_1,w)$ being the 0 polynomial. $\V$ evaluates it at a random point $\dot{V}_0(g^{(0)})$ and sends $g^{(0)}$ to $\P$.
+			
+			\item $\P$ and $\V$ execute the zero knowledge sumcheck protocol presented in Construction~\ref{construction::zksumcheck} on
+			\[
+			\dot{V}_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\dot{V}_{1}(x)\dot{V}_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\dot{V}_{1}(x)+\dot{V}_{1}(y))
+			\]
+			If $u_1^{(1)} = v_1^{(1)}$, $\P$ aborts. At the end of the protocol, $\V$ receives $\dot{V}_1(u^{(1)})$ and $\dot{V}_1(v^{(1)})$. $\V$ computes $\tmult_1(g^{(0)},u^{(1)},v^{(1)})$, $\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ and checks that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\dot{V}_1(u^{(1)})\dot{V}_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\dot{V}_1(u^{(1)})+\dot{V}_1(v^{(1)}))$ equals to the last message of the sumcheck (evaluation oracle).
+			
+			\item For layer $i=1,\ldots, d-1$:
+			\begin{enumerate}
+				\item $\V$ randomly selects $\alpha^{(i)}, \beta^{(i)}\in\F$ and sends them to $\mathcal{P}$.
+				\item $\P$ and $\V$ run the zero knowledge sumcheck on the equation\\
+				
+				$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
+				\begin{align*}
+				\sum_{x, y\in \binary^{s_{i+1}},w \in \binary}&(I(\vec{0},w) \cdot (\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
+				&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber\\
+				&+ I((x, y), \vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, w)+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, w)))
+				\end{align*}
+				If $u_1^{(i+1)} = v_1^{(i+1)}$, $\P$ aborts.
+				
+				\item At the end of the zero-knowledge sumcheck protocol, $\P$ sends $\V$ $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$.
+				
+				\item $\V$ computes $a_{i+1} = \alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ and $b_{i+1} = \alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ locally. $\V$ computes $Z_i(u^{(i)}),Z_i(v^{(i)}),I(\vec{0},c^{(i)}), I((u^{(i+1)},v^{(i+1)}),\vec{0})$ locally.
+				\item $\P$ and $\V$ open $R_i$ at two points $R_i(u_1^{(i)},c^{(i)})$ and $R_i(v_1^{(i)},c^{(i)})$ using $\Open$ and $\Verify$.
+				\item $\V$ computes the following as the evaluation oracle and uses it to complete the last step of the zero-knowledge sumcheck.
+				\begin{align*}
+				I(\vec{0},c^{(i)})(a_{i+1}(\dot{V}_{i+1}(u^{(i+1)})\dot{V}_{i+1}(v^{(i+1)}))+b_{i+1}(\dot{V}_{i+1}(u^{(i+1)})+\dot{V}_{i+1}(v^{(i+1)})))\\
+				+I((u^{(i+1)},v^{(i+1)}),\vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, c^{(i)})+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, c^{(i)}))
+				\end{align*}
+				If all checks in the zero knowledge sumcheck and $\Verify$ passes, $\V$ uses $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
+				
+			\end{enumerate}
+			
+			\item At the input layer $d$, $\V$ has two claims $\dot{V}_{d}(u^{(d)})$ and $\dot{V}_{d}(v^{(d)})$. $\V$ opens $R_d$ at 4 points $R_d(u_1^{(d)},0),R_d(u_1^{(d)},1),R_d(v_1^{(d)},0),R_d(v_1^{(d)},1)$ and checks that $\dot{V}_{d}(u^{(d)}) = \tV_d(u^{(d)})+Z_d(u^{(d)})\sum\limits_{w \in \binary}R_d(u_1^{(d)},w)$ and $\dot{V}_{d}(v^{(d)}) = \tV_d(v^{(d)})+Z_d(v^{(d)})\sum\limits_{w \in \binary}R_d(v_1^{(d)},w)$, given oracle access to two evaluates of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$. If the check passes, output $\accept$; otherwise, output $\reject$.
+			
+		\end{enumerate}
+	\end{construction}
+\end{mdframed}
 
-\item $\P$ randomly selects polynomials $R_1(z_1, w), \ldots, R_d(z_1, w): \F^2\rightarrow \F$ with variable degree 2. $\P$ commits to these polynomials by sending $\comm_i\leftarrow\Commit(R_i)$ to $\V$ for $i\in[1,d]$.
 
-\item $\V$ defines $\dot{V}_0(z)= \tV_0(z)$, where $\tV_0(z)$ is the multilinear extension of $\mathsf{out}$. $\dot{V}_0(z)$ can be viewed as a special case with $R_0(z_1,w)$ being the 0 polynomial. $\V$ evaluates it at a random point $\dot{V}_0(g^{(0)})$ and sends $g^{(0)}$ to $\P$.
- 
-\item $\P$ and $\V$ execute the zero knowledge sumcheck protocol presented in Construction~\ref{construction::zksumcheck} on
-\[
-\dot{V}_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\dot{V}_{1}(x)\dot{V}_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\dot{V}_{1}(x)+\dot{V}_{1}(y))
-\]
-If $u_1^{(1)} = v_1^{(1)}$, $\P$ aborts. At the end of the protocol, $\V$ receives $\dot{V}_1(u^{(1)})$ and $\dot{V}_1(v^{(1)})$. $\V$ computes $\tmult_1(g^{(0)},u^{(1)},v^{(1)})$, $\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ and checks that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\dot{V}_1(u^{(1)})\dot{V}_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\dot{V}_1(u^{(1)})+\dot{V}_1(v^{(1)}))$ equals to the last message of the sumcheck (evaluation oracle).
+%}}}}
+%\end{figure}
 
-\item For layer $i=1,\ldots, d-1$:
-	\begin{enumerate}
-	\item $\V$ randomly selects $\alpha^{(i)}, \beta^{(i)}\in\F$ and sends them to $\mathcal{P}$.
-	\item $\P$ and $\V$ run the zero knowledge sumcheck on the equation\\
 
-	$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
-	\begin{align*}
-	\sum_{x, y\in \binary^{s_{i+1}},w \in \binary}&(I(\vec{0},w) \cdot (\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
-	&+(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber\\
-	&+ I((x, y), \vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, w)+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, w)))
-	\end{align*}
-	If $u_1^{(i+1)} = v_1^{(i+1)}$, $\P$ aborts.
-	
-	\item At the end of the zero-knowledge sumcheck protocol, $\P$ sends $\V$ $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$.
-	
-	\item $\V$ computes $a_{i+1} = \alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ and $b_{i+1} = \alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ locally. $\V$ computes $Z_i(u^{(i)}),Z_i(v^{(i)}),I(\vec{0},c^{(i)}), I((u^{(i+1)},v^{(i+1)}),\vec{0})$ locally.
-	\item $\P$ and $\V$ open $R_i$ at two points $R_i(u_1^{(i)},c^{(i)})$ and $R_i(v_1^{(i)},c^{(i)})$ using $\Open$ and $\Verify$.
-	\item $\V$ computes the following as the evaluation oracle and uses it to complete the last step of the zero-knowledge sumcheck.
-	\begin{align*}
-		I(\vec{0},c^{(i)})(a_{i+1}(\dot{V}_{i+1}(u^{(i+1)})\dot{V}_{i+1}(v^{(i+1)}))+b_{i+1}(\dot{V}_{i+1}(u^{(i+1)})+\dot{V}_{i+1}(v^{(i+1)})))\\
-		+I((u^{(i+1)},v^{(i+1)}),\vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, c^{(i)})+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, c^{(i)}))
-	\end{align*}
-	If all checks in the zero knowledge sumcheck and $\Verify$ passes, $\V$ uses $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
-	
-	\end{enumerate}
-
-\item At the input layer $d$, $\V$ has two claims $\dot{V}_{d}(u^{(d)})$ and $\dot{V}_{d}(v^{(d)})$. $\V$ opens $R_d$ at 4 points $R_d(u_1^{(d)},0),R_d(u_1^{(d)},1),R_d(v_1^{(d)},0),R_d(v_1^{(d)},1)$ and checks that $\dot{V}_{d}(u^{(d)}) = \tV_d(u^{(d)})+Z_d(u^{(d)})\sum\limits_{w \in \binary}R_d(u_1^{(d)},w)$ and $\dot{V}_{d}(v^{(d)}) = \tV_d(v^{(d)})+Z_d(v^{(d)})\sum\limits_{w \in \binary}R_d(v_1^{(d)},w)$, given oracle access to two evaluates of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$. If the check passes, output $\accept$; otherwise, output $\reject$.
-
-\end{enumerate}
-\end{construction}}}}}
-\end{figure}
 \begin{theorem}
 	Construction~\ref{construction:zkgkr} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$.
 \end{theorem}
