@@ -9,9 +9,17 @@
 
 Before presenting the experimental results, we describe two concrete optimizations we used in the implementation that further improve the performance of our system.
 
-\paragraph{Key generation with lookup tables.}
+\paragraph{Key generation with lookup tables.} There is a setup phase in our zkVPD protocol, where the generator $g$ of the bilinear map base group is raised to $O(n)$ different powers. We developed an algorithm with lookup tables that improves this setup time by $\frac{\log n}{2}$. 
 
-\paragraph{More gate types with no overhead.}
+The bit-length of these powers is $\log |\F|$, as they are products of the secret keys selected randomly. We divide the $\log|\F|$ bits into $\frac{2\log|\F|}{\log n}$ blocks with $\frac{\log n}{2}$ bits each. For each block, we consider all $i\in\binary^{\log n/2}$ in the block and set the bits of other blocks as 0. We precompute the powers of $g$ to all possible values in each block as the lookup table. The space and time of this step is $O(\frac{2\log|\F|}{\log n}\cdot\sqrt{n})$. To compute a power $g^a$, we divide the bits of $a$ into such blocks. The contribution of each block can be computed in constant time by the lookup table, and we simply multiply them together to get $g^a$. The computation takes $O(\frac{2\log|\F|}{\log n})$ time, while without this optimization, each exponentiation takes $O(\log |\F|)$ time.
+
+Concretely, the optimization improves the setup time by around $10\times$ in practice, and can also be applied to the setup in SNARKs.
+
+\paragraph{More gate types with no overhead.} In our protocol, we only consider addition and multiplication gates, as they are enough to represent all arithmetic circuits. However, in practice, the size of the circuit can be reduced significantly if we introduce other types of gate. The GKR protocol still works with these new gates, but they incur an overhead on the prover time for a circuit of the same size. Therefore, in prior work such as~\cite{wahby2016verifiable,vram}, this is considered as a trade-off.
+
+Our protocol supports any gate with fan-in $\le 2$ and degree $\le 2$ with no overhead on the prover. Recall that in the GKR protocol, the values in layer $i$ is represented as a sumcheck of values in layer $i+1$ and the wiring predicates, as shown in Equation~\ref{eq:GKR}. With a set of gate types $\mathcal{T}$, we can write the polynomial in the sum as $$\sum_{j\in\mathcal{T}}\tilde{gate}^{(j)}_i(g,x,y) G^{(j)}_i(\tV_{i+1}(x),\tV_{i+1}(x)),$$ where $G^{(j)}_i()$ is the computation of gate type $j$ (e.g., for addition gates, $G^{(j)}_i(\tV_{i+1}(x),\tV_{i+1}(x)) = \tV_{i+1}(x)+\tV_{i+1}(x)$). As the gates have fan-in $\le 2$ and degree $\le 2$, $G^{(j)}_i$ has up to 2 variables and total degree at most 2 for all $j$. Therefore, each $G^{(j)}_i$ can be expressed explicitly as $a_0+a_1\tV_{i+1}(x)+a_2\tV_{i+1}(y)+a_3\tV_{i+1}(x)\tV_{i+1}(y)+a_4\tV_{i+1}(x)^2+a_5\tV_{i+1}(y)^2$, at most 6 nonzero monomials. The prover can then combine all the wiring predicates $\tilde{gate}^{(j)}_i(g,x,y)$ for the same monomial through a summation. With this approach, when generating the proof in Algorithm~\ref{alg::phase1} and~\ref{alg::phase2}, the prover only allocates one array for each monomial, and initializes all 6 arrays with one scan through all the gates in $\mathsf{Init\_PhaseOne}$ and $\mathsf{Init\_PhaseTwo}$. In this way, the prover time remains the same regardless of the number of gate types. 
+
+In our experiments, useful types of gates include subtraction, relay, multiply by constant, $x(1-x)$ for binary check, \texttt{NOT,AND,OR,XOR}, etc. 
 
 
 \subsection{Improvements on GKR protocols}\label{subsec:expGKR}
