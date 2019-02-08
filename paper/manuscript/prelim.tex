@@ -17,7 +17,7 @@ polynomials, PPT, vectors, ,binary, array, security parameter, $\neg$,
 
 We formalize the interactive proof in the following:	
 \begin{definition}\label{def:ip}
-	Let $f$ be a boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for $f$ with soundness $\epsilon$ if the following holds:
+	Let $f$ be a Boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for $f$ with soundness $\epsilon$ if the following holds:
 	\begin{itemize}
 		\item {\bf Completeness.} For every $x$ such that $f(x) = 1$ it holds that $\Pr[\langle\mathcal{P}, \mathcal{V}\rangle(x)=accept]=1$.
 		\item {\bf $\epsilon$-Soundness.} For any $x$ with $f(x) \neq 1$ and any $\mathcal{P}^*$ it holds that $\Pr[\langle\mathcal{P^*},\mathcal{V}\rangle=accept] \le \epsilon$
@@ -40,11 +40,11 @@ We formalize the interactive proof in the following:
 		
 		$$\Pr[\langle\P(\pk), \V(\vk) \rangle(x) = \accept \wedge (x, w) \notin R | w \leftarrow \varepsilon(\pk, x)] \leq \neg(\lambda)$$
 		
-		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$, it holds that
-		
-		$$\Pr\left[(x;w)\in R; \langle\P(\pk,w),\A(\sigma) \rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk) \right] = $$
-		$$\Pr\left[(x;w)\in R; \langle\S(\mathsf{trap}, z, \pk),\A(\sigma) \rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk)\right]$$
-		
+		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$, it holds that\\
+		{\scriptsize
+		$\Pr\left[(x;w)\in R; \langle\P(\pk,w),\A(\sigma) \rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk) \right] = $\\
+		$\Pr\left[(x;w)\in R; \langle\S(\mathsf{trap}, z, \pk),\A(\sigma) \rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk)\right]$\\
+		}
 		where $=$ means perfect zero knowledge. 
 		
 	\end{itemize}

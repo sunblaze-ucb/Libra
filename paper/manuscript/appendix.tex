@@ -19,6 +19,7 @@ The second assumption is a generalization of the $q$-PKE assumption~\cite{groth2
 \begin{assumption}[$(d,\ell)$-Extended Power Knowledge of Exponent]
 	\label{asp::dlEPKE}
 	For any PPT adversary $\mathcal{A}$, there is a polynomial time algorithm $\mathcal{E}$ (takes the same randomness of $\mathcal{A}$ as input) such that for all benign auxiliary inputs $z \in \{0,1\}^{\poly({\lambda})}$ the following probability is negligible:
+	{\footnotesize
 	\[\Pr\left[ \begin{aligned}
 	\mathsf{bp} \leftarrow \mathsf{BilGen}(1^\lambda) && \\
 	s_1, ..., s_\ell, s_{\ell + 1}, \alpha \overset{R}{\leftarrow} Z_{p}^*, s_0=1 && \\
@@ -28,7 +29,129 @@ The second assumption is a generalization of the $q$-PKE assumption~\cite{groth2
 	\mathbb{G} \times \mathbb{G} \ni (h, \tilde{h}) \leftarrow \mathcal{A} \left(1^{\lambda}, \sigma, z\right)&& \\
 	\left( a _ { 0 } , \dots , a _ { \left| \mathcal { W } _ { \ell , d } \right| } , b \right) \leftarrow \mathcal { E } \left( 1 ^ { \lambda } , \sigma , z \right) &&
 	\end{aligned}\right] \le \negl{(\lambda)}\]
+	}
 \end{assumption}
+
+\section{GKR protocol}\label{app:gkr}
+
+%\begin{figure}[t!]
+	\small{
+		\centering{\centering
+			\framebox{\parbox{.99\linewidth}{
+					\begin{protocol}
+						\label{protocol::GKR}
+						Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ wants to convince that $\mathsf{out}=C(\mathsf{in})$ where $\mathsf{in}$ is the input from $\V$, and $\mathsf{out}$ is the output. Without loss of generality, assume $n$ and $k$ are both powers of 2 and we can pad them if not.
+						
+						\begin{itemize}
+							\item Define the multilinear extension of array $\mathsf{out}$ as $\tV_0$. $\V$ chooses a random $g \in \mathbb{F}^{s_0}$ and sends it to $\P$. Both parties compute $\tilde{V_0}(g)$.
+							\item $\P$ and $\V$ run a sumcheck protocol on
+							\[
+							\tV_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\tV_{1}(x)\tV_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\tV_{1}(x)+\tV_{1}(y))
+							\]
+							At the end of the protocol, $\V$ receives $\tV_1(u^{(1)})$ and $\tV_1(v^{(1)})$. $\V$ computes $\tmult_1(g^{(0)},u^{(1)},v^{(1)})$, $\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ and checks that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\tV_1(u^{(1)})\tV_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\tV_1(u^{(1)})+\tV_1(v^{(1)}))$ equals to the last message of the sumcheck.
+							
+							\item For $i=1,...,d-1$:
+							\begin{itemize}
+								
+								\item $\V$ randomly selects $\alpha^{(i)}, \beta^{(i)}\in\F$ and sends them to $\mathcal{P}$.
+								\item $\P$ and $\V$ run the sumcheck on the equation\\
+								
+								$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
+								\begin{align*}
+								\sum_{x, y\in \binary^{s_{i+1}}}&((\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)\tV_{i+1}(y))\\
+								+&(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber
+								\end{align*}
+								
+								\item At the end of the sumcheck protocol, $\P$ sends $\V$ $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$.
+								
+								
+								\item $\V$ computes the following and checks if it equals to the last message of the sumcheck. For simplicity, let $Mult_{i+1}(x) = \tilde{mult}_{i+1}(x, u^{(i+1)}, v^{(i+1)})$ and $Add_{i+1}(x) = \tilde{add}_{i+1}(x, u^{(i+1)}, v^{(i+1)})$.
+								\begin{align*}
+								&(\alpha^{(i)}Mult_{i+1}(u^{(i)})+\beta^{(i)}Mult_{i+1}(v^{(i)})(\tV_{i+1}(u^{(i+1)})\tV_{i+1}(v^{(i+1)}))+\\
+						        &(\alpha^{(i)}\tilde{Add}_{i+1}(u^{(i)})+\beta^{(i)}\tilde{Add}_{i+1}(v^{(i)})(\tV_{i+1}(u^{(i+1)})+\tV_{i+1}(v^{(i+1)}))
+								\end{align*}
+								If all checks in the sumcheck pass, $V$ uses $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
+								
+							\end{itemize}
+							\item At the input layer $d$, $\V$ has two claims $\tV_{d}(u^{(d)})$ and $\tV_{d}(v^{(d)})$. $\V$ queries the oracle of evaluations of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$ and checks that they are the same as the two claims. If yes, output $\accept$; otherwise, output $\reject$.
+							
+						\end{itemize}
+	\end{protocol}}}}}
+%\end{figure}
+
+\section{Definition of zkVPD}\label{app:zkvpd}
+
+\begin{definition}\label{def::zkvpd}
+Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) consists of the following algorithms: $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$, $\comm \leftarrow \Commit(f, r_f, \pp)$, $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$, $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$, $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$, such that
+
+\begin{itemize}
+			\item \textbf{Perfect Completeness}
+				For any polynomial $f \in \mathcal{F}$ and value $t$, the following probability is 1.
+				\[\Pr_{r_f}\left[
+					\begin{aligned}
+						(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \\
+						\comm \leftarrow \Commit(f, r_f, \pp) &:&  \CheckComm(\comm, \vp)=\accept \hspace*{5pt}\land \\
+						(y, \pi) \leftarrow \Open(f, t, r_f, \pp) && \hspace*{10pt}\Verify(\comm, t, y, \pi, \vp)=\accept\\
+					\end{aligned}
+				\right]\]
+			\item \textbf{Binding}
+			For any PPT adversary $\mathcal{A}$ and benign auxiliary input $z_1, z_2$ the following probability is negligible of $\lambda$:
+			{\footnotesize
+			\[\Pr \left[
+				\begin{aligned}
+					(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d) && \CheckComm(\comm^*, \vp)=\accept \hspace*{5pt}\land\\
+					(\pi^*, \comm^*, y^*, state) \leftarrow \mathcal{A}(1^\lambda, z_1, \pp) &:& \Verify(\comm^*, t^*, y^*, \pi^*, \vp)=\accept \hspace*{5pt} \land\\
+					(f^*, t^*, r_f^*) \leftarrow \mathcal{A}(1^\lambda, z_2, state, \pp) && \comm^*=\Commit(f^*, r_f^*, \pp) \hspace*{5pt} \land\\
+					&& (y^*, \pi^*) = \Open(f^*, t^*, r_f^*, \pp) \hspace*{5pt} \land \\
+					&& f^*(t^*) \neq y^*\\
+				\end{aligned}
+			\right]\]
+			}
+			\item \textbf{Zero Knowledge} For security parameter $\lambda$, polynomial $f$, adversary $\mathcal{A}$, and simulator $\S$, consider the following two experiments:
+			{\footnotesize
+				\begin{align*}
+					\begin{minipage}{.48\linewidth}
+						$\mathsf{Real}_{\A, f}(1^\lambda)$:
+						\begin{enumerate}
+							\item $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$
+							%\item \text{Generate $r_f$ uniformly at random}
+							\item $\comm \leftarrow \Commit(f, r_f, \pp)$
+							\item $k\leftarrow \mathcal{A}(1^\lambda, \comm, \vp)$
+							\item \text{For $i=1,...,k$ repeat}
+							\begin{enumerate}
+								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1,...,y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
+								\item $(y_i, \pi_i) \leftarrow \Open(f, t_i, r_f, \pp)$
+							\end{enumerate}
+							\item $b \leftarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
+							\item \text{Output b}
+						\end{enumerate}
+					\end{minipage}
+					\hspace*{5pt}\vline \hspace*{5pt}
+					%\vline
+					\begin{minipage}{.48\linewidth}
+						$\mathsf{Ideal}_{\A, \S}(1^\lambda)$:
+						\begin{enumerate}
+							\item $(\comm, \pp, \vp, \sigma) \leftarrow \mathsf{Sim}(1^\lambda, \ell, d)$
+							\item $k \leftarrow \A(1^\lambda, \comm, \vp)$
+							\item \text{For $i=1,...,k$ repeat}:
+							\begin{enumerate}
+								\item $t_i \leftarrow \A(1^\lambda, \comm, y_1, ..., y_{i-1}, \pi_1,\\ ..., \pi_{i-1}, \vp)$
+								\item $(y_i, \pi_i, \sigma) \leftarrow \mathsf{Sim}(t_i, \sigma, \pp)$
+							\end{enumerate}
+							\item $b \leftarrow \A(1^\lambda, \comm, (y_1, ..., y_k, \pi_1, ..., \pi_k), \vp)$
+							\item \text{Output b}
+						\end{enumerate}
+					\end{minipage}
+				\end{align*}
+				}
+				For any PPT adversary $\A$ and all polynomial $f\in\F$, there exists simulator $\S$ such that
+				\[
+				|\Pr[\mathsf{Real}_{\A, f}(1^\lambda)=1] - \Pr[\mathsf{Ideal}_{\A, \S}(1^\lambda)=1]|\le \negl(\lambda).
+				\]
+\end{itemize}
+
+	
+\end{definition}
 
 \section{Condensing to One Point in Linear Time}\label{app:onepoint}
 
@@ -57,14 +180,14 @@ In this section, we present an algorithm to reduce two claims about $\tV_{i+1}$ 
 \end{figure}
 
 
-In our new algorithm, we write $\tV(\gamma(x)) = \sum_{y\in\binary^s}I(\gamma(x), y)\tV(y)$, where $I(a,b)$ is an identity polynomial $I(a,b)=0$ iff $a=b$. This holds by inspection of both sides on the boolean hypercube. We then evaluate the right side in linear time with a binary tree structure. The key observation is that the identity polynomial can be written as $I(a,b) = \prod_{j=1}^s (a_jb_j+(1-a_j)(1-b_j))$, and we can process one variable ($a_j,b_j$) at a time and multiply them together to get the final result. 
+In our new algorithm, we write $\tV(\gamma(x)) = \sum_{y\in\binary^s}I(\gamma(x), y)\tV(y)$, where $I(a,b)$ is an identity polynomial $I(a,b)=0$ iff $a=b$. This holds by inspection of both sides on the Boolean hypercube. We then evaluate the right side in linear time with a binary tree structure. The key observation is that the identity polynomial can be written as $I(a,b) = \prod_{j=1}^s (a_jb_j+(1-a_j)(1-b_j))$, and we can process one variable ($a_j,b_j$) at a time and multiply them together to get the final result. 
 
 We construct a binary tree with $2^s$ leaves and initialize each leaf $b\in\binary^s$ with $\tV(b)$. As $\gamma(x)$ is a linear polynomial, we write it as $\gamma(x) = [c_1, \ldots, c_s]^T x+ [d_1, \ldots, d_s]^T$. At the leaf level, we only consider the last variable of $I(\gamma(x), y)$. For each leaf $b\in\binary^s$, we multiply the value with $b_s(c_s x+ d_s)+(1-b_s)(1-c_s x- d_s)$, the result of which is a linear polynomial. For a node $b\in\binary^j$ in the intermediate level $j$, we add the polynomials from its two children, and multiply it with $b_j(c_j x+ d_j)+(1-b_j)(1-c_j x- d_j)$, the part in $I$ that corresponds to the $j$-th variable. In this way, each node in the $j$-th level stores a degree $j$ polynomial. Eventually, the root is the polynomial on the right side of degree $s$, which equals to $\tV(\gamma(x))$. The algorithm is given in Algorithm~\ref{alg::comb}. 
 
 To see the complexity of Algorithm~\ref{alg::comb}, both the storage and the polynomial multiplication at level $j$ is $O(s-j+1)$ in each node. So the total time is $O(\sum_{j=1}^s 2^j (s-j+1)) = O(2^s)$, which is linear to the number of gates in the layer.
 
 An alternative way to interpret this result is to add an additional layer for each layer of the circuit in GKR relaying the values. That is, $$\tV_{i}(g) = \sum_{x\in\binary^{s_i}}I(g,x)\tV_{i+1}(x),$$ where $\tV_i = \tV_{i+1}$. Then when using the random linear combination approach, the sumcheck is executed on $$\alpha\tV_{i}(u)+\beta\tV_i(v) = \sum_{x\in\binary^{s_i}}(\alpha I(u,x)+\beta I(v,x))\tV_{i+1}(x).$$
-At the end of the sumcheck, the verifier receives a single claim on $\tV_{i+1} = \tV_{i}$. The sumchek can obviously run in linear time, and the relay layers do not change the result of the circuit. This approach is actually the same as the condensing to one point in linear time above conceptually. 
+At the end of the sumcheck, the verifier receives a single claim on $\tV_{i+1} = \tV_{i}$. The sumcheck can obviously run in linear time, and the relay layers do not change the result of the circuit. This approach is actually the same as the condensing to one point in linear time above conceptually. 
 
 
 

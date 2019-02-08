@@ -11,7 +11,7 @@ Let us consider the sumcheck problem on a particular class of polynomials with s
 f_0(g) = \sum\limits_{x,y\in\binary^\ell}f_1(g,x,y)f_2(x)f_3(y)\, ,
 \end{equation}
 for a random point $g\in\mathbb{F}^\ell$, where $f_0,f_2,f_3: \mathbb{F}^\ell\rightarrow\mathbb{F}$ are multilinear polynomials and $f_0(x), f_2(x)$ and $f_3(x)$ can be computed in constant time for all $x\in\binary^\ell$. $f_1:\mathbb{F}^{3\ell}\rightarrow\mathbb{F}$ is the multilinear extension of a sparse array with $O(2^\ell)$ (out of $2^{3\ell}$ possible) nonzero elements. 
-It is not hard to see that the sumcheck polynomials in GRK given by Equation~\ref{eq:GKR} and~\ref{eq:randomGKR} have the similar structure.
+It is not hard to see that the sumcheck polynomials in GKR given by Equation~\ref{eq:GKR} and~\ref{eq:randomGKR} have the similar structure.
 
 Before presenting our new linear time algorithm for the prover on~\ref{eq:linearsc}, we first describe a building block, namely an efficient algorithm on a simpler sumcheck problem. In~\cite{t13}, Justin Thaler proposed a dynamic programming algorithm with linear prover time for the sumcheck protocol on $$\sum\limits_{x\in\binary^\ell}f(x)\, ,$$ where $f$ is a multilinear polynomial. In particular, as described in Section~\ref{subsec::sumcheck}, in the $i$-th round ($i\le \ell$), $\P$ sends $\V$ a univariate polynomial of $x_i$: $$\sum\limits_{b_{i+1}, \ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ where $r_1, \ldots, r_{i-1}$ are random values chosen by $\V$ in previous rounds. The degree of the univariate polynomial is 1 as $f$ is multilinear, so it suffices to send 2 evaluations of the polynomial to $\V$ at points $t = 0,1$. To compute the evaluations, the idea is that in the $i$-th round, $\P$ stores an array of values $f(r_1,\ldots, r_{i-1}, b_{i}, b_{i+1},\ldots, b_{\ell})$ for all $b_i,\ldots,b_\ell\in\binary$. The size of this array is $2^{\ell-i+1}$. With this array, $f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})$ can be computed in constant time (see step~\ref{alg::dynamic::compute} of the Algorithm~\ref{alg::dynamic}). Therefore, prover's message $\sum\limits_{b_{i+1}, \ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})$ for $t=0,1$ can be computed in time $O(2^{\ell-i+1})$ by summing up all the values in the previous step. In addition, the array that will be used in the $(i+1)$-th round can be computed in time $O(2^{\ell-i+1})$ from the array in the $i$-th round (step~\ref{alg::dynamic::update}).  In this way, the total complexity of generating all the messages in the sumcheck protocol is $O(2^{\ell})+ O(2^{\ell-1}) + O(2^{\ell-2}) + \ldots = O(2^\ell)$. The full protocol is given in Algorithm~\ref{alg::dynamic}. 
 
@@ -46,7 +46,7 @@ Before presenting our new linear time algorithm for the prover on~\ref{eq:linear
 
 Unfortunately, this algorithm does not work efficiently for the sumcheck on Equation~\ref{eq:linearsc}. This is because $f_1$ has $2^{2\ell}$ variables to sum on and naively applying Algorithm~\ref{alg::dynamic} would incur quadratic prover time $O(2^{2\ell}) = O(L^2)$, where $L = 2^\ell$. Alternatively, as $f_1$ is sparse, instead of storing $f_1(x,y)$ for all $x,y\in\binary^\ell$ in $\mathsf{Init}$, $\P$ can store only the $O(2^\ell)$ nonzero values. This is exactly the approach used in many prior work~\cite{CMT,vram,....}. However, with this approach, as $f_1$ is sparse, the number of nonzero values is not always reduced to half after every update in step~\ref{alg::dynamic::update}. Therefore, the overall complexity becomes $O(\ell 2^\ell) = L\log L$.
 
-%We start with the sumcheck protocol to reduce a claim on layer $i$ to two claims on layer $i+1$, as defined in Definition~\ref{def::multilinear}. As shown in~\cite{CMT}, in the sumcheck protocol, the parts corresponding to $\tV_{i+1}(u)$ (and $\tV_{i+1}(v)$) can be computed in linear time by the prover using a dynamic programming technique. In particular, as introduced in Section~\ref{subsec::sumcheck}, in the $j$-th round of the sumcheck protocol, in order to compute the univariate polynomial to be sent to the verifier, the prover needs to compute $\tV_{i+1}(r_1, \ldots, r_{j-1}, t, u_{j+1}, \ldots, u_l)$ $\forall (u_{j+1},\ldots,u_l)\in\binary^{l-j}$ and $t = 0,1,2$ (as the degree of the univariate polynomial is 2 in the sumcheck of GKR, it suffices to send its evaluations on 3 points). To do this efficiently, the prover initializes an array $\textbf{V}$ of size $2^{s_{i+1}}$ storing all evaluations of $\tV_{i+1}$ on the boolean hypercube (i.e., $\tV_{i+1}(b) = V_{i+1}(b)$, $\forall b\in\{0,1\}^{s_{i+1}}$). Starting from the first round, the prover can compute each term defined above in constant time using $\textbf{V}$ (step~\ref{alg::dynamic::compute} of the Algorithm~\ref{alg::dynamic}). The array is then updated to half of the size based on the random number chosen by the verifier in this round, as in step~\ref{alg::dynamic::update}. In this way, the total complexity is $O(2^{s_{i+1}})+ O(2^{s_{i+1}-1}) + O(2^{s_{i+1}-2}) + \ldots = O(2^{s_{i+1}})$. The full protocol is given in Algorithm~\ref{alg::dynamic}. 
+%We start with the sumcheck protocol to reduce a claim on layer $i$ to two claims on layer $i+1$, as defined in Definition~\ref{def::multilinear}. As shown in~\cite{CMT}, in the sumcheck protocol, the parts corresponding to $\tV_{i+1}(u)$ (and $\tV_{i+1}(v)$) can be computed in linear time by the prover using a dynamic programming technique. In particular, as introduced in Section~\ref{subsec::sumcheck}, in the $j$-th round of the sumcheck protocol, in order to compute the univariate polynomial to be sent to the verifier, the prover needs to compute $\tV_{i+1}(r_1, \ldots, r_{j-1}, t, u_{j+1}, \ldots, u_l)$ $\forall (u_{j+1},\ldots,u_l)\in\binary^{l-j}$ and $t = 0,1,2$ (as the degree of the univariate polynomial is 2 in the sumcheck of GKR, it suffices to send its evaluations on 3 points). To do this efficiently, the prover initializes an array $\textbf{V}$ of size $2^{s_{i+1}}$ storing all evaluations of $\tV_{i+1}$ on the Boolean hypercube (i.e., $\tV_{i+1}(b) = V_{i+1}(b)$, $\forall b\in\{0,1\}^{s_{i+1}}$). Starting from the first round, the prover can compute each term defined above in constant time using $\textbf{V}$ (step~\ref{alg::dynamic::compute} of the Algorithm~\ref{alg::dynamic}). The array is then updated to half of the size based on the random number chosen by the verifier in this round, as in step~\ref{alg::dynamic::update}. In this way, the total complexity is $O(2^{s_{i+1}})+ O(2^{s_{i+1}-1}) + O(2^{s_{i+1}-2}) + \ldots = O(2^{s_{i+1}})$. The full protocol is given in Algorithm~\ref{alg::dynamic}. 
 %
 %Note that each term $v_{j,b}$ computed in step~\ref{alg::dynamic::compute} is going to be multiplied with other parts such as $\tilde{add}_{i+1}$ and $\tilde{mult}_{i+1}$ to generate the message. Unfortunately, they cannot be computed in linear time using this technique, as the size of their boolean hypercube is $2^{2s_{i+1}}$, and naively applying the same technique would incur quadratic prover time $O(2^{2s_{i+1}}) = O(S_{i+1}^2)$. This is the main reason why piror work~\cite{CMT,...} take a different approach, resulting in $O(S_{i+1}\log S_{i+1})$ prover time.
 
@@ -83,7 +83,7 @@ In this paper, we propose a new algorithm to reduce the prover time of the sumch
 
 
 \paragraph{Phase one.} 
-During the first $\ell$ rounds, as $y$ does not change (always being summed on the boolean hypercube), we can write Equation~\ref{eq:linearsc} as 
+During the first $\ell$ rounds, as $y$ does not change (always being summed on the Boolean hypercube), we can write Equation~\ref{eq:linearsc} as 
 \[
 f_0(g) = \sum_{x\in\binary^\ell} h_g(x)f_2(x),
 \]
@@ -101,7 +101,7 @@ Note here that $f_2(u)$ is merely a single value which we already computed in ph
 The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\ell ((1-u_i)(1-b_i)+u_ib_i)$ using procedure $\mathsf{Precompute}(u)$ in Algorithm~\ref{alg::phase1}. Then for each nonzero element with index $b_1,b_2,b_3$ that defines $f_1$, add $\textbf{G}[b_1]\cdot\textbf{U}[b_2]$ to $\textbf{A}_1[b_3]$. In this way, $\textbf{A}_1[b_3]=f_1(g,u,b_3)$ $\forall b_3\in\binary^\ell$. Then we use Algorithm~\ref{alg::dynamic} on both $\textbf{A}_1$ and $f_3(y)$ to run the sumcheck in this phase in linear time. The protocol is presented in Algorithm~\ref{alg::phase2}.
 
 
-\begin{figure}[b!]
+\begin{figure}[t!]
 	\begin{algorithm}[H]
 		\caption{Phase 2 in sumcheck}\label{alg::phase2}
 		\begin{algorithmic}[1]
@@ -123,7 +123,12 @@ The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\el
 
 
 \paragraph{Generalizations.}
-\yupeng{Give a general form of sumcheck equations that can be computed in linear time. No need to show algorithms.}
+Our technique can be extended to sumchecks with a general form below:
+
+\[
+f(g) = \sum\limits_{x_1, x_2, ..., x_c\in\binary^\ell}f_0(g,x_1, x_2, ..., x_c)f_1(x_1)f_2(x_2)...f_c(x_c)\, ,
+\]
+where $c$ is a constant, $f$s are multilinear and $f_0()$ is sparse and consists of linearly many nonzero monomials. We divide the protocol into $c$ phases similar to the algorithms described above. This generalization captures the sumcheck in the original GKR paper with identity polynomials (see~\cite{GKR}), and our new algorithms also improve the prover time of it to linear.
 
 \subsection{Linear Time GKR}
 
@@ -163,7 +168,7 @@ Though with the approach above we already have a linear prover GKR protocol, the
 	where $v$ is a binary vector in $\{0, 1\}^{s_{i+1}}$, $\{r_1,r_2,...,r_{k-1},x_k, u_{k+1},..., u_{s_{i+1}}\}$ is the representation of $u$.
 	
 	\paragraph{The Definition of Building Block}
-	In the first round, we calculate two arraies to help speed up calculation, where each array element is a pair $(a, b)$ representing a linear function $ax+b$.
+	In the first round, we calculate two arrays to help speed up calculation, where each array element is a pair $(a, b)$ representing a linear function $ax+b$.
 	
 	The first array is $mult_1^1$, where $mult_1^1[p]$ is a pair $(a, b)$ representing a linear function as follows:
 	$${mult}_1^1[p]\overset{def}{=}\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_i(g, \{x_1, p\}, v)\tV_{i+1}(v),$$
@@ -193,13 +198,13 @@ Though with the approach above we already have a linear prover GKR protocol, the
 	\end{align*}
 	We can solve for ${V}_1^1[p]$ easily.
 	
-	For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivil to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tV_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumberate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tV_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
+	For ${mult}_1^1$, the idea is the same as ${V}_1^1$, but it's non-trivial to calculate $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u, v)\tV_{i+1}(v)$ for every binary $u$ in linear time, since we need to calculate $\tilde{\beta}_{s_{i}}(g, g')$ part in $\tilde{mult}_{i+1}(g, u, v)$. Instead enumerate every binary $u$ to initialize the array, we can enumerate $g'$ instead. And accumulate the contribution of $(g', u', v')$ to $\sum_{v\in \{0,1\}^{s_{i+1}}}\tilde{mult}_{i+1}(g, u', v)\tV_{i+1}(v)$. We will use a depth first search to enumerate every $g'$ bit by bit. The detailed algorithm is shown in Algorithm \ref{alg::premult}.
 	\begin{figure}[p]
 		\begin{algorithm}[H]
 			\label{alg::premult}
 			\caption{Preprocess ${mult}_1^1, {V}_1^1$}
 			\begin{algorithmic}[1]
-				\parState{Assuming we have global access to $g$, $s_i$, $s_{i+1}$, which is resonable since prover knows these values, and $g[k]$ means the $k$-th field element of $g$, starting from $0$ since we are writing pseudo-code}
+				\parState{Assuming we have global access to $g$, $s_i$, $s_{i+1}$, which is reasonable since prover knows these values, and $g[k]$ means the $k$-th field element of $g$, starting from $0$ since we are writing pseudo-code}
 				\Procedure{{\sf DFS}}{$A$, $g'$, $depth$, $Value$}
 				\parState{Note $A$, $g'$ is the pointer to the array, any change to $A$ or $g'$ will change it globally.}
 				\parState{In this function, we will recurse on the bits of $g$}
@@ -237,7 +242,7 @@ Though with the approach above we already have a linear prover GKR protocol, the
 	
 	It's easy to get this result by doing some transformation on the original equation.
 	
-	We reduce these arraies to the second round using the following way
+	We reduce these arrays to the second round using the following way
 	
 	\begin{enumerate}
 		\item By definition, ${mult}_2^1[p'](0)={mult}_1^1[0||p'](r_1)$ and ${mult}_2^1[p'](1)={mult}_1^1[1||p'](r_1)$
@@ -262,7 +267,7 @@ Though with the approach above we already have a linear prover GKR protocol, the
 	\begin{proof}
 		It's trivial to see that ${mult}_k^1, {V}_k^1$ are computed correctly. 
 		
-		For time complexity part, ${mult}_k^1, {V}_k^1$ are computed in linear time since Algorithm \ref{alg::premult} runs in linear time, and for $k$-th layer, the size of ${mult}_k^1$ is half size of ${mult}_{k-1}^1$, by total size of these arraies is linear to the circuit size.
+		For time complexity part, ${mult}_k^1, {V}_k^1$ are computed in linear time since Algorithm \ref{alg::premult} runs in linear time, and for $k$-th layer, the size of ${mult}_k^1$ is half size of ${mult}_{k-1}^1$, by total size of these arrays is linear to the circuit size.
 		
 		The answer to the verifier is correct by the definition of ${mult}_k^1, {V}_k^1$.
 	\end{proof}
@@ -287,7 +292,7 @@ Though with the approach above we already have a linear prover GKR protocol, the
 		\end{enumerate}
 	\end{definition}
 	
-	As we discussed in Part One, we only need to calculate all the values of ${mult}_k^2, {V}_k^2$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three seperate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed algorithm in Algorithm \ref{alg::parttwo}.
+	As we discussed in Part One, we only need to calculate all the values of ${mult}_k^2, {V}_k^2$. By the definition of $\tilde{mult}_i(g, u, v)\overset{def}{=}\sum_{g', u', v' \in G_{i, mult}}\tilde{\beta_{s_i}}(g, g')\tilde{\beta_{s_{i+1}}}(u, u')\tilde{\beta_{s_{i+1}}}(v, v')$. We found that $\tilde{mult}_i$ is composed by three separate functions. Since $g, u$ are fixed random vector, we can preprocess $\tilde{\beta}_{s_i}(g, g')$ for every binary $g'$ and preprocess $\tilde{\beta}_{s_{i+1}}(u, u')$ for every binary $u'$. See the detailed algorithm in Algorithm \ref{alg::parttwo}.
 	
 	\begin{figure}[p]
 		\begin{algorithm}[H]
@@ -353,7 +358,7 @@ Though with the approach above we already have a linear prover GKR protocol, the
 		\item For $k$-th round, the answer to the query is $\sum_{p} mult_{k}^2[p](x)\times V_{k}^2[p](x)$
 	\end{enumerate}
 	
-	\begin{theorem} The algorithm above correctly answered querys of last $s_{i+1}$ rounds, and runs in time $O(\max(2^{s_{i}}, 2^{s_{i+1}}))$.
+	\begin{theorem} The algorithm above correctly answered queries of last $s_{i+1}$ rounds, and runs in time $O(\max(2^{s_{i}}, 2^{s_{i+1}}))$.
 	\end{theorem}
 	
 	\begin{proof}
@@ -370,6 +375,6 @@ Though with the approach above we already have a linear prover GKR protocol, the
 		
 		Since $BetaMult[g'], BetaV[u']$ are correct, we have $MultBinaryU$ is correct. Thus $mult_1^2$ is correct.
 		
-		To prove $mult_k^2, V_k^2$ is correct ($k \ge 2$). We assume $mult_{k-1}^2, V_{k-1}^2$ is correct. According to the definition of $mult_k^2$, $mult_k^2[p](0)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 0, p})=mult_{k-1}^2[0||p](r_{k-1})$, $mult_k^2[p](1)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 1, p})=mult_{k-1}^2[1||p](r_{k-1})$, by solving the linear equation, we can get the right value of $mult_k^2[p]$. And we have a similar arguement of $V_k^2$.
+		To prove $mult_k^2, V_k^2$ is correct ($k \ge 2$). We assume $mult_{k-1}^2, V_{k-1}^2$ is correct. According to the definition of $mult_k^2$, $mult_k^2[p](0)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 0, p})=mult_{k-1}^2[0||p](r_{k-1})$, $mult_k^2[p](1)=\tilde{mult}_i(g, u, {r_1, r_2,...,r_{k-1}, 1, p})=mult_{k-1}^2[1||p](r_{k-1})$, by solving the linear equation, we can get the right value of $mult_k^2[p]$. And we have a similar argument of $V_k^2$.
 	\end{proof}
 }

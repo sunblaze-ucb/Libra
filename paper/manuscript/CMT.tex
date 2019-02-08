@@ -40,7 +40,7 @@ The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable
 	
 \end{definition}
 
-\paragraph{Multilinear extensions of arrays.} Inspired by the close form equation of the multilinear extension given above, we can view an array $\textbf{A} = (a_0, a_1, \ldots, a_{n-1})$ as a function $A: \binary^{\log n}\rightarrow \F$ such that $\forall i\in[0,n-1], A(i) = a_i$. Therefore, in this paper, we abuse the use of multilinear extension on an array as the multilinear externsion $\tilde{A}$ of $A$.    
+\paragraph{Multilinear extensions of arrays.} Inspired by the close form equation of the multilinear extension given above, we can view an array $\textbf{A} = (a_0, a_1, \ldots, a_{n-1})$ as a function $A: \binary^{\log n}\rightarrow \F$ such that $\forall i\in[0,n-1], A(i) = a_i$. Therefore, in this paper, we abuse the use of multilinear extension on an array as the multilinear extension $\tilde{A}$ of $A$.    
 
 Using the sumcheck protocol as a building block, Goldwasser et al.~\cite{GKR} showed an interactive proof protocol for layered arithmetic circuits. 
 
@@ -66,7 +66,7 @@ for any $z\in\binary^{s_i}$.
 \ignore{
 \yupeng{try to remove $\beta$.}
 
-\begin{definition}[Multilinear extension of identity fucntion]
+\begin{definition}[Multilinear extension of identity function]
 Here we present a multilinear extension of identity function
 \begin{eqnarray}\beta_{l}(a, b)=
 	\begin{cases}
@@ -110,6 +110,7 @@ $$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_
 
 
 In the equation above, $V_i$ is expressed as a summation, so $\V$ can use the sumcheck protocol to check that it is computed correctly. As the sumcheck protocol operates on polynomials defined on $\mathbb{F}$, we rewrite the equation with their multilinear extensions:
+
 \begin{align}\label{eq:GKR}
 \tV_i(g)=&\sum_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
 =&\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
@@ -117,55 +118,12 @@ In the equation above, $V_i$ is expressed as a summation, so $\V$ can use the su
 \end{align}
 where $g\in\mathbb{F}^{s_i}$ is a random vector. 
 
-\paragraph{Protocol.} With Equation~\ref{eq:GKR}, the GKR protocol proceeds as following. The prover $\P$ first sends the claimed output of the circuit to $\V$. From the claimed output, $\V$ defines polynomial $\tV_0$ and computes $\tV_0(g)$ for a random $g\in\mathbb{F}^{s_0}$. $\V$ and $\P$ then invoke a sumcheck protocol on Equation~\ref{eq:GKR} with $i=0$. As described in Section~\ref{subsec::sumcheck}, at the end of the sumcheck, $\V$ needs an oracle access to $f_i(u,v)$, where $u,v$ are randomly selected in $\mathbb{F}^{s_{i+1}}$. To compute $f_i(u,v)$, $\V$ computes $\tadd_{i+1}(u,v)$ and $\tmult_{i+1}(u,v)$ locally (they only depend on the wiring pattern of the circuit, but not on the values), asks $\P$ to send $\tV_1(u)$ and $\tV_1(v)$ and computes $f_i(u,v)$ to complete the sumcheck protocol. In this way, $\V$ and $\P$ reduces a claim about the output to two claims about values in layer 1. $\V$ and $\P$ could invoke two sumcheck protocols on $\tV_1(u)$ and $\tV_1(v)$ to reduce them to claims on layer 2, and continue recursively until the input layer. However, by doing so, the number of claims and the sumcheck protocols increases exponentially to $d$ , and the verification time is even more expensive than computing locally. 
+\paragraph{Protocol.} With Equation~\ref{eq:GKR}, the GKR protocol proceeds as following. The prover $\P$ first sends the claimed output of the circuit to $\V$. From the claimed output, $\V$ defines polynomial $\tV_0$ and computes $\tV_0(g)$ for a random $g\in\mathbb{F}^{s_0}$. $\V$ and $\P$ then invoke a sumcheck protocol on Equation~\ref{eq:GKR} with $i=0$. As described in Section~\ref{subsec::sumcheck}, at the end of the sumcheck, $\V$ needs an oracle access to $f_i(u,v)$, where $u,v$ are randomly selected in $\mathbb{F}^{s_{i+1}}$. To compute $f_i(u,v)$, $\V$ computes $\tadd_{i+1}(u,v)$ and $\tmult_{i+1}(u,v)$ locally (they only depend on the wiring pattern of the circuit, but not on the values), asks $\P$ to send $\tV_1(u)$ and $\tV_1(v)$ and computes $f_i(u,v)$ to complete the sumcheck protocol. In this way, $\V$ and $\P$ reduces a claim about the output to two claims about values in layer 1. $\V$ and $\P$ could invoke two sumcheck protocols on $\tV_1(u)$ and $\tV_1(v)$ recursively to layers above, but the number of claims and the sumcheck protocols increases exponentially in $d$. 
 
 \smallskip\noindent\textbf{Combining two claims: condensing to one claim.} In~\cite{GKR}, Goldwasser et al. presented a protocol to reduce two claims $\tV_i(u)$ and $\tV_i(v)$ to one as following. $\V$ defines a line $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ such that $\gamma(0)=u, \gamma(1)=v$. $\V$ sends $\gamma(x)$ to $\P$. Then $\P$ sends $\V$ a degree $s_i$ univariate polynomial $h(x)=\tilde{V_i}(\gamma(x))$. $\V$ checks that $h(0)=\tV_i(u), h(1)=\tV_i(v)$. Then $\V$ randomly chooses $r\in\mathbb{F}$ and computes a new claim $h(r) = \tV_i(\gamma(r)) = \tV_i(w)$ on $w=\gamma(r) \in \mathbb{F}^{s_i}$. $\V$ sends $r, w$ to $\P$. In this way, the two claims are reduced to one claim $\tV_i(w)$. Combining this protocol with the sumcheck protocol on Equation~\ref{eq:GKR}, $\V$ and $\P$ can reduce a claim on layer $i$ to one claim on layer $i+1$, and eventually to a claim on the input, which completes the GKR protocol.
 
 
-\begin{figure}[t!]
-	\small{
-		\centering{\centering
-			\framebox{\parbox{.99\linewidth}{
-					\begin{protocol}
-						\label{protocol::GKR}
-						Let $\mathbb{F}$ be a prime field. Let $C$: $\mathbb{F}^n\rightarrow \mathbb{F}^k$ be a $d$-depth layered arithmetic circuit. $\mathcal{P}$ wants to convince that $\mathsf{out}=C(\mathsf{in})$ where $\mathsf{in}$ is the input from $\V$, and $\mathsf{out}$ is the output. Without loss of generality, assume $n$ and $k$ are both powers of 2 and we can pad them if not.
-						
-						\begin{itemize}
-							\item Define the multilinear extension of array $\mathsf{out}$ as $\tV_0$. $\V$ chooses a random $g \in \mathbb{F}^{s_0}$ and sends it to $\P$. Both parties compute $\tilde{V_0}(g)$.
-							\item $\P$ and $\V$ run a sumcheck protocol on
-							\[
-							\tV_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\tV_{1}(x)\tV_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\tV_{1}(x)+\tV_{1}(y))
-							\]
-							At the end of the protocol, $\V$ receives $\tV_1(u^{(1)})$ and $\tV_1(v^{(1)})$. $\V$ computes $\tmult_1(g^{(0)},u^{(1)},v^{(1)})$, $\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ and checks that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\tV_1(u^{(1)})\tV_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})(\tV_1(u^{(1)})+\tV_1(v^{(1)}))$ equals to the last message of the sumcheck.
-							
-							\item For $i=1,...,d-1$:
-							\begin{itemize}
-								
-								\item $\V$ randomly selects $\alpha^{(i)}, \beta^{(i)}\in\F$ and sends them to $\mathcal{P}$.
-								\item $\P$ and $\V$ run the sumcheck on the equation\\
-								
-								$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
-								\begin{align*}
-								\sum_{x, y\in \binary^{s_{i+1}}}&((\alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)\tV_{i+1}(y))\\
-								+&(\alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber
-								\end{align*}
-								
-								\item At the end of the sumcheck protocol, $\P$ sends $\V$ $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$.
-								
-								
-								\item $\V$ computes the following and checks if it equals to the last message of the sumcheck. For simplicity, let $Mult_{i+1}(x) = \tilde{mult}_{i+1}(x, u^{(i+1)}, v^{(i+1)})$ and $Add_{i+1}(x) = \tilde{add}_{i+1}(x, u^{(i+1)}, v^{(i+1)})$.
-								\begin{align*}
-								&(\alpha^{(i)}Mult_{i+1}(u^{(i)})+\beta^{(i)}Mult_{i+1}(v^{(i)})(\tV_{i+1}(u^{(i+1)})\tV_{i+1}(v^{(i+1)}))+\\
-						        &(\alpha^{(i)}\tilde{Add}_{i+1}(u^{(i)})+\beta^{(i)}\tilde{Add}_{i+1}(v^{(i)})(\tV_{i+1}(u^{(i+1)})+\tV_{i+1}(v^{(i+1)}))
-								\end{align*}
-								If all checks in the sumcheck pass, $V$ uses $\tV_{i+1}(u^{(i+1)})$ and $\tV_{i+1}(v^{(i+1)})$ to proceed to the $(i+1)$-th layer. Otherwise, $\V$ outputs $\reject$ and aborts.
-								
-							\end{itemize}
-							\item At the input layer $d$, $\V$ has two claims $\tV_{d}(u^{(d)})$ and $\tV_{d}(v^{(d)})$. $\V$ queries the oracle of evaluations of $\tV_d$ at $u^{(d)}$ and $v^{(d)}$ and checks that they are the same as the two claims. If yes, output $\accept$; otherwise, output $\reject$.
-							
-						\end{itemize}
-	\end{protocol}}}}}
-\end{figure}
+
 
 \smallskip\noindent\textbf{Combining two claims: random linear combination.}  In~\cite{zksumcheck}, Chiesa et al. proposed an alternative approach using random linear combinations. Upon receiving the two claims $\tV_i(u)$ and $\tV_i(v)$, $\V$ selects $\alpha_i, \beta_i\in\mathbb{F}$ randomly and computes $\alpha_i\tV_i(u)+\beta_i\tV_i(v)$. Based on Equation~\ref{eq:GKR}, this random linear combination can be written as
 {\footnotesize
@@ -178,7 +136,7 @@ where $g\in\mathbb{F}^{s_i}$ is a random vector.
 }
 $\V$ and $\P$ then execute the sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equation~\ref{eq:GKR}. At the end of the sumcheck protocol, $\V$ still receives two claims about $\tV_{i+1}$, computes their random linear combination and proceeds to an layer above recursively until the input layer.
 
-In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Protocol~\ref{protocol::GKR}.
+In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Protocol~\ref{protocol::GKR} of Appendix~\ref{app:gkr}.
 
-\begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::CMT} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {|C|}}{|\mathbb{F}|})$. It uses $O(d \log |C|)$ rounds of interaction and running time of the prover $\mathcal{P}$ is $O(|C|\log |C|)$. Let the optimal computation time for all $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of $\V$ is $O(n+k+d\log |C|+T)$. For log-space uniform circuits, $T=\poly{\log |C|}$.
+\begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::GKR} is an interactive proof for the function computed by $C$ with soundness $O(\frac{d\log {|C|}}{|\mathbb{F}|})$. It uses $O(d \log |C|)$ rounds of interaction and running time of the prover $\mathcal{P}$ is $O(|C|\log |C|)$. Let the optimal computation time for all $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of $\V$ is $O(n+k+d\log |C|+T)$. For log-space uniform circuits, $T=\poly{\log |C|}$.
 \end{theorem}
