@@ -24,8 +24,8 @@ Unfortunately, as of today we are yet to construct a ZKP system whose prover tim
 
 
 \paragraph{Our contributions.} In this paper we propose the first ZKP protocol with linear prover time and succinct proof size and verification time\footnote{The verification time is succinct in our protocol only when the circuit is log-space uniform. For all ZKP protocols without per-circuit setup, this is the best that can be achieved, as the verifier must read the entire circuit, which takes linear time in the worst case. We always refer to log-space uniform circuits when we say our scheme is succinct in this paper, to differentiate from schemes with linear verification time on all circuits. Schemes such as STARK~\cite{libstark}, zkVSQL~\cite{zkvpd} and Hyrax~\cite{hyrax} also have such property. In practice, most computations can be expressed as log-space uniform circuits. Moreover, as shown in~\cite{ben2014succinct,vram,libstark}, all programs in the random access machine model can be compiled into circuits that are log-space uniform in the running time of the programs (but linear in the size of the programs).} (in the size of the arithmetic circuit representing the statement $C$). Our protocol works  for log-space uniform circuits~\cite{GKR}, a class of circuits that represent most real world applications\footnote{We note here that log-space uniform circuits are required for our verifier to be succinct. If we do not care about succinct verification but only linear prover time, our ZKP protocol can work with arbitrary circuits. }. \yupeng{This claim is too weak. I think we should put a footnote in the previous sentence and remove this one.} Our scheme is based on the doubly efficient interactive proof proposed by Goldwasser et al. in~\cite{GKR} (referred as GKR protocol in this paper), and the verifiable polynomial delegation scheme proposed by Zhang et al. in~\cite{zhang2017vsql}. As such it comes with \emph{one-time trusted} setup (and not per-statement trusted setup) that depends only on the size of the input (witness) to the statement that is being proved. Our technical  contributions are:
-\begin{itemize}
-	\item \textbf{GKR with linear prover time.} We develop a new linear-time algorithm to generate the proof in the GKR protocol for (layered) arithmetic circuits. Our algorithm does not require any pattern in the circuit and our result subsumes all existing improvements on the GKR prover assuming special circuit structures, such as regular circuits in~\cite{t13}, data parallel circuits in~\cite{t13,wahby2017full}, circuits with different sub-copies in~\cite{vram}. See related work for more details. 
+\begin{itemize}[leftmargin=*]
+	\item \textbf{GKR with linear prover time.} We develop a new linear-time algorithm to generate the proof in the GKR protocol for (layered) arithmetic circuits. Our algorithm does not require any pattern in the circuit and our result subsumes all existing improvements on the GKR prover assuming special circuit structures, such as regular circuits in~\cite{JT_Thesis}, data parallel circuits in~\cite{JT_Thesis,wahby2017full}, circuits with different sub-copies in~\cite{vram}. See related work for more details. 
 	\item \textbf{Adding zero-knowledge.} We propose an approach to turn our linear-time argument system into zero-knowledge efficiently. In particular, we show a way to mask the responses of the prover with small random polynomials such that the zero-knowledge variant of the protocol introduces minimal overhead on the verification time compared to the original (unmasked) construction. 
 	\item \textbf{Implementation and evaluation.}  We implement our proposed ZKP system, \name, based on our new protocol. \name takes an arithmetic circuit with various types of gates (fan-in 2 and degree $\le 2$, such as $+,-,\times$, AND, XOR, etc.) and compiles it into a ZKP protocol. We conduct thorough comparisons to all existing ZKP systems and show that \name is (one of) the best in all measurements: prover time, proof size and verification time. We plan to release our system as an open-source implementation.
 
@@ -37,12 +37,16 @@ The only other system with linear prover time is Bulletproofs~\cite{bulletproofs
 
 The proof size and verification time of \name are also competitive to other systems. In asymptotic terms, our proof size is only larger than SNARK and Bulletproof, and verification is slower than SNARK and STARK. Comparing to Hyrax, which is based on the same technique of GKR and VPD, \name improves the performance in all aspects. One can refer to Section~\ref{sec:eval} for our experimental settings and more detailed comparisons. 
  
+
+ 
 Finally, among all the systems, SNARK requires a trusted setup phase for every circuit, and \name requires a one-time trusted setup for an upper bound on the input size. See Section~\ref{subsec::discuss} for a discussion on removing the trusted setup in \name. 
 
+ \dawn{we may consider adding a row in the table to show the trusted setup, e.g., making it explicit in the table about the difference in trusted setup btw SNARK and Buggati.} 
 
 
 
 \begin{table}[h]
+    \vspace{-.2in}
 	\centering
 	{\fontsize{8}{8}
 	\begin{tabular}{|c|c|c|c|c|c|c|c|}
@@ -56,7 +60,7 @@ Finally, among all the systems, SNARK requires a trusted setup phase for every c
 		\hline
 		$\P$&$O(C\log^2C)$&$O(C\log C)$&$O(C)$&$O(C\log C)$&$O(C\log^2 C)$&$O(C\log C)$ &$O(C)$\\
 		\hline
-		$\V$&$O(1)$&$O(C\log C)$&$O(C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$&$O(C\log C)$&$O(d\log C)$\\
+		$\V$&$O(1)$&$O(C)$&$O(C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$&$O(C)$&$O(d\log C)$\\
 		\hline
 		$|\pi|$&$O(1)$&$O(\sqrt{C})$&$O(\log C)$&$O(\sqrt{n}+d\log C)$&$O(\log^2 C)$& $O(\log^2 C)$&$O(d\log C)$\\
 		\hline
@@ -65,15 +69,15 @@ Finally, among all the systems, SNARK requires a trusted setup phase for every c
 		\hline
 		$\P$&360s&400s&13,000s&1,041s&30,000s&3199s&201s\\
 		\hline
-			$\V$&0.003s&4s&900s&9.9s&0.02s&15.2s&0.71s\\
+			$\V$&0.002s&4s&900s&9.9s&0.02s&15.2s&0.71s\\
 		\hline
-		$|\pi|$&0.28KB&1,500KB&5.5KB&185KB&728KB&174.3KB&51KB\\
+		$|\pi|$&0.13KB&1,500KB&5.5KB&185KB&728KB&174.3KB&51KB\\
 		\hline
 	\end{tabular}
 }
 
 \caption{Comparisons to existing ZKP systems. $C$ is the size of the log-space uniform circuit with depth $d$, and $n$ is the size of the input. The numbers are for a circuit computing the root of a Merkle tree with 256 leaves (511 instances of SHA256). The verification time of Hyrax, STARK and \name is also linear to the description of the circuit. In the worst case, the description is $O(C)$.\protect\footnotemark}\label{tab:zkpall}
-
+\vspace{-0.5in}
 \end{table}
 \footnotetext{STARK is in the random access machine (RAM) model. To compare the performance, we can convert a circuit of size $C$ to a RAM program with $T=\Theta(C)$ steps. }
 
@@ -88,14 +92,14 @@ In our new approach, we divide the protocol into two separate sumchecks. In each
 
 In our scheme, we first show that in order to make the sumcheck protocol zero knowledge, the prover can mask it with a "small" polynomial. In particular, the masking polynomial only contains logarithmically many random coefficients. The intuition is that though the original polynomial has $O(2^\ell)$ or more terms ($\ell$ is the number of variables in the polynomial), the prover only sends $O(\ell)$ messages in the sumcheck protocol. Therefore, it suffices to mask the original polynomial with a random one with $O(\ell)$ coefficients to achieve zero knowledge. In particular, we set the masking polynomial as the sum of $\ell$ univariate random polynomials with the same variable-degree. In Section~\ref{subsec:zksumcheck}, we show that the entropy of this mask exactly counters the leakage of the sumcheck, proving that it is sufficient and optimal.
 
-Besides the sumcheck, the GKR protocol additional leaks two evaluations of the polynomial defined by values in each layer of the circuit. To make these evaluations zero knowledge, we mask the polynomial by a special low-degree random polynomial. In particular, we show that after the mask, the verifier in total learns 4 messages related to the evaluations of the masking polynomial and we can prove zero knowledge by making these messages linearly independent. Therefore, the masking polynomial is of constant size: it consists of 2 variables with variable degree 2.
+Besides the sumcheck, the GKR protocol additionally leaks two evaluations of the polynomial defined by values in each layer of the circuit. To make these evaluations zero knowledge, we mask the polynomial by a special low-degree random polynomial. In particular, we show that after the mask, the verifier in total learns 4 messages related to the evaluations of the masking polynomial and we can prove zero knowledge by making these messages linearly independent. Therefore, the masking polynomial is of constant size: it consists of 2 variables with variable degree 2.
 
 
 \subsection{Related Work}\label{subsec::related}
 
  In recent years there has been significant progress in efficient zero knowledge proof protocols and systems. In this section, we discuss related work in this area, with the focus on those with sub-linear proofs. 
 
-\paragraph{SNARK.} With earlier work of Ishai~\cite{IshaiKO07}, Groth~\cite{Groth10} and Lipmaa~\cite{lipmaa2012progression}, Gennaro et al.~\cite{GGPR13} introduced quadratic arithmetic programs (QAP), which forms the basis of most recent zkSNARK implementations~\cite{parno2013pinocchio,ben2013snarks,braun13,libsnark,ben2014scalable,geppetto,DBLP:conf/eurocrypt/ChiesaTV15,wahby2015efficient,Fiore16,wu2018dizk}. The proof size in SNARKs is constant, and the verification time only depends on the input size, which are particularly appealing for applications such as blockchain and lead to real world products like ZCash~\cite{zerocash}. However, SNARKs usually introduce a high overhead on the prover running time and memory consumption, making it hard to scale to proving large functions. In addition, it relies on a separate trusted setup for every different circuit. 
+\paragraph{SNARK.} With earlier work of Ishai~\cite{IshaiKO07}, Groth~\cite{groth2010short} and Lipmaa~\cite{lipmaa2012progression}, Gennaro et al.~\cite{GGPR13} introduced quadratic arithmetic programs (QAP), which forms the basis of most recent zkSNARK implementations~\cite{parno2013pinocchio,ben2013snarks,braun13,libsnark,ben2014scalable,geppetto,DBLP:conf/eurocrypt/ChiesaTV15,wahby2015efficient,Fiore16,wu2018dizk}. The proof size in SNARKs is constant, and the verification time only depends on the input size, which are particularly appealing for applications such as blockchain and lead to real world products like ZCash~\cite{zerocash}. However, SNARKs usually introduce a high overhead on the prover running time and memory consumption, making it hard to scale to proving large functions. In addition, it relies on a separate trusted setup for every different circuit. 
 
 \paragraph{STARK.} Following the seminal work of Kilian~\cite{Kilian92} and Micali~\cite{Micali00}, Ben-Sasson et al.~\cite{libstark} built a zero knowledge transparent argument of knowledge (zkSTARK) using short probabilistically checkable proof (PCP), which does not rely on trusted setup. STARK executes on the random access machine (RAM) model, and its verification time is only linear to the description of the RAM program, and succinct (logarithmic) on the time of the program.  However, due to the heavy machinery of PCPs, the prover time and memory usage is big in practice (see~\cite{hyrax} and Section~\ref{sec:eval}). 
 
@@ -103,7 +107,7 @@ Besides the sumcheck, the GKR protocol additional leaks two evaluations of the p
 
 \paragraph{Discrete log.} Building on the work of Groth~\cite{groth2009linear}, Bayer and Groth~\cite{bayer2012efficient} and Bootle et al.~\cite{bootle2016efficient,bootle2017linear}, B{\"u}nz et al.~\cite{bulletproofs} proposed Bulletproof, a zero knowledge arguments based on discrete logarithm assumptions. To the best of our knowledge, this is the only line of work that achieves a linear prover time. The proof size in Bulletproof is $O(\log C)$, and is small in practices (several KBs). However, both the prover and the verification involve several cryptographic operations per gate of the circuit, which limits the size it can handle.
 
-\paragraph{Interactive proof.} The line of work that relates to our paper the most is based on interactive proofs~\cite{goldwasser1989knowledge}. In the seminal work of~\cite{GKR}, Goldwasser et al. proposed a doubly efficient interactive proof for layered arithmetic circuits. Later, Cormode et al.~\cite{CMT} improves the prover complexity of the interactive proof in~\cite{GKR} to $O(C\log C)$ using multilinear extensions instead of low degree extensions. Several follow-up work further reduces the prover time assuming special structures of the circuit. For regular circuits where the wiring pattern can be described in constant space and time, Thaler~\cite{t13} introduced a protocol with $O(C)$ prover time; for data parallel circuits with many copies of small circuits with size $C'$, a $O(C\log C')$ protocol is presented in the same work, later improved to $O(C+C'\log C)$ by Wahby et al. in~\cite{wahby2017full}; for circuits with many non-connected but different copies, Zhang et al. showed a protocol with $O(C\log C')$ prover time. Our result of a protocol with $O(C)$ prover time for arbitrary layered circuits subsumes all of these protocols. 
+\paragraph{Interactive proof.} The line of work that relates to our paper the most is based on interactive proofs~\cite{goldwasser1989knowledge}. In the seminal work of~\cite{GKR}, Goldwasser et al. proposed a doubly efficient interactive proof for layered arithmetic circuits. Later, Cormode et al.~\cite{CMT} improves the prover complexity of the interactive proof in~\cite{GKR} to $O(C\log C)$ using multilinear extensions instead of low degree extensions. Several follow-up work further reduces the prover time assuming special structures of the circuit. For regular circuits where the wiring pattern can be described in constant space and time, Thaler~\cite{JT_Thesis} introduced a protocol with $O(C)$ prover time; for data parallel circuits with many copies of small circuits with size $C'$, a $O(C\log C')$ protocol is presented in the same work, later improved to $O(C+C'\log C)$ by Wahby et al. in~\cite{wahby2017full}; for circuits with many non-connected but different copies, Zhang et al. showed a protocol with $O(C\log C')$ prover time. Our result of a protocol with $O(C)$ prover time for arbitrary layered circuits subsumes all of these protocols. 
 
 In~\cite{zhang2017vsql}, Zhang et al. extended the doubly efficient interactive proofs to argument systems using verifiable polynomial delegations. Zhang et al.~\cite{vram} and Wahby et al.~\cite{hyrax} make the argument system zero knowledge by putting all the messages in the proof into homomorphic commitments, as proposed by Cramer and Damgard in~\cite{cramer1998zero}. This approach introduces a high overhead on the verification time compared to the plain argument system without zero knowledge, as each addition becomes a multiplication and each multiplication becomes an exponentiation in the homomorphic commitments. The multiplicative overhead is around two orders of magnitude in practice. Additionally, the scheme of~\cite{hyrax}, Hyrax, removes the trusted setup of the argument scheme by introducing a new polynomial delegation, increasing the proof size and verification time to $O(\sqrt{n})$ where $n$ is the input size of the circuit. 
 

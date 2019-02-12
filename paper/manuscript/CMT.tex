@@ -2,13 +2,13 @@
 
 \subsection{GKR Protocol}\label{subsec::GKR}
 
-In~\cite{GKR}, Goldwasser et al. proposed an efficient interactive proof protocol for layered arithmetic circuits, which we use as a building block for our new zero-knowledge argument and is referred as the \emph{GKR} protocol. It is later improved in~\cite{CMT,t13, wahby2017full,vram} for different categories of circuits. We present the detailed protocol here.
+In~\cite{GKR}, Goldwasser et al. proposed an efficient interactive proof protocol for layered arithmetic circuits, which we use as a building block for our new zero-knowledge argument and is referred as the \emph{GKR} protocol. It is later improved in~\cite{CMT,JT_Thesis, wahby2017full,vram} for different categories of circuits. We present the detailed protocol here.
 
 
 
 \subsubsection{Sumcheck Protocol.}
 \label{subsec::sumcheck}
-The sumcheck problem is a fundamental problem that serves as a building block for varies applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\limits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
+The sumcheck problem is a fundamental problem that serves as a building block for varies applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\nolimits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
 Directly computing the sum requires exponential time in $\ell$, as there are $2^\ell$ combinations of $b_1,\ldots,b_\ell$. Lund et al.~\cite{sumcheck} proposed a \emph{sumcheck} protocol that allows a verifier $\mathcal{V}$ to delegate the computation to a computationally unbounded prover $\mathcal{P}$, who can convince $\mathcal{V}$ that $H$ is the correct sum. We provide a description of the sumcheck protocol in Protocol~\ref{prot::sumcheck}.
 \begin{figure}[t!]
 \small{
@@ -25,6 +25,7 @@ Directly computing the sum requires exponential time in $\ell$, as there are $2^
 		\item In the $\ell$-th round, $\P$ sends a univariate polynomial $$f_{\ell}(x_{\ell})\overset{def}{=}f(r_1, r_2, ..., r_{l-1}, x_{\ell})\, ,$$ $\V$ checks $f_{\ell-1}(r_{\ell-1})=f_{\ell}(0)+f_{\ell}(1)$. The verifier generates a random challenge $r_{\ell}\in\mathbb{F}$. Given oracle access to an evaluation $f(r_1, r_2, ..., r_\ell)$ of $f$, $\V$ will accept if and only if $f_{\ell}(r_\ell) = f(r_1, r_2, ..., r_\ell)$. The instantiation of the oracle access depends on the application of the sumcheck protocol.
 	\end{itemize}
 \end{protocol}}}}}
+\vspace{-0.2in}
 \end{figure}
 The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial for each variable in $f$, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
 
@@ -34,7 +35,7 @@ The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable
 	
 	
 	$\tilde{V}$ can be expressed as:
-	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum_{b\in\{0,1\}^l}\prod_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
+	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum\nolimits_{b\in\{0,1\}^\ell}\prod\nolimits_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
 	where $b_i$ is $i$-th bit of b.
 	
 	
@@ -112,8 +113,8 @@ $$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_
 In the equation above, $V_i$ is expressed as a summation, so $\V$ can use the sumcheck protocol to check that it is computed correctly. As the sumcheck protocol operates on polynomials defined on $\mathbb{F}$, we rewrite the equation with their multilinear extensions:
 
 \begin{align}\label{eq:GKR}
-\tV_i(g)=&\sum_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
-=&\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
+\tV_i(g)=&\sum\nolimits_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
+=&\sum\nolimits_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
 &+\tmult_{i+1}(g,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))
 \end{align}
 where $g\in\mathbb{F}^{s_i}$ is a random vector. 

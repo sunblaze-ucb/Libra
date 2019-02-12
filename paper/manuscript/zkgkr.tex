@@ -2,7 +2,7 @@
 
 \section{Zero Knowledge Argument Protocols}\label{sec:zkp}
 
-In this section, we present the construction of our new zero-knowledge argument system. In~\cite{zhang2017vsql}, Zhang et al. proposed to combine the GKR protocol with a verifiable polynomial delegation protocol, resulting in an argument system. Later, in~\cite{zkvpd,wahby2018doubly}, the construction was extended to zero-knowledge, by sending all the messages in the GKR protocol in homomorphic commitments and performing all the checks by zero-knowledge equality and product testing. This incurs a high overhead for the verifier compared to the plain version without zero-knowledge, as each multiplication becomes a homomorphic operation (exponentiation) and each equality check becomes a $\Sigma$-protocol, which is around $100\times$ slower in practice.
+In this section, we present the construction of our new zero-knowledge argument system. In~\cite{zhang2017vsql}, Zhang et al. proposed to combine the GKR protocol with a verifiable polynomial delegation protocol, resulting in an argument system. Later, in~\cite{zkvpd,hyrax}, the construction was extended to zero-knowledge, by sending all the messages in the GKR protocol in homomorphic commitments and performing all the checks by zero-knowledge equality and product testing. This incurs a high overhead for the verifier compared to the plain version without zero-knowledge, as each multiplication becomes a homomorphic operation (exponentiation) and each equality check becomes a $\Sigma$-protocol, which is around $100\times$ slower in practice.
 
 In this paper, we follow the same blueprint of combining GKR and VPD to obtain an argument system, but instead show how to extend it to be zero-knowledge efficiently. In particular, the prover masks the GKR protocol with special random polynomials so that the verifier runs a "randomized" GKR that leaks no extra information and her overhead is small. A similar approach was used by Chiesa et.al in~\cite{zksumcheck}. In the following, we present the zero-knowledge version of each building block, followed by the whole zero-knowledge argument protocol.
 
@@ -10,8 +10,8 @@ In this paper, we follow the same blueprint of combining GKR and VPD to obtain a
 As a core step of the GKR protocol, $\P$ and $\V$ execute a sumcheck protocol on Equation~\ref{eq:GKR}, during which $\P$ sends $\V$ evaluations of the polynomial at several random points chosen by $\V$. These evaluations leak information about the values in the circuit, as they can be viewed as weighted sums on the values in each layer of the circuit. 
 
 To make the sumcheck protocol zero-knowledge, we take the approach proposed by Chiesa et al. in \cite{zksumcheck}, which is masking the polynomial in the sumcheck protocol by a random polynomial. In this approach, to prove 
-$$H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}f(x_1, x_2, \cdots, x_\ell)$$
-, the prover generates a random polynomial $g$ with the same variables and individual degrees of $f$. She commits to the polynomial $g$, and sends the verifier a claim $G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}g(x_1, x_2, \cdots, x_\ell)$. The verifier picks a random number $\rho$, and execute a sumcheck protocol with the prover on $$H + \rho G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \{0, 1\}}(f(x_1, x_2, \cdots, x_\ell) + \rho g(x_1, x_2, \cdots, x_\ell)).$$ At the last round of this sumcheck, the prover opens the commitment of $g$ at $g(r_1, \ldots, r_\ell)$, and the verifier computes $f(r_1, \ldots, r_l)$ by subtracting $\rho g(r_1, \ldots, r_\ell)$ from the last message, and compares it with the oracle access of $f$. It is shown that as long as the commitment and opening of $f$ are zero-knowledge, the protocol is zero-knowledge. Intuitively, this is because all the coefficients of $f$ are masked by those of $g$. The soundness still holds because of the random linear combination of $f$ and $g$. 
+$$H = \sum\nolimits_{x_1, x_2, \cdots, x_\ell \in \binary}f(x_1, x_2, \cdots, x_\ell)$$
+, the prover generates a random polynomial $g$ with the same variables and individual degrees of $f$. She commits to the polynomial $g$, and sends the verifier a claim $G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}g(x_1, x_2, \cdots, x_\ell)$. The verifier picks a random number $\rho$, and execute a sumcheck protocol with the prover on $$H + \rho G = \sum\nolimits_{x_1, x_2, \cdots, x_\ell \in \{0, 1\}}(f(x_1, x_2, \cdots, x_\ell) + \rho g(x_1, x_2, \cdots, x_\ell)).$$ At the last round of this sumcheck, the prover opens the commitment of $g$ at $g(r_1, \ldots, r_\ell)$, and the verifier computes $f(r_1, \ldots, r_l)$ by subtracting $\rho g(r_1, \ldots, r_\ell)$ from the last message, and compares it with the oracle access of $f$. It is shown that as long as the commitment and opening of $f$ are zero-knowledge, the protocol is zero-knowledge. Intuitively, this is because all the coefficients of $f$ are masked by those of $g$. The soundness still holds because of the random linear combination of $f$ and $g$. 
 
 Unfortunately, the masking polynomial $g$ is as big as $f$, and opening it to a random point later is expensive. In~\cite{zksumcheck}, the prover sends a PCP oracle of $g$, and executes a zero-knowledge sumcheck to open it to a random point, which incurs an exponential complexity for the prover. Even replacing it with the zkVPD protocol in~\cite{zkvpd}, the prover time is slow in practice.
 
@@ -38,36 +38,15 @@ $$H + \rho G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}(f(x_1, x_2, \c
 
 \end{enumerate}
 \end{construction}}}}}
+\vspace{-.2in}
 \end{figure}
-The completeness of the protocol holds obviously. The soundness of the protocol follows the soundness of the sumcheck protocol and the random linear combination in step 2 and 3, as proven in~\cite{zksumcheck}. We give a proof of zero-knowledge here.
+The completeness of the protocol holds obviously. The soundness of the protocol follows the soundness of the sumcheck protocol and the random linear combination in step 2 and 3, as proven in~\cite{zksumcheck}. We give a proof of zero-knowledge in Appendix~\ref{app:proofsc}.
 
 \begin{theorem}[Zero knowledge]\label{thm:zksc}
 	For every verifier $\V^*$ and every $\ell$-variate polynomial $f:\F^\ell\rightarrow\F$ with variable degree $d$, there exists a simulator $\S$ such that given access to $H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-4 of Construction~\ref{construction::zksumcheck}. 
 \end{theorem}
 
-\begin{proof}
-	
-	We build the simulator $\S$ as following.
-	
-	\begin{enumerate}
-		
-		\item $\S$ selects a random polynomial $g^*(x_1,\ldots,x_\ell) = a^*_{0} + g^*_1(x_1) + g^*_2(x_2) + \cdots + g^*_\ell(x_\ell)$, where $g^*_i(x_i) = a^*_{i,1}x_i + a^*_{i,2}x_i^2 + \cdots + a^*_{i,d}x_i^d$. $\S$ sends $H$, $G^* = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} g^*(x_1, x_2, \cdots, x_\ell)$ and $\comm_{g^*} = \Commit(g^*)$ to $\V$.
-		
-			
-		\item $\S$ receives $\rho \neq 0$ from $\V^*$.
-		\item $\S$ selects a polynomial $f^*:\F^\ell\rightarrow\F$ with variable degree $d$ uniformly at random conditioning on $\sum\limits_{x_1, x_2, \cdots, x_\ell \in \{0, 1\}}f^*(x_1, x_2, \cdots, x_\ell) = H$. $\S$ then engages in a sumcheck protocol with $\V$ on  $H+\rho G^* = \sum\limits_{x_1, x_2, \cdots, x_l \in \{0, 1\}}(f^*(x_1, x_2, \cdots, x_\ell)+\rho g^*(x_1, x_2, \cdots, x_\ell))$
-		
-		\item Let $r \in \F^\ell$ be the point chosen by $\V^*$ in the sumcheck protocol. $\S$ runs $(g^*(r), \pi)\leftarrow\Open(g^*,r)$ and sends them to $\V$.
-		
-	\end{enumerate} 
-	
-	As both $g$ and $g^*$ are randomly selected, and the zkVPD protocol is zero-knowledge, it is obvious that step 1 and 4 in $\S$ are indistinguishable from those in the real world of Construction~\ref{construction::zksumcheck}. It remains to show that the sumchecks in step 3 of both worlds are indistinguishable.
-	
-	To see that, recall that in round $i$ of the sumcheck protocol, $\V$ receives a univariate polynomial $h_i(x_i) = \sum\limits_{b_{i+1}, \ldots,b_\ell\in\binary}h(r_1, \ldots, r_{i-1},x_i, b_{i+1}, \ldots, b_\ell)$ where $h = f+\rho g$. (The view of $\V^*$ is defined in the same way with $h^*,f^*,g^*$ and we omit the repetition in the following.) As the variable degree of $f$ and $g$ is $d$, $\P$ sends $\V$ $h_i(0), h_i(1), \ldots, h_i(d)$ which uniquely defines $h_i(x_i)$. These evaluations reveal $d+1$ independent linear constraints on the coefficients of $h$. In addition, note that when these evaluations are computed honestly by $\P$, $h_i(0)+h_i(1) = h_{i-1}(r_{i-1})$, as required in the sumcheck protocol. Therefore, in all $\ell$ rounds of the sumcheck, $\V$ and $\V^*$ receives $\ell(d+1) - (\ell-1) = \ell d+1$ independent linear constraints on the coefficients of $h$ and $h^*$. 
-	
-	As $h$ and $h^*$ are masked by $g$ and $g^*$, each with exactly $\ell d+1$ coefficients selected randomly, the two linear systems are identically distributed. Therefore, step 3 of the ideal world is indistinguishable from that of the real world.
-	
-\end{proof}
+
 
 
 
@@ -79,7 +58,7 @@ To achieve zero-knowledge, we replace the sumcheck protocol in GKR with the zero
 To prevent this leakage, Chiesa et al.\cite{zksumcheck} proposed to replace the multi-linear extension $\tV_i$ with a low degree extension, such that learning $\tV_i(u)$ and $\tV_i(v)$ does not leak any information about $V_i$. In particular, define a low degree extension of $V_i$ as 
 
 \begin{equation}\label{eq:lde}
-\dot{V}_{i}(z) \overset{def}{=} \tV_i(z)+Z_i(z)\sum\limits_{w \in \{0, 1\}^\lambda}R_i(z, w),
+\dot{V}_{i}(z) \overset{def}{=} \tV_i(z)+Z_i(z)\sum\nolimits_{w \in \{0, 1\}^\lambda}R_i(z, w),
 \end{equation}
 
 where $Z(z) = \prod_{i=1}^{s_i} z_i(1-z_i)$, i.e., $Z(z)=0$ for all $z\in\{0, 1\}^{s_i}$. $R_i(z,w)$ is a random low-degree polynomial and $\lambda$ is the security parameter. 
@@ -87,19 +66,19 @@ where $Z(z) = \prod_{i=1}^{s_i} z_i(1-z_i)$, i.e., $Z(z)=0$ for all $z\in\{0, 1\
 With this low degree extension, Equation~\ref{eq:GKR} becomes
 
 \begin{align}\label{eq:zkGKR}
-\dot{V}_{i}(g)&=\sum_{x, y\in \binary^{s_{i+1}}}\tilde{mult}_{i+1}(g, x, y)(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
-&+\tilde{add}_{i+1}(g,x,y)(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber + Z_i(g)\sum\limits_{w \in \binary^\lambda}R_i(g, w)\nonumber\\
-&=\sum_{x, y\in \binary^{s_{i+1}},w \in \binary^\lambda}(I(\vec{0},w) \cdot \tilde{mult}_{i+1}(g, x, y)(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
+\dot{V}_{i}(g)&=\sum\nolimits_{x, y\in \binary^{s_{i+1}}}\tilde{mult}_{i+1}(g, x, y)(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
+&+\tilde{add}_{i+1}(g,x,y)(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber + Z_i(g)\sum\nolimits_{w \in \binary^\lambda}R_i(g, w)\nonumber\\
+&=\sum\nolimits_{x, y\in \binary^{s_{i+1}},w \in \binary^\lambda}(I(\vec{0},w) \cdot \tilde{mult}_{i+1}(g, x, y)(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
 &+\tilde{add}_{i+1}(g,x,y)(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber + I((x, y), \vec{0})Z_i(g)R_i(g, w))
 \end{align}
 
 where $I(\vec{a},\vec{b})$ is an identity polynomial $I(\vec{a},\vec{b}) = 0$ iff $\vec{a}=\vec{b}$. The first equation holds because $\dot{V}_i$ agrees with $\tV_i$ on the Boolean hyper-cube $\binary^{s_i}$, as $Z_i(z) = 0$ for binary inputs. The second equation holds because the mask in $\dot{V}_i$ is in the form of a "sum" and can be moved into the sumcheck equation. 
 
-When executing the zero-knowledge sumcheck protocol on Equation~\ref{eq:zkGKR}, at the end of the protocol, $\V$ receives $\dot{V}_{i+1}(u)$ and $\dot{V}_{i+1}(v)$ for random points $u,v\in\F^{s_{i+1}}$ chosen by $\V$. They no longer leak information about $V_{i+1}$, as they are masked by $Z_{i+1}(z)\sum\limits_{w \in \{0, 1\}^\lambda}R_{i+1}(z, w)$ for $z=u$ and $z=v$. $\V$ computes $\tilde{mult}_{i+1}(g,u,v)$ and $\tilde{add}_{i+1}(g,u,v)$ as before, computes $Z_i(g), I(\vec{0},c), I((u,v),\vec{0})$ where $c\in\F^\lambda$ is a random point chosen by $\V$ for variable $w$, opens $R_i(g,w)$ at $c$  with $\P$ through a polynomial commitment, and checks that together with $\dot{V}_{i+1}(u), \dot{V}_{i+1}(v)$ received from $\P$ they are consistent with the last message of the sumcheck.$\V$ then uses $\dot{V}_{i+1}(u), \dot{V}_{i+1}(v)$ to proceed to the next round.
+When executing the zero-knowledge sumcheck protocol on Equation~\ref{eq:zkGKR}, at the end of the protocol, $\V$ receives $\dot{V}_{i+1}(u)$ and $\dot{V}_{i+1}(v)$ for random points $u,v\in\F^{s_{i+1}}$ chosen by $\V$. They no longer leak information about $V_{i+1}$, as they are masked by $Z_{i+1}(z)\sum\nolimits_{w \in \{0, 1\}^\lambda}R_{i+1}(z, w)$ for $z=u$ and $z=v$. $\V$ computes $\tilde{mult}_{i+1}(g,u,v)$ and $\tilde{add}_{i+1}(g,u,v)$ as before, computes $Z_i(g), I(\vec{0},c), I((u,v),\vec{0})$ where $c\in\F^\lambda$ is a random point chosen by $\V$ for variable $w$, opens $R_i(g,w)$ at $c$  with $\P$ through a polynomial commitment, and checks that together with $\dot{V}_{i+1}(u), \dot{V}_{i+1}(v)$ received from $\P$ they are consistent with the last message of the sumcheck.$\V$ then uses $\dot{V}_{i+1}(u), \dot{V}_{i+1}(v)$ to proceed to the next round.
 
 Unfortunately, similar to the zero-knowledge sumcheck, the masking polynomial $R_i$ is very large in~\cite{zksumcheck}. Opening $R_i$ at a random point takes exponential time for $\P$ either using a PCP oracle as in~\cite{zksumcheck} or potentially using a zkVPD, as $R$ has $s_i+2s_{i+1}+\lambda$ variables.
 
-In this section, we show that we can set $R_i$ to be a small polynomial to achieve zero-knowledge. In particular, $R_i$ has only two variables with variable degree 2. This is because in the $(i-1)$-th round, $\V$ receives two evaluations of $V_i$, $\dot{V}_i(u)$ and $\dot{V}_i(v)$,  which are masked by $\sum_{w}R_i(u,w)$ and $\sum_{w}R_i(v,w)$; in the $i$-th sumcheck, $\V$ opens $R_i$ at $R_i(u,c)$ and $R_i(v,c)$. It suffices to make these four evaluations linearly independent, assuming the commitment and opening of $R_i$ are using a zkVPD. Therefore, we set the low-degree term in Equation~\ref{eq:lde} as $Z_i(z)\sum\limits_{w \in\binary} R_i(z_1, w)$, i.e. $R_i$ only takes two variables, the first variable $z_1$ of $z$ and an extra variable $w\in\binary$ instead of $\binary^\lambda$, with variable degree 2. 
+In this section, we show that we can set $R_i$ to be a small polynomial to achieve zero-knowledge. In particular, $R_i$ has only two variables with variable degree 2. This is because in the $(i-1)$-th round, $\V$ receives two evaluations of $V_i$, $\dot{V}_i(u)$ and $\dot{V}_i(v)$,  which are masked by $\sum_{w}R_i(u,w)$ and $\sum_{w}R_i(v,w)$; in the $i$-th sumcheck, $\V$ opens $R_i$ at $R_i(u,c)$ and $R_i(v,c)$. It suffices to make these four evaluations linearly independent, assuming the commitment and opening of $R_i$ are using a zkVPD. Therefore, we set the low-degree term in Equation~\ref{eq:lde} as $Z_i(z)\sum\nolimits_{w \in\binary} R_i(z_1, w)$, i.e. $R_i$ only takes two variables, the first variable $z_1$ of $z$ and an extra variable $w\in\binary$ instead of $\binary^\lambda$, with variable degree 2. 
 
 The full protocol is presented in Construction~\ref{construction:zkgkr}. Here we use superscriptions (e.g., $u^{(i)}$) to denote random numbers or vectors for the $i$-th layer of the circuit.
 
@@ -166,105 +145,14 @@ The full protocol is presented in Construction~\ref{construction:zkgkr}. Here we
 %\end{figure}
 
 
-\begin{theorem}
-	Construction~\ref{construction:zkgkr} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$.
+\begin{theorem}\label{thm:zkgkr}
+	Construction~\ref{construction:zkgkr} is an interactive proof protocol per Definition~\ref{def:ip}, for a function $f$ defined by a layered arithmetic circuit $C$ such that $f(\mathsf{in},\mathsf{out}) = 1$ iff $C(\mathsf{in}) = \mathsf{out}$. In addition, for every verifier $\V^*$ and every layered circuit $C$ with $d$ layers, input $\mathsf{in}$ and output $\mathsf{out}$, there exists a simulator $\S$ such that given oracle access to $\mathsf{out}$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-5 of Construction~\ref{construction:zkgkr}. 
 \end{theorem}
 
-The completeness follows from the construction explained above and the completeness of the zero knowledge sumcheck. The soundness follows the soundness of the GKR protocol with low degree extensions, as proven in~\cite{GKR} and~\cite{zksumcheck}. \yupeng{think more about the proof.}
+The completeness follows from the construction explained above and the completeness of the zero knowledge sumcheck. The soundness follows the soundness of the GKR protocol with low degree extensions, as proven in~\cite{GKR} and~\cite{zksumcheck}. We give the proof of zero knowledge in Appendix~\ref{app:proofgkr}.
 
 
 
-\ignore{
-Let $\mathcal{P}^*$ be an cheating prover which convinces $\mathcal{V}$ of a claim ``Output = C(Input)'' for some Input and C such that Output $\neq$ C(Input). That means $\dot{V_0(0)} \neq \text{Output}$ in the beginning of the protocol. Suppose that we omit the soundness of the oracle since all of them are negligible of $\lambda = \log |\mathbb{F}|$. We claim that if there exists $\dot{V}_i(r) \neq a_r$, then after this iteration with high probability either $(a)$ $\mathcal{V}$ rejects, or $(b)$ in the next iteration, $\dot{V}_{i+1}(r) \neq a_r$ or $\dot{V}_{i+1}(s) \neq a_s$. Since $\alpha_1$ and $\alpha_2$ are randomly chosen by $\mathcal{V}$, the probability that $\alpha_1 \dot{V}_i(r) + \alpha_2 \dot{V}_i(s) = \alpha_1 a_{r} + \alpha_2 a_{s}$ is $1/|\mathbb{F}|$ if $\dot{V}_i(r) \neq a_r$. Besides, according to the soundness of sumcheck protocol, when we run the protocol on a false claim with $2s_{i+1} + 1 \leq 3 \log S$ variables and individual degree at most 2, the verifier $\mathcal{V}$ either rejects or passes the false claim to the next iteration with probability $1 - 6 \log S / (|\mathbb{F}| - 2)$.\\
-
-That is to say, if $C(\text{Input}) \neq \dot{V}_0(0)$, the verifier $\mathcal{V}$ will accept with probability at most $\mathcal{O}(d \log S / |\mathcal{F}|)$, where $d$ is the depth of $C$ and $S$ is the maximum number of gates in one layer of $C$. Hence, the total soundness of the zero knowledge GKR protocol is negligible of $\lambda$.
-}
-
-\begin{theorem}[Zero knowledge]\label{thm:zkgkr}
-	For every verifier $\V^*$ and every layered circuit $C$ with $d$ layers, input $\mathsf{in}$ and output $\mathsf{out}$, there exists a simulator $\S$ such that given oracle access to $\mathsf{out}$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-5 of Construction~\ref{construction:zkgkr}. 
-\end{theorem}
-
-\begin{proof} With oracle access to $\mathsf{out}$, and the simulator $\S_{sc}$ of the zero-knowledge sumcheck protocol in Section~\ref{subsec:zksumcheck} as a subroutine, we construct the simulator $\mathcal{S}$ as following:
-
-\begin{enumerate}
-
-\item $\S$ sends the $\mathsf{out}$ to $\V^*$.
-
-\item $\S$ randomly selects polynomials $R^*_1(z_1, w), \ldots, R^*_d(z_1, w): \F^2\rightarrow \F$ with variable degree 2. $\S$ commits to these polynomials by sending $\comm_i\leftarrow\Commit(R^*_i)$ to $\V^*$ for $i\in[1,d]$.
-
-\item $\S$ receives $g^{(0)}$ from $\V^*$.
-
-\item $\S$ calls $\S_{sc}$ to simulate the partial view of the zero knowledge sumcheck protocol on 
-{\footnotesize
-\[
-\dot{V}_{0}(g^{(0)})=\sum_{x, y\in \binary^{s_{1}}}\tilde{mult}_{1}(g^{(0)}, x, y)(\dot{V}_{1}(x)\dot{V}_{1}(y))+\tilde{add}_{1}(g^{(0)},x,y)(\dot{V}_{1}(x)+\dot{V}_{1}(y))
-\]
-}
-If $u_1^{(1)} = v_1^{(1)}$, $\S$ aborts. At the end of the sumcheck, $\S$ samples $\dot{V}^*_1(u^{(1)})$ and $\dot{V}^*_1(v^{(1)})$ such that $\tmult_1(g^{(0)},u^{(1)},v^{(1)})\dot{V}^*_1(u^{(1)})\dot{V}^*_1(v^{(1)})+\tadd_1(g^{(0)},u^{(1)},v^{(1)})$ $(\dot{V}^*_1(u^{(1)})+\dot{V}^*_1(v^{(1)}))$ equals to the last message of the sumcheck.
-
-\item For layer $i=1,\ldots,d-1$:
-	\begin{enumerate}
-	\item $\S$ receives $\alpha^{(i)}, \beta^{(i)}$ from $\V^*$.
-	\item Let $Mult_{i + 1}(x, y) = \alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, x, y)$ and $Add_{i + 1}(x, y) = \alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, x, y)+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, x, y)$. $\S$ calls $\S_{sc}$ to simulate the partial view of the zero knowledge sumcheck protocol on \\
-	
-	$\alpha^{(i)}\dot{V}_i(u^{(i)})+\beta^{(i)}\dot{V}_i(v^{(i)})=$
-	\begin{align*}
-	&\sum_{\substack{x, y\in \binary^{s_{i+1}}\\w \in \binary}}(I(\vec{0},w) \cdot Mult_{i+1}(x, y)(\dot{V}_{i+1}(x)\dot{V}_{i+1}(y))\\
-	&+Add_{i+1}(x, y)(\dot{V}_{i+1}(x)+\dot{V}_{i+1}(y))\nonumber\\
-	&+ I((x, y), \vec{0})(\alpha^{(i)}Z_i(u^{(i)})R_i(u_1^{(i)}, w)+\beta^{(i)}Z_i(v^{(i)})R_i(v_1^{(i)}, w)))
-	\end{align*}
-	If $u_1^{(i+1)} = v_1^{(i+1)}$, $\S$ aborts.
-	
-	\item At the end of the zero-knowledge sumcheck protocol, if $u_1^{(i+1)} = v_1^{(i+1)}$, $\S$ aborts. Otherwise, $\S$ samples $\dot{V}^*_{i+1}(u^{(i+1)})$ and $\dot{V}^*_{i+1}(v^{(i+1)})$ randomly such that the following equals to the last message of the sumcheck protocol.
-	{\footnotesize
-	\begin{align*}
-	I(\vec{0},c^{(i)})(a_{i+1}(\dot{V}^*_{i+1}(u^{(i+1)})\dot{V}^*_{i+1}(v^{(i+1)}))+b_{i+1}(\dot{V}^*_{i+1}(u^{(i+1)})+\dot{V}^*_{i+1}(v^{(i+1)})))\\
-	+I((u^{(i+1)},v^{(i+1)}),\vec{0})(\alpha^{(i)}Z_i(u^{(i)})R^*_i(u_1^{(i)}, c^{(i)})+\beta^{(i)}Z_i(v^{(i)})R^*_i(v_1^{(i)}, c^{(i)}))
-	\end{align*}
-	}
-	$a_{i+1} = \alpha^{(i)}\tilde{mult}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{mult}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$ and $b_{i+1} = \alpha^{(i)}\tilde{add}_{i+1}(u^{(i)}, u^{(i+1)}, v^{(i+1)})+\beta^{(i)}\tilde{add}_{i+1}(v^{(i)}, u^{(i+1)}, v^{(i+1)})$. $\S$ sends $\dot{V}_{i+1}(u^{(i+1)})$ and $\dot{V}_{i+1}(v^{(i+1)})$ to $\V^*$.
-	
-	\item $\V^*$ computes the corresponding values locally as in step 5(d) of Construction~\ref{construction:zkgkr}.
-	\item $\S$ opens $R^*_i$ at two points $R^*_i(u_1^{(i)},c^{(i)})$ and $R^*_i(v_1^{(i)},c^{(i)})$ using $\Open$.
-	\item $\V^*$ performs the checks as in step 5(f) of Construction~\ref{construction:zkgkr}.
-	\end{enumerate}
-\end{enumerate} 
-
-Note here that $\V^*$ can actually behave arbitrarily in step 5(d) and 5(f) above. We include these steps to be consistent with the real world in  Construction~\ref{construction:zkgkr} for the ease of interpretation.
-
-To prove zero-knowledge, step 1,3, 5(a), 5(d) and 5(f) are obviously indistinguishable as $\S$ only receives messages from $\V^*$. Step 2 and 5(e) of both worlds are indistinguishable because of the zero knowledge property of the zkVPD, and the fact that $R^*$ and $R$ are sampled randomly in both worlds. Step 4 and 5(b) are indistinguishable as proven in Theorem~\ref{thm:zksc} for $\S_{sc}$.  
-
-
-It remains to consider the messages received at the end of step 4 and in step 5(c), namely $\dot{V}_{i}(u^{(i)}), \dot{V}_{i}(v^{(i)})$ and $\dot{V}^*_{i}(u^{(i)}), \dot{V}^*_{i}(v^{(i)})$ for $i = 1,\ldots,d$. In the real world, $\dot{V}_{i}(z)$ is masked by $\sum\limits_{w \in\binary}R_i(z_1,w)$ ($Z(z)$ is publicly known), thus $\dot{V}_{i}(u^{(i)})$ and $\dot{V}_{i}(v^{(i)})$ are masked by $\sum\limits_{w \in\binary}R_i(u_1^{(i)},w)$ and $\sum\limits_{w \in\binary}R_i(v_1^{(i)},w)$ correspondingly. In addition, in step 5(e), $\V^*$ opens $R_i$ at $R_i(u_1^{(i)},c^{(i)})$ and $R_i(v_1^{(i)},c^{(i)})$. To simplify the notation here, we consider only a particular layer and omit the subscription and superscription of $i$. Let $R(z_1,w) = a_0+a_1z_1+a_2w+a_3z_1w+a_4z_1^2+a_5w^2+a_6z_1^2w^2$, where $a_0,\ldots,a_6$ are randomly chosen. We can write the four evaluations above as 
-\[
-\begin{bmatrix}
-2 & 2u_1 & 1 & u_1 & 2u_1^2 & 1 & u_1^2\\
-2 & 2v_1 & 1 & v_1& 2v_1^2 & 1 & v_1^2\\
-1 & u_1 & c & cu_1 & u_1^2 & c^2 & c^2u_1^2\\
-1 & v_1 & c & cv_1 &  v_1^2 & c^2 & c^2v_1^2\\
-\end{bmatrix}
-\times
-\begin{bmatrix}
-a_0 & a_1 &a_2 &a_3&a_4&a_5&a_6
-\end{bmatrix}^T
-\]
-After row reduction, the left matrix is
-\[
-\begin{bmatrix}
-2 & 2u_1 & 1 & u_1 & 2u_1^2 & 1 & u_1^2\\
-0 & 2(v_1-u_1) & 0 & v_1-u_1 & 2(u_1^2-v_1^2) & 0 & u_1^2-v_1^2\\
-0 & 0 & 2c-1 & (2c-1)u_1 & 0 & 2c^2-1 & (2c^2-1)u_1^2\\
-0 & 0 & 0 & (2c-1)(v_1-u_1)&0 & 0 & (2c^2-1)(v_1^2-u_1^2)\\
-\end{bmatrix}
-\]
-As $u_1\neq v_1$, the matrix has full rank if $2c^2 - 1\neq 0 \mod p$, where $p$ is the prime that defines $\F$. This holds if $2^{-1}$ is not in the quadratic residue of $p$, or equivalently $p \not\equiv 1, 7 \mod 8$.\footnote{From the reduced matrix, we can see that setting $a_2 = a_3 = a_4 = 0$ does not affect the rank of the matrix, which simplifies the masking polynomial $R$ in practice.} In case $p\equiv 1, 7 \mod 8$, we can add a check to both the protocol and the simulator to abort if $2c^2 -1 =0$. This does not affect the proof of zero knowledge, and only reduces the soundness error by a small amount. \footnote{If one is willing to perform a check like this, we can simplify the masking polynomial $R$ to be multilinear. The reduced matrix will be the first 4 columns of the matrix showed above, and it has full rank if $c\neq 2^{-1}$.}
-
-
-Because of the full rank of the matrix, the four evaluations are linearly independent and uniformly distributed, as $a_0,\ldots a_6$ are chosen randomly. In the ideal world, $R^*(u_1,c)$ and $R^*(v_1,c)$ are independent and uniformly distributed, and $\dot{V}^*(u), \dot{V}^*(v)$ are randomly selected subject to a linear constraint (step 5(c)), which is the same as the real world. Therefore, they are indistinguishable in the two worlds, which completes the proof.   
-
-
-
-\end{proof}
 
 \subsection{Zero knowledge VPD}\label{subsec::our_zkvpd}
 In this section, we present the instantiation of the zkVPD protocol, as defined in Definition~\ref{def::zkvpd}. We start with the one used for the input layer. Recall that at the end of the GKR protocol, $\V$ receives two evaluations of the polynomial $\dot{V}_d(z)=\tV_d(z)+Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$ at $z=u^{(d)}$ and $z=v^{(d)}$. In our zero knowledge proof protocol, which will be presented in Section~\ref{subsec::zkall}, $\P$ commits to $\dot{V}_d(z)$ using the zkVPD at the beginning, and opens it to the two points selected by $\V$ using the zkVPD.
@@ -272,9 +160,7 @@ In this section, we present the instantiation of the zkVPD protocol, as defined 
 
 
 
-Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cite{zkvpd}. The protocol in~\cite{zkvpd} works for any polynomial with $\ell$ variables and any variable degree, and is particularly efficient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and preserves the efficiency. Note that though $\dot{V}_d(z)$ is a low degree extension of the input, it can be decomposed to the sum of $\tV_d(z)$, a multilinear polynomial, and $Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$. Moreover, $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$ can be computed directly by $\V$. Therefore, in our construction, $\P$ commits to $\tV_d(z)$ and $\sum\limits_{w \in\binary} R_d(z_1,w)$ separately, and later opens the sum together given $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$, which is naturally supported because of the homomorphic property of the commitment. Another optimization is that unlike other layers of the circuit, $R_d(z_1,w)$ itself is not opened at two points ($\V$ does not receive $R_d(u^{(d)},c^{(d)})$ and $R_d(v^{(d)},c^{(d)})$ in Construction~\ref{construction:zkgkr}). Therefore, it suffices to set $\dot{V}_d(z)=\tV_d(z)+Z_d(z)R_d(z_1)$, where $R_d$ is a univariate linear polynomial.
-
-The full protocol is presented in Construction~\ref{construction::zkVPD}.
+Our construction is based on the zkVPD protocol proposed by Zhang et al. in~\cite{zkvpd}. The protocol in~\cite{zkvpd} works for any polynomial with $\ell$ variables and any variable degree, and is particularly efficient for multilinear polynomials. We modify the protocol for our zero-knowledge proof scheme and preserves the efficiency. Note that though $\dot{V}_d(z)$ is a low degree extension of the input, it can be decomposed to the sum of $\tV_d(z)$, a multilinear polynomial, and $Z_d(z)\sum\limits_{w \in\binary} R_d(z_1,w)$. Moreover, $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$ can be computed directly by $\V$. Therefore, in our construction, $\P$ commits to $\tV_d(z)$ and $\sum\limits_{w \in\binary} R_d(z_1,w)$ separately, and later opens the sum together given $Z_d(u^{(d)})$ and $Z_d(v^{(d)})$, which is naturally supported because of the homomorphic property of the commitment. Another optimization is that unlike other layers of the circuit, $R_d(z_1,w)$ itself is not opened at two points ($\V$ does not receive $R_d(u^{(d)},c^{(d)})$ and $R_d(v^{(d)},c^{(d)})$ in Construction~\ref{construction:zkgkr}). Therefore, it suffices to set $\dot{V}_d(z)=\tV_d(z)+Z_d(z)R_d(z_1)$, where $R_d$ is a univariate linear polynomial. The full protocol is presented in Construction~\ref{construction::zkVPD} of Appendix~\ref{app:zkvpdconstruction}.
 
 
 
@@ -286,47 +172,16 @@ The full protocol is presented in Construction~\ref{construction::zkVPD}.
 The proof of completeness, soundness and zero knowledge is similar to that of the zkVPD protocol in~\cite{zkvpd}. We only add an extra univariate linear polynomial $R(x_1)$, which does not affect the proof. We omit the proof due to space limit. Using the same algorithms proposed in in~\cite{vram,zkvpd}, the running time of $\KeyGen$, $\Commit$ and $\Open$ is $O(2^\ell)$, $\Verify$ takes $O(\ell)$ time and the proof size is $O(\ell)$.
 
 
-\begin{figure}[H]
-	\small{
-		\centering{\centering
-			\framebox{\parbox{.99\linewidth}{
-					\begin{construction}
-						\label{construction::zkVPD}
-						Let $\mathbb{F}$ be a prime-order finite field. Let $\dot{V}(x): \F^\ell\rightarrow \F$ be an $\ell$-variate polynomial such that $\dot{V}(x) = \tV(x)+Z(x)R(x_1)$, where $\tV(x)$ is a multilinear polynomial, $Z(x) = \prod_{i=1}^\ell x_i(1-x_i)$ and $R(x_1) = a_0+a_1x_1$. 
-						
-						
-						\begin{itemize}
-							\item $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell)$: Select $\alpha, t_1, t_2, \cdots, t_l, t_{\ell+1} \in \F$ uniformaly at random, run $\mathsf{bp} \leftarrow \mathsf{BilGen}(1^{\lambda})$ and compute $\pp = (\mathsf{bp},g^\alpha, g^{t_{\ell+1}}, g^{\alpha t_{\ell+1}}, \{g^{\prod_{i\in W}t_i}, g^{\alpha\prod_{i\in W}t_i}\}_{W\in \mathcal{W}_\ell})$, where $\mathcal{W}_\ell$ is the set of all subsets of $\{1,\ldots, \ell\}$. Set $\vp = (\mathsf{bp},g^{t_1}, \ldots, g^{t_{\ell+1}}, g^\alpha)$.
-							
-							
-							\item $\comm \leftarrow \Commit(\dot{V}, r_V, r_R, \pp)$: Compute $c_1 = g^{\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1}}$, $c_2 = g^{\alpha(\tV(t_1, t_2, \cdots, t_\ell) + r_Vt_{\ell+1})}$, $c_3 = g^{R(t_1)+r_Rt_{\ell+1}}$ and $c_4 = g^{\alpha(R(t_1)+r_Rt_{\ell+1})}$  output the commitment $\comm = (c_1, c_2,c_3,c_4)$.
-							
-							\item $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$: Output $\accept$ if $e(c_1, g^\alpha) = e(c_2,g)$ and $e(c_3, g^\alpha) = e(c_4,g)$. Otherwise, output $\reject$.
-							
-							\item $(y,\pi)\leftarrow\Open(\dot{V}, r_V, r_R, u,\pp)$: Choose $r_1,\ldots, r_\ell\in\F$ at random, and compute polynomials $q_i$ such that
-							\[
-							\tV(x)+r_Vx_{\ell+1}+Z(u)(R(x_1)+r_Rx_{\ell+1}) -(\tV(u)+Z(u)R(u_1)) =
-							\]
-							\[ \sum_{i=1}^\ell(x_i-u_i)(q_i(x_i,\ldots,x_\ell)+r_ix_{\ell+1})+x_{\ell+1}(r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(x_i-u_i)).
-							\]   
-							Set $\pi = (\{g^{q_i(t_i\ldots, t_\ell)+r_it_{\ell+1}}, g^{\alpha(q_i(t_i\ldots, t_\ell)+r_it_{\ell+1})}\}_{i\in[1,\ell]},$ $ g^{r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(t_i-u_i)}, g^{\alpha(r_V+r_RZ(u)-\sum_{i=1}^\ell r_i(t_i-u_i))})$ and $y = \tV(u)+Z(u)R(u_1)$.
-							
-							\item $\{\accept,\reject\}\leftarrow\Verify(\comm,u,y,\pi,\vp)$: Parse $\pi$ as $(\pi_i,\pi_{\alpha i})$ for $i\in[1,\ell+1]$. Check $e(\pi_i,g^\alpha) = e(\pi_{\alpha i},g)$ for $i\in[1,\ell+1]$. Check $e(c_1c_3^{Z(u)}/g^y, g) = \prod_{i=1}^\ell e(\pi_i, g^{t_i-u_i}) \cdot e(g^{\pi_{\ell+1}},g^{t_{\ell+1}})$. Output $\accept$ if all the checks pass, otherwise, output $\reject$.
-							
-							
-						\end{itemize} 
-						
-	\end{construction}}}}}
-\end{figure}
+
 
 \paragraph{zkVPD for other layers.}
-Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{subsec::zkgkr}, we also use a zkVPD protocol to commit and open the masking polynomials $g_i(x), R_i(z_1, w)$ for each intermediate layer $i$. We use the same zkVPD protocol for these polynomials as in~\cite{zkvpd} in our construction. In fact, as we show in the previous sections, these polynomials are very small ($g_i$ is the sum of univariate polynomials with constant degrees and $R_i$ has 2 variables with variable degree 2), the zkVPD protocols become very simple. The complexity of $\KeyGen, \Commit, \Open, \Verify$ and proof size are all $O(s_i)$ for $g_i$ and are all $O(1)$ for $R_i$. We give the full protocols in Appendix~\ref{}. \yupeng{TODO if time allows}
+Other than the input layer, in our zero knowledge GKR protocol in Section~\ref{subsec::zkgkr}, we also use a zkVPD protocol to commit and open the masking polynomials $g_i(x), R_i(z_1, w)$ for each intermediate layer $i$. We use the same zkVPD protocol for these polynomials as in~\cite{zkvpd} in our construction. In fact, as we show in the previous sections, these polynomials are very small ($g_i$ is the sum of univariate polynomials with constant degrees and $R_i$ has 2 variables with variable degree 2), the zkVPD protocols become very simple. The complexity of $\KeyGen, \Commit, \Open, \Verify$ and proof size are all $O(s_i)$ for $g_i$ and are all $O(1)$ for $R_i$. We omit the full protocols due to space limit.
 
 
 \subsection{Putting Everything Together}\label{subsec::zkall}
 
-In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,wahby2018doubly,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Construction~\ref{construction::all}, which combines our zero knowledge GKR and zkVPD protocols. Similar to the protocols in~\cite{zkvpd,hyrax}, Step 6 and 7 are to check that $\P$ indeed uses $x$ as the input to the circuit.
-\begin{figure}[H]
+In this section, we present our zero knowledge argument scheme. At a high level, similar to~\cite{zhang2017vsql,hyrax,zkvpd}, $\V$ can use the GKR protocol to verify the correct evaluation of a circuit $C$ on input $x$ and a witness $w$, given an oracle access to the evaluation of a polynomial defined by $x,w$ on a random point. We instantiate the oracle using the zkVPD protocol. Formally, we present the construction in Construction~\ref{construction::all}, which combines our zero knowledge GKR and zkVPD protocols. Similar to the protocols in~\cite{zkvpd,hyrax}, Step 6 and 7 are to check that $\P$ indeed uses $x$ as the input to the circuit.
+\begin{figure}[t!]
 \small{
 \centering{\centering
 \framebox{\parbox{.99\linewidth}{
@@ -351,6 +206,7 @@ In this section, we present our zero knowledge argument scheme. At a high level,
 	\end{itemize}
 %\end{protocol}
 \end{construction}}}}}
+\vspace{-0.2in}
 \end{figure}
 \begin{theorem}\label{theorem:main}
 	For an input size $n$ and a finite field $\F$, Construction~\ref{construction::all} is a zero knowledge argument for the relation
@@ -362,7 +218,7 @@ In this section, we present our zero knowledge argument scheme. At a high level,
 
 \paragraph{Proof Sketch.} The correctness and the soundness follow from those of the two building blocks, zero knowledge GKR and zkVPD, by Theorem~\ref{thm:zkgkr} and~\ref{thm:zkvpd}.
 
-To prove zero knowledge, consider a simulator $\S$ that calls the simulator $\S_{GKR}$ of zero knowledge GKR given in Section~\ref{subsec::zkgkr} as a subroutine, which simulates the partial view up to the input layer. At the input layer, the major challenge is that $\S$ committed to (a randomly chosen) $\dot{V}^*_d$ at the beginning of the protocol, before knowing the points $u^{(d)}, v^{(d)}$ to evaluate on. If $\S$ opens the commitment honestly, with high probability the evaluations are not consistent with the last message of the GKR (sumcheck in layer $d-1$) and a malicious $\V^*$ can distinguish the ideal world from the real world. In our proof, we resolve this issue by using the simulator $\S_{VPD}$ of our zkVPD protocol. Given the trapdoor $\mathsf{trap}$ used in $\KeyGen$, $\S_{VPD}$ is able to open the commitment to any value in zero knowledge, and in particular it opens to those messages that are consistent with the GKR protocol in our scheme, which completes the construction of $\S$. We give the formal proof in Appendix~\ref{??}. \yupeng{or full version.} 
+To prove zero knowledge, consider a simulator $\S$ that calls the simulator $\S_{GKR}$ of zero knowledge GKR given in Section~\ref{subsec::zkgkr} as a subroutine, which simulates the partial view up to the input layer. At the input layer, the major challenge is that $\S$ committed to (a randomly chosen) $\dot{V}^*_d$ at the beginning of the protocol, before knowing the points $u^{(d)}, v^{(d)}$ to evaluate on. If $\S$ opens the commitment honestly, with high probability the evaluations are not consistent with the last message of the GKR (sumcheck in layer $d-1$) and a malicious $\V^*$ can distinguish the ideal world from the real world. In our proof, we resolve this issue by using the simulator $\S_{VPD}$ of our zkVPD protocol. Given the trapdoor $\mathsf{trap}$ used in $\KeyGen$, $\S_{VPD}$ is able to open the commitment to any value in zero knowledge, and in particular it opens to those messages that are consistent with the GKR protocol in our scheme, which completes the construction of $\S$. We defer the formal proof to the full version of the paper. 
 
 The complexity of our zero knowledge argument scheme follows from our new GKR protocol with linear prover time, and the complexity of the zkVPD protocol for the input layer analyzed in Section~\ref{subsec::our_zkvpd}. The masking polynomials $g_i, R_i$ and their commitments and openings introduce no asymptotic overhead and are efficient in practice.
 
