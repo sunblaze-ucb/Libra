@@ -1,20 +1,18 @@
 %!TEX root = fastZKP.tex
-\section{Preliminary}
+\section{Preliminaries}
 \label{sec::prelim}
 
-\subsection{Notations}
+\subsection{Notation}
 
-In this paper, we use $\lambda$ to denote the security parameter, and $\neg(\lambda)$ to denote the negligible function in $\lambda$. "PPT" stands for probabilistic polynomial time. We use $f(),h()$ for polynomials, $x,y,z$ for vectors of variables and $g,u,v$ for vectors of values. $x_i$ denotes the $i$-th variablein $x$. We use bold letters such as $\textbf{A}$ to represent arrays.
+In this paper, we use $\lambda$ to denote the security parameter, and $\neg(\lambda)$ to denote the negligible function in $\lambda$. ``PPT" stands for probabilistic polynomial time. We use $f(),h()$ for polynomials, $x,y,z$ for vectors of variables and $g,u,v$ for vectors of values. $x_i$ denotes the $i$-th variable in $x$. We use bold letters such as $\textbf{A}$ to represent arrays.
 
-\paragraph{Bilinear pairing.} Let $\mathbb{G}, \mathbb{G}_T$ be two groups of order $p$ and $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map. Our scheme relies on the $q$-Strong Bilinear Diffie-Hellman ($q$-SBDH) assumption and an extended version of the Power Knowledge of Exponent (PKE) assumption. We present the assumptions formally in Appendix~\ref{app:assume}.
+\paragraph{Bilinear pairings.} Let $\mathbb{G}, \mathbb{G}_T$ be two groups of prime order $p$ and let $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map. Our scheme relies on the $q$-Strong Bilinear Diffie-Hellman ($q$-SBDH) assumption and an extended version of the Power Knowledge of Exponent (PKE) assumption. We present the assumptions formally in Appendix~\ref{app:assume}.
 
 
 
-\subsection{Interactive Proof and Zero-knowledge Arguments}
+\subsection{Interactive Proofs and Zero-knowledge Arguments}
 
-\paragraph{Interactive proof.} An interactive proof allows a prover $\P$ to convince a verifier $\V$ the validity of some statement. The interactive proof runs in several rounds, allowing $\V$ to ask questions in each round based on $\P$'s answers of previous rounds. We phrase this in terms of $\P$ trying to convince $\V$ that $f(x)=1$. The proof system is interesting if and only if the running time of $\V$ is less than the time of directly computing the function $f$.
-
-We formalize the interactive proof in the following:	
+\paragraph{Interactive proofs.} An interactive proof allows a prover $\P$ to convince a verifier $\V$ the validity of some statement. The interactive proof runs in several rounds, allowing $\V$ to ask questions in each round based on $\P$'s answers of previous rounds. We phrase this in terms of $\P$ trying to convince $\V$ that $f(x)=1$. The proof system is interesting only when the running time of $\V$ is less than the time of directly computing the function $f$. We formalize interactive proofs in the following:	
 \begin{definition}\label{def:ip}
 	Let $f$ be a Boolean function. A pair of interactive machines $\langle\mathcal{P}, \mathcal{V}\rangle$ is an interactive proof for $f$ with soundness $\epsilon$ if the following holds:
 	\begin{itemize}
@@ -24,27 +22,28 @@ We formalize the interactive proof in the following:
 \end{definition}
 
 
-\paragraph{Zero-knowledge Argument.} An argument system for an NP relationship $R$ is a protocol between a computationally bounded prover $\P$ and a verifier $\V$. At the end of the protocol, $\V$ is convinced by $\P$ that there exists a witness $w$ such that $(x; w) \in R$ for some input $x$. We focus on arguments of knowledge which have the stronger property that if the prover convinces the verifier of the statement’s validity, then the prover must know $w$. We use $\mathcal{G}$ to represent public key $\pk$ and verification key $\vk$ generation phase. Formally, consider the definition below.
+\paragraph{Zero-knowledge arguments.} An argument system for an NP relationship $R$ is a protocol between a computationally-bounded prover $\P$ and a verifier $\V$. At the end of the protocol, $\V$ is convinced by $\P$ that there exists a witness $w$ such that $(x; w) \in R$ for some input $x$. We focus on arguments of knowledge which have the stronger property that if the prover convinces the verifier of the statement validity, then the prover must know $w$. We use $\mathcal{G}$ to represent the generation phase of the public key $\pk$ and the verification key $\vk$. Formally, consider the definition below.
 
 \begin{definition}\label{def::zkp}
 	
-	Let $R$ be an NP relation and let $\lambda$ be the security parameter. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero knowledge argument fro $R$ if the following holds.
+	Let $R$ be an NP relation and let $\lambda$ be the security parameter. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero-knowledge argument for $R$ if the following holds.
 	
 	\begin{itemize}
 		
 		\item \textbf{Correctness}. For every $(\pk, \vk)$ output by $\mathcal{G}(1^\lambda)$ and $(x, w) \in R$, 
 		$$\langle \P(\pk, w), \V(\vk) \rangle(x) = \accept$$
-		
+		\babis{should not $R$ be given as input to prover and verifier?}
 		\item \textbf{Soundness}. For any PPT prover $\P$, there exists a PPT extractor $\varepsilon$ such that for any $x$ it holds that
 		
 		$$\Pr[\langle\P(\pk), \V(\vk) \rangle(x) = \accept \wedge (x, w) \notin R | w \leftarrow \varepsilon(\pk, x)] \leq \neg(\lambda)$$
-		
+		\babis{should not $\mathcal{G}$ appear somewhere in the soundnesss definition here?}
 		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$, it holds that\\
 		{\fontsize{8}{8}
 		$\Pr\left[(x;w)\in R; \langle\P(\pk,w),\A(\sigma) \rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk) \right] = $\\
 		$\Pr\left[(x;w)\in R; \langle\S(\mathsf{trap}, z, \pk),\A(\sigma) \rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk)\right]$\\
 		}
-		where $=$ means perfect zero knowledge. 
+	\babis{small fontsize looks ugly...}
+		where $=$ means perfect zero knowledge \babis{this is weird. = means = probabilities. What you probably want to say is that when the probabilities are equal then the protocol is perfect zero-knowledge}. 
 		
 	\end{itemize}
 	We say that $(\mathcal{G},\P,\V)$ is a \textbf{succinct} argument system if the
