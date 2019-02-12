@@ -4,10 +4,9 @@
 
 \subsection{Notations}
 
-polynomials, PPT, vectors, ,binary, array, security parameter, $\neg$,
+In this paper, we use $\lambda$ to denote the security parameter, and $\neg(\lambda)$ to denote the negligible function in $\lambda$. "PPT" stands for probabilistic polynomial time. We use $f(),h()$ for polynomials, $x,y,z$ for vectors of variables and $g,u,v$ for vectors of values. $x_i$ denotes the $i$-th variablein $x$. We use bold letters such as $\textbf{A}$ to represent arrays.
 
-
-\paragraph{Bilinear pairing.} Let $\lambda$ be the security parameter, $\mathbb{G}, \mathbb{G}_T$ be two groups of order $p$ and $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map. Our scheme relies on the $q$-Strong Bilinear Diffie-Hellman ($q$-SBDH) assumption and an extended version of the Power Knowledge of Exponent (PKE) assumption. We present the assumptions formally in Appendix~\ref{app:assume}.
+\paragraph{Bilinear pairing.} Let $\mathbb{G}, \mathbb{G}_T$ be two groups of order $p$ and $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map. Our scheme relies on the $q$-Strong Bilinear Diffie-Hellman ($q$-SBDH) assumption and an extended version of the Power Knowledge of Exponent (PKE) assumption. We present the assumptions formally in Appendix~\ref{app:assume}.
 
 
 
@@ -41,7 +40,7 @@ We formalize the interactive proof in the following:
 		$$\Pr[\langle\P(\pk), \V(\vk) \rangle(x) = \accept \wedge (x, w) \notin R | w \leftarrow \varepsilon(\pk, x)] \leq \neg(\lambda)$$
 		
 		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$, it holds that\\
-		{\scriptsize
+		{\fontsize{8}{8}
 		$\Pr\left[(x;w)\in R; \langle\P(\pk,w),\A(\sigma) \rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk) \right] = $\\
 		$\Pr\left[(x;w)\in R; \langle\S(\mathsf{trap}, z, \pk),\A(\sigma) \rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk)\right]$\\
 		}
