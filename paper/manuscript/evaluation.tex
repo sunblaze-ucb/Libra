@@ -58,30 +58,30 @@ To be consistent with the next section, all the protocols are executed on a 254-
 \hline
 \multirow{3}{*}{\shortstack{Matrix\\ multiplication}} &Matrix size & 4x4 & 16x16 & 64x64 & 256x256\\ 
 \cline{2-6}
-{} & \cite{JT_Thesis} & 0.0003s & 0.0065s & 0.3923s & 28.9632s\\
+{} & \cite{JT_Thesis} & 0.0003s & 0.006s & 0.390s & 29.0s\\
 \cline{2-6}
-{} & Ours & 0.0004s & 0.0158s & 0.8663s & 55.1185s\\
+{} & Ours & 0.0004s & 0.014s & 0.788s & 50.0s\\
 \hline
 \multirow{3}{*}{Image scaling} & \#pixels & 112x112 & 176x176 &560x560 & 1072x1072\\ 
 \cline{2-6}
-{} & \cite{wahby2017full} & 0.4848s & 0.8341s & 7.8867s & 30.7184s\\
+{} & \cite{wahby2017full} & 0.445s & 0.779s & 7.54s & 29.2s\\
 \cline{2-6}
-{} & Ours & 0.31303s & 1.15604s & 18.3345s & 73.2782s\\
+{} & Ours & 0.337s & 1.25s & 19.8s & 79.2s\\
 \hline
 \multirow{3}{*}{\shortstack{Image scaling with\\ different parameters}} & \#pixels & 112x112 & 176x176 &560x560 & 1072x1072\\
 \cline{2-6}
-{} & \cite{zhang2017vsql} & 5.989001s & 23.970003s & 383.183502s & 1541.7906s\\
+{} & \cite{zhang2017vsql} & 5.45s & 21.8s & 348s & 1441s\\
 \cline{2-6}
-{} & Ours & 0.31303s & 1.15604s & 18.3345s & 73.2782s\\
+{} & Ours & 0.329s & 1.22s & 19.3s & 77.2s\\
 \hline
 \multirow{3}{*}{Random circuit} & \#gates per layer& $2^8$ & $2^{12}$ & $2^{16}$ & $2^{20}$\\ 
 \cline{2-6}
-{} & \cite{CMT} & 0.0090765s & 0.19723s & 4.20471s & 91.201s\\
+{} & \cite{CMT} & 0.008s & 0.179s & 3.79s & 83.1s\\
 \cline{2-6}
-{} & Ours & 0.0366618s & 0.0889080s & 0.780485s & 12.4869s\\
+{} & Ours & 0.002s & 0.039s & 0.635s & 10.8s\\
 \hline
 \end{tabular}
-\caption{\label{tab:GKRCom}Prover time of our linear GKR and previous GKR variants.\yupeng{Jiaheng and Tiancheng, keep 3 or 4 digits for the numbers.}}
+\caption{\label{tab:GKRCom}Prover time of our linear GKR and previous GKR variants.}
 \vspace{-0.4in}
 }
 \end{table}

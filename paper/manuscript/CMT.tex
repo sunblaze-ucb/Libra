@@ -27,7 +27,7 @@ Directly computing the sum requires exponential time in $\ell$, as there are $2^
 \end{protocol}}}}}
 \vspace{-0.2in}
 \end{figure}
-The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial for each variable in $f$\babis{you mean the maximum degree accross all variableS?}, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
+The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial for each variable in $f$\babis{you mean the maximum degree accross all variableS?}\yupeng{formally defined in 2.1}, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
 
 
 \begin{definition}[\textbf{Multi-linear Extension}]
@@ -139,4 +139,4 @@ In our new ZKP scheme, we will mainly use the second approach. The full GKR prot
 
 \begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::GKR} is an interactive proof for the function computed by $C$ with soundness $O(d\log {|C|}/|\mathbb{F}|)$. It uses $O(d \log |C|)$ rounds of interaction and running time of the prover $\mathcal{P}$ is $O(|C|\log |C|)$. Let the optimal computation time for all $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of $\V$ is $O(n+k+d\log |C|+T)$. For log-space uniform circuits it is $T=\poly{\log |C|}$.
 \end{theorem}
-\babis{is it possible to argue briefly why the prover time is $C\log C$? This is important for the paper motivation.}
+\babis{is it possible to argue briefly why the prover time is $C\log C$? This is important for the paper motivation.}\yupeng{Explained in section 3.}

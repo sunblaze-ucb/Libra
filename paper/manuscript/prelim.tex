@@ -4,7 +4,7 @@
 
 \subsection{Notation}
 
-In this paper, we use $\lambda$ to denote the security parameter, and $\neg(\lambda)$ to denote the negligible function in $\lambda$. ``PPT" stands for probabilistic polynomial time. We use $f(),h()$ for polynomials, $x,y,z$ for vectors of variables and $g,u,v$ for vectors of values. $x_i$ denotes the $i$-th variable in $x$. We use bold letters such as $\textbf{A}$ to represent arrays.
+In this paper, we use $\lambda$ to denote the security parameter, and $\neg(\lambda)$ to denote the negligible function in $\lambda$. ``PPT" stands for probabilistic polynomial time. We use $f(),h()$ for polynomials, $x,y,z$ for vectors of variables and $g,u,v$ for vectors of values. $x_i$ denotes the $i$-th variable in $x$. We use bold letters such as $\textbf{A}$ to represent arrays. For a multivariate polynomial $f$, its "variable-degree" is the maximum degree of $f$ in any of its variables.
 
 \paragraph{Bilinear pairings.} Let $\mathbb{G}, \mathbb{G}_T$ be two groups of prime order $p$ and let $g\in\mathbb{G}$ be a generator. $e: \mathbb{G}\times\mathbb{G}\rightarrow\mathbb{G}_T$ denotes a bilinear map and we use $\mathsf{bp}=(p,\mathbb{G},\mathbb{G}_T,e,g)\leftarrow\mathsf{BilGen}(1^\lambda)$ for the generation of parameters for the bilinear map. Our scheme relies on the $q$-Strong Bilinear Diffie-Hellman ($q$-SBDH) assumption and an extended version of the Power Knowledge of Exponent (PKE) assumption. We present the assumptions formally in Appendix~\ref{app:assume}.
 
@@ -22,28 +22,28 @@ In this paper, we use $\lambda$ to denote the security parameter, and $\neg(\lam
 \end{definition}
 
 
-\paragraph{Zero-knowledge arguments.} An argument system for an NP relationship $R$ is a protocol between a computationally-bounded prover $\P$ and a verifier $\V$. At the end of the protocol, $\V$ is convinced by $\P$ that there exists a witness $w$ such that $(x; w) \in R$ for some input $x$. We focus on arguments of knowledge which have the stronger property that if the prover convinces the verifier of the statement validity, then the prover must know $w$. We use $\mathcal{G}$ to represent the generation phase of the public key $\pk$ and the verification key $\vk$. Formally, consider the definition below.
+\paragraph{Zero-knowledge arguments.} An argument system for an NP relationship $R$ is a protocol between a computationally-bounded prover $\P$ and a verifier $\V$. At the end of the protocol, $\V$ is convinced by $\P$ that there exists a witness $w$ such that $(x; w) \in R$ for some input $x$. We focus on arguments of knowledge which have the stronger property that if the prover convinces the verifier of the statement validity, then the prover must know $w$. We use $\mathcal{G}$ to represent the generation phase of the public key $\pk$ and the verification key $\vk$. Formally, consider the definition below, where we assume $R$ is known to $\P$ and $\V$.
 
 \begin{definition}\label{def::zkp}
 	
-	Let $R$ be an NP relation and let $\lambda$ be the security parameter. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero-knowledge argument for $R$ if the following holds.
+	Let $R$ be an NP relation. A tuple of algorithm $(\mathcal{G}, \mathcal{P}, \mathcal{V})$ is a zero-knowledge argument for $R$ if the following holds.
 	
 	\begin{itemize}
 		
 		\item \textbf{Correctness}. For every $(\pk, \vk)$ output by $\mathcal{G}(1^\lambda)$ and $(x, w) \in R$, 
 		$$\langle \P(\pk, w), \V(\vk) \rangle(x) = \accept$$
-		\babis{should not $R$ be given as input to prover and verifier?}
-		\item \textbf{Soundness}. For any PPT prover $\P$, there exists a PPT extractor $\varepsilon$ such that for any $x$ it holds that
+		%\babis{should not $R$ be given as input to prover and verifier?}
+		\item \textbf{Soundness}. For any PPT prover $\P$, there exists a PPT extractor $\varepsilon$ such that for every $(\pk, \vk)$ output by $\mathcal{G}(1^\lambda)$ and any $x$, it holds that
 		
 		$$\Pr[\langle\P(\pk), \V(\vk) \rangle(x) = \accept \wedge (x, w) \notin R | w \leftarrow \varepsilon(\pk, x)] \leq \neg(\lambda)$$
-		\babis{should not $\mathcal{G}$ appear somewhere in the soundnesss definition here?}
-		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{poly(\lambda)}$, it holds that\\
-		{\fontsize{8}{8}
-		$\Pr\left[(x;w)\in R; \langle\P(\pk,w),\A(\sigma) \rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk) \right] = $\\
-		$\Pr\left[(x;w)\in R; \langle\S(\mathsf{trap}, z, \pk),\A(\sigma) \rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w,\sigma)\leftarrow\A(z,\pk,\vk)\right]$\\
-		}
-	\babis{small fontsize looks ugly...}
-		where $=$ means perfect zero knowledge \babis{this is weird. = means = probabilities. What you probably want to say is that when the probabilities are equal then the protocol is perfect zero-knowledge}. 
+		%\babis{should not $\mathcal{G}$ appear somewhere in the soundnesss definition here?}
+		\item \textbf{Zero knowledge}. There exists a PPT simulator $\S$ such that for any PPT adversary $\A$, auxiliary input $z \in \{0, 1\}^{\mathsf{poly}(\lambda)}$, $(x;w)\in R$, it holds that\\
+		%{\footnotesize
+		$\Pr\left[\langle\P(\pk,w),\A\rangle=\accept: (\pk,\vk)\leftarrow\mathcal{G}(1^\lambda); (x,w)\leftarrow\A(z,\pk,\vk) \right] = $\\
+		$\Pr\left[\langle\S(\mathsf{trap}, z, \pk),\A\rangle=\accept:(\pk,\vk,\mathsf{trap})\leftarrow\S(1^\lambda); (x,w)\leftarrow\A(z,\pk,\vk)\right]$\\
+		%}
+%\babis{small fontsize looks ugly...}
+		%where $=$ means perfect zero knowledge \babis{this is weird. = means = probabilities. What you probably want to say is that when the probabilities are equal then the protocol is perfect zero-knowledge}. 
 		
 	\end{itemize}
 	We say that $(\mathcal{G},\P,\V)$ is a \textbf{succinct} argument system if the
