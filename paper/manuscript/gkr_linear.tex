@@ -94,7 +94,7 @@ In this paper, we propose a new algorithm to reduce the prover time of the sumch
 			\State Set $\textbf{G}[0] = 1$
 			\For{$i=0,\ldots,\ell-1$}
 			\For{$b\in\binary^i$}
-			\State $\textbf{G}[b,0] = \textbf{G}[b]\cdot(1-g_{i+1})$
+			\State $\textbf{G}[b,0] = \textbf{G}[b]\cdot(1-g_{i+1})$ \Comment{$g_{i+1}$ is the $(i+1)$-th element in $g$.}
 			\State $\textbf{G}[b,1] = \textbf{G}[b]\cdot g_{i+1}$
 			\EndFor
 			\EndFor
@@ -110,7 +110,7 @@ In this paper, we propose a new algorithm to reduce the prover time of the sumch
 			\State $\textbf{G}\leftarrow\mathsf{Precompute}(g), \textbf{H}\leftarrow\mathsf{Init\_PhaseOne}(G,f_1, f_3)$. 
 			%\State $\textbf{A}_2\leftarrow\mathsf{Init}(f_2)$
 			%\State Run $\mathsf{Update}(\textbf{H},u)$ and $\mathsf{Update}(\textbf{A}_2,u)$ simultaneously. At step~\ref{alg::dynamic::sum}, compute $\sum_{b\in\binary^{\ell-i}}h_g(u_1,\ldots, u_{i-1}, t, b)\cdot f_2(u_1,\ldots, u_{i-1}, t, b)$ for $t\in\{0,1,2\}$ and send to the verifier.
-			\State Run Algorithm 1 on $\textbf{H}$ and $\textbf{A}_2$, where $\textbf{A}_2$ is the array that defines $f_2$. 
+			\State Run Algorithm 1 on $\textbf{H}$ and $\textbf{A}_2$ separately. $\textbf{A}_2$ is the array that defines $f_2$. 
 			\For{$i=1,\ldots,\ell$}
 			\For{$t\in\{0,1,2\}$}
 			\State \textbf{return}  $\sum_{b\in\binary^{\ell-i}}h_g(u_1,\ldots, u_{i-1}, t, b)\cdot f_2(u_1,\ldots, u_{i-1}, t, b)$.
@@ -158,7 +158,7 @@ The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\el
 			\Procedure{{\sf Prove\_PhaseTwo}}{$\textbf{G}, f_1, f_3, f_2(u), u, v$}
 			
 			\State $\textbf{A}_1\leftarrow\mathsf{Init\_PhaseTwo}(u,f_1,\textbf{G})$. 
-			\State Run Algorithm 1 on $\textbf{A}_1$ and $\textbf{A}_3$, where $\textbf{A}_3$ is the array that defines $f_3$. 
+			\State Run Algorithm 1 on $\textbf{A}_1$ and $\textbf{A}_3$ separately. $\textbf{A}_3$ is the array that defines $f_3$. 
 			\For{$i=1,\ldots,\ell$}
 			\For{$t\in\{0,1,2\}$}
 			\State \textbf{return} $\sum_{b\in\binary^{\ell-i}}f_1(g,u, v_1, \ldots,v_{i-1}, t, b)\cdot f_2(u)\cdot f_3(v_1, \ldots,v_{i-1}, t, b)$
