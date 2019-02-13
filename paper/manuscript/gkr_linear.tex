@@ -8,45 +8,76 @@ In this section, we present our improvements on the GKR protocol~\cite{GKR} to m
 
 Let us consider the sumcheck problem on a particular class of polynomials with specific properties. The sumcheck problem is defined as computing:
 \begin{equation}\label{eq:linearsc}
-f_0(g) = \sum\limits_{x,y\in\binary^\ell}f_1(g,x,y)f_2(x)f_3(y)\, ,
+f_0(g) = \sum\nolimits_{x,y\in\binary^\ell}f_1(g,x,y)f_2(x)f_3(y)\, ,
 \end{equation}
-for a random point $g\in\mathbb{F}^\ell$, where $f_0,f_2,f_3: \mathbb{F}^\ell\rightarrow\mathbb{F}$ are multilinear polynomials and $f_0(x), f_2(x)$ and $f_3(x)$ can be computed in constant time for all $x\in\binary^\ell$. $f_1:\mathbb{F}^{3\ell}\rightarrow\mathbb{F}$ is the multilinear extension of a sparse array with $O(2^\ell)$ (out of $2^{3\ell}$ possible) nonzero elements. 
+for a random point $g\in\mathbb{F}^\ell$, where $f_0(x), f_2(x),f_3(x): \F^\ell\rightarrow \F$ are multilinear extensions of arrays of size $2^\ell$. $f_1:\mathbb{F}^{3\ell}\rightarrow\mathbb{F}$ is the multilinear extension of a sparse array with $O(2^\ell)$ (out of $2^{3\ell}$ possible) nonzero elements. 
 It is not hard to see that the sumcheck polynomials in GKR given by Equation~\ref{eq:GKR} and~\ref{eq:randomGKR} satisfy these properties.
 
-Before presenting our new linear time algorithm for the prover on~\ref{eq:linearsc}, we first describe a building block, namely an efficient algorithm on a simpler sumcheck problem. In~\cite{JT_Thesis}, Thaler proposed a dynamic programming algorithm with linear prover time $O(2^\ell)$ for the sumcheck protocol on $$\sum\limits_{x\in\binary^\ell}f(x)\, ,$$ where $f$ is a multilinear polynomial. In particular, as described in Section~\ref{subsec::sumcheck}, in the $i$-th round ($i\le \ell$), $\P$ sends $\V$ a univariate polynomial of $x_i$: $$\sum\limits_{b_{i+1}, \ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ where $r_1, \ldots, r_{i-1}$ are random values chosen by $\V$ in previous rounds. The degree of the univariate polynomial is 1 as $f$ is multilinear, so it suffices to send 2 evaluations of the polynomial to $\V$ at points $t = 0,1$. To compute the evaluations, the idea is that in the $i$-th round, $\P$ stores an array of values $f(r_1,\ldots, r_{i-1}, b_{i}, b_{i+1},\ldots, b_{\ell})$ for all $b_i,\ldots,b_\ell\in\binary$. The size of this array is $2^{\ell-i+1}$. With this array, $f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})$ can be computed in constant time (see step~\ref{alg::dynamic::compute} of the Algorithm~\ref{alg::dynamic}). Therefore, prover's message $\sum\limits_{b_{i+1}, \ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})$ for $t=0,1$ can be computed in time $O(2^{\ell-i+1})$ by summing up all the values in the previous step. In addition, the array that will be used in the $(i+1)$-th round can be computed in time $O(2^{\ell-i+1})$ from the array in the $i$-th round (step~\ref{alg::dynamic::update}).  In this way, the total complexity of generating all the messages in the sumcheck protocol is $O(2^{\ell})+ O(2^{\ell-1}) + O(2^{\ell-2}) + \ldots = O(2^\ell)$. The full protocol is given in Algorithm~\ref{alg::dynamic}. 
+Before presenting our new linear time algorithm for the prover on~\ref{eq:linearsc}, we first describe a building block, namely an efficient algorithm on a simpler sumcheck problem. In~\cite{JT_Thesis}, Thaler proposed a dynamic programming algorithm with linear prover time $O(2^\ell)$ for the sumcheck protocol on $$\sum\nolimits_{x\in\binary^\ell}f(x)\, ,$$ where $f$ is a multilinear extension of an array. In particular, as described in Section~\ref{subsec::sumcheck}, in the $i$-th round ($i\le \ell$), $\P$ sends $\V$ a univariate polynomial of $x_i$: $$\sum\nolimits_{b_{i+1}, \ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ where $r_1, \ldots, r_{i-1}$ are random values chosen by $\V$ in previous rounds. The degree of the univariate polynomial is 1 as $f$ is multilinear, so it suffices to send 2 evaluations of the polynomial to $\V$ at points $t = 0,1$. 
 
+To compute these evaluations, the idea is that in the $i$-th round, $\P$ stores an array of values $f(r_1,\ldots, r_{i-1}, b_{i}, b_{i+1},\ldots, b_{\ell})$ for all $b_i,\ldots,b_\ell\in\binary$. The size of this array is $2^{\ell-i+1}$. With this array, $f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})$ for either $t=0$ or $t=1$ can be computed in constant time (see step~\ref{alg::dynamic::compute} of the Algorithm~\ref{alg::dynamic}). Therefore, prover's message
+\[
+\sum\nolimits_{b_{i+1},\ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})
+\]
+for $t=0$ and $t=1$ can be computed in time $O(2^{\ell-i+1})$ by summing up all the values in the previous step. In addition, the array that will be used in the $(i+1)$-th round can be computed in time $O(2^{\ell-i+1})$ from the array in the $i$-th round (step~\ref{alg::dynamic::update}).  In this way, the total complexity of generating all the messages in the sumcheck protocol is $O(2^{\ell})+ O(2^{\ell-1}) + O(2^{\ell-2}) + \ldots = O(2^\ell)$. The full protocol is given in Algorithm~\ref{alg::dynamic} (to be compatible with algorithms later, we set $t=0,1,2$, which does not affect the complexity). 
 
-
-\begin{figure}[b!]
+\begin{figure}[t!]
     \vspace{-.5in}
 	\begin{algorithm}[H]
 		\caption{sumcheck on $\sum_{x\in\binary^\ell}f(x)$}\label{alg::dynamic}
+		\hspace*{\algorithmicindent} \textbf{Input:} Array \textbf{A}, its multilinear extension $f:\F^\ell \rightarrow \F$, randomness $r_1,\ldots,r_\ell$;  \\
+    \hspace*{\algorithmicindent} \textbf{Output:} The messages of the prover  in sumcheck protocol on $\sum_{x\in\binary^\ell}f(x)$;  
 		\begin{algorithmic}[1]
-			\Procedure{{\sf Init}}{$f(x)$}
-			\For{$b\in\binary^{\ell}$}
-			\State $\textbf{A}[b] = f(b)$ \Comment{$b$ represents both a number and its binary representation.}
-			\EndFor
-			\EndProcedure
-			\Procedure{\sf Update}{$\textbf{A}, r$} \Comment{This is an interactive protocol with the verifier.}
+		
 			\For{$i = 1, \ldots, \ell$} 
-				\For{$b\in\binary^{\ell-i}$}
-					\For{$t\in\{0,1\}$} 
+				\For{$b\in\binary^{\ell-i}$} \Comment{$b$ is both a number and its binary representation.}
+					\For{$t\in\{0,1,2\}$} 
 					\State\label{alg::dynamic::compute} Compute $f(r_1,\ldots, r_{i-1}, t, b) = \textbf{A}[b]\cdot(1-t)+\textbf{A}[b+2^{\ell-i}]\cdot t$
 					\EndFor
 					
-					\State\label{alg::dynamic::update} $\textbf{A}[b]=\textbf{A}[b]\cdot(1-r_i)+\textbf{A}[b+2^{s_{i+1}-j}]\cdot r_i$
+					\State\label{alg::dynamic::update} $\textbf{A}[b]=\textbf{A}[b]\cdot(1-r_i)+\textbf{A}[b+2^{\ell-i}]\cdot r_i$
 				\EndFor
-				\For{$t\in\{0,1\}$} 
-					\State\label{alg::dynamic::sum} Compute $\sum_{b\in\binary^{\ell-i}}f(r_1,\ldots, r_{i-1}, t, b)$ and send to $\V$.
+				\For{$t\in\{0,1,2\}$} 
+					\State\label{alg::dynamic::sum} \textbf{return} $\sum_{b\in\binary^{\ell-i}}f(r_1,\ldots, r_{i-1}, t, b)$
 				\EndFor
+				
 			\EndFor
-			\EndProcedure
+			
 		\end{algorithmic}
 	\end{algorithm}
-%	\vspace{-.5in}
+	\vspace{-.5in}
 \end{figure}
 
-Unfortunately, this algorithm does not work efficiently for the sumcheck on Equation~\ref{eq:linearsc}. This is because $f_1$ has $2^{2\ell}$ variables to sum on and naively applying Algorithm~\ref{alg::dynamic} would incur quadratic prover time $O(2^{2\ell}) = O(L^2)$, where $L = 2^\ell$. Alternatively, as $f_1$ is sparse, instead of storing $f_1(x,y)$ for all $x,y\in\binary^\ell$ in $\mathsf{Init}$, $\P$ can store only the $O(2^\ell)$ nonzero values. This is exactly the approach used in many prior work~\cite{CMT,wahby2017full,vram}. However, with this approach, as $f_1$ is sparse, the number of nonzero values is not always reduced to half after every update in step~\ref{alg::dynamic::update}. Therefore, the overall complexity becomes $O(\ell 2^\ell) = L\log L$.
+% \begin{figure}[b!]
+%     \vspace{-.5in}
+% 	\begin{algorithm}[H]
+% 		\caption{sumcheck on $\sum_{x\in\binary^\ell}f(x)$}\label{alg::dynamic}
+% 		\begin{algorithmic}[1]
+% 			\Procedure{{\sf Init}}{$f(x)$}
+% 			\For{$b\in\binary^{\ell}$}
+% 			\State $\textbf{A}[b] = f(b)$ \Comment{$b$ represents both a number and its binary representation.}
+% 			\EndFor
+% 			\EndProcedure
+% 			\Procedure{\sf Update}{$\textbf{A}, r$} \Comment{This is an interactive protocol with the verifier.}
+% 			\For{$i = 1, \ldots, \ell$} 
+% 				\For{$b\in\binary^{\ell-i}$}
+% 					\For{$t\in\{0,1\}$} 
+% 					\State\label{alg::dynamic::compute} Compute $f(r_1,\ldots, r_{i-1}, t, b) = \textbf{A}[b]\cdot(1-t)+\textbf{A}[b+2^{\ell-i}]\cdot t$
+% 					\EndFor
+					
+% 					\State\label{alg::dynamic::update} $\textbf{A}[b]=\textbf{A}[b]\cdot(1-r_i)+\textbf{A}[b+2^{\ell-i}]\cdot r_i$
+% 				\EndFor
+% 				\For{$t\in\{0,1\}$} 
+% 					\State\label{alg::dynamic::sum} Compute $\sum_{b\in\binary^{\ell-i}}f(r_1,\ldots, r_{i-1}, t, b)$ and send to $\V$.
+% 				\EndFor
+% 			\EndFor
+% 			\EndProcedure
+% 		\end{algorithmic}
+% 	\end{algorithm}
+% %	\vspace{-.5in}
+% \end{figure}
+
+Unfortunately, this algorithm does not work efficiently for the sumcheck on Equation~\ref{eq:linearsc}. This is because $f_1$ has $2^{2\ell}$ variables to sum on and naively applying Algorithm~\ref{alg::dynamic} would incur quadratic prover time $O(2^{2\ell}) = O(L^2)$, where $L = 2^\ell$. Alternatively, as $f_1$ is sparse, instead of storing $f_1(x,y)$ for all $x,y\in\binary^\ell$, $\P$ can store only the $O(2^\ell)$ nonzero values. This is exactly the approach used in many prior work~\cite{CMT,wahby2017full,vram}. However, with this approach, as $f_1$ is sparse, the number of nonzero values is not always reduced to half after every update in step~\ref{alg::dynamic::update}. Therefore, the overall complexity becomes $O(\ell 2^\ell) = L\log L$.
 
 %We start with the sumcheck protocol to reduce a claim on layer $i$ to two claims on layer $i+1$, as defined in Definition~\ref{def::multilinear}. As shown in~\cite{CMT}, in the sumcheck protocol, the parts corresponding to $\tV_{i+1}(u)$ (and $\tV_{i+1}(v)$) can be computed in linear time by the prover using a dynamic programming technique. In particular, as introduced in Section~\ref{subsec::sumcheck}, in the $j$-th round of the sumcheck protocol, in order to compute the univariate polynomial to be sent to the verifier, the prover needs to compute $\tV_{i+1}(r_1, \ldots, r_{j-1}, t, u_{j+1}, \ldots, u_l)$ $\forall (u_{j+1},\ldots,u_l)\in\binary^{l-j}$ and $t = 0,1,2$ (as the degree of the univariate polynomial is 2 in the sumcheck of GKR, it suffices to send its evaluations on 3 points). To do this efficiently, the prover initializes an array $\textbf{V}$ of size $2^{s_{i+1}}$ storing all evaluations of $\tV_{i+1}$ on the Boolean hypercube (i.e., $\tV_{i+1}(b) = V_{i+1}(b)$, $\forall b\in\{0,1\}^{s_{i+1}}$). Starting from the first round, the prover can compute each term defined above in constant time using $\textbf{V}$ (step~\ref{alg::dynamic::compute} of the Algorithm~\ref{alg::dynamic}). The array is then updated to half of the size based on the random number chosen by the verifier in this round, as in step~\ref{alg::dynamic::update}. In this way, the total complexity is $O(2^{s_{i+1}})+ O(2^{s_{i+1}-1}) + O(2^{s_{i+1}-2}) + \ldots = O(2^{s_{i+1}})$. The full protocol is given in Algorithm~\ref{alg::dynamic}. 
 %
@@ -59,7 +90,7 @@ In this paper, we propose a new algorithm to reduce the prover time of the sumch
 	\begin{algorithm}[H]
 		\caption{Phase 1 in sumcheck}\label{alg::phase1}
 		\begin{algorithmic}[1]
-			\Procedure{{\sf Precompute}}{$g$}
+			\Procedure{{$\textbf{G}\leftarrow$  \sf Precompute}}{$g$}    \Comment{$g\in\F^\ell$, $\textbf{G}$ is an array of size $2^\ell$.}
 			\State Set $\textbf{G}[0] = 1$
 			\For{$i=0,\ldots,\ell-1$}
 			\For{$b\in\binary^i$}
@@ -68,16 +99,23 @@ In this paper, we propose a new algorithm to reduce the prover time of the sumch
 			\EndFor
 			\EndFor
 			\EndProcedure
-			\Procedure{{\sf Init\_PhaseOne}}{$\textbf{G}, f_3$}
+			\Procedure{{$\textbf{H}\leftarrow$\sf Init\_PhaseOne}}{$\textbf{G}, f_1, f_3$} \Comment{\textbf{H} is an array of size $2^\ell$.}
 			\State Initialize $\textbf{H}[b] = 0$ for $b\in\binary^\ell$
 			\For{Every nonzero element in the array that defines $f_1$}
 			\State Parse the index of the element as $b_1,b_2,b_3\in\binary^\ell$
 			\State\label{alg::phase1::init} $\textbf{H}[b_2] = \textbf{H}[b_2]+ \textbf{G}[b_1]\cdot f_3(b_3)$
 			\EndFor
 			\EndProcedure
-			\Procedure{{\sf Prove\_PhaseOne}}{$\textbf{H}, f_2$}
-			\State $\textbf{A}_2\leftarrow\mathsf{Init}(f_2)$
-			\State Run $\mathsf{Update}(\textbf{H},u)$ and $\mathsf{Update}(\textbf{A}_2,u)$ simultaneously. At step~\ref{alg::dynamic::sum}, compute $\sum_{b\in\binary^{\ell-i}}h_g(u_1,\ldots, u_{i-1}, t, b)\cdot f_2(u_1,\ldots, u_{i-1}, t, b)$ for $t\in\{0,1,2\}$ and send to the verifier.
+			\Procedure{{\sf Prove\_PhaseOne}}{$f_1, f_2, f_3, g, u$}
+			\State $\textbf{G}\leftarrow\mathsf{Precompute}(g), \textbf{H}\leftarrow\mathsf{Init\_PhaseOne}(G,f_1, f_3)$. 
+			%\State $\textbf{A}_2\leftarrow\mathsf{Init}(f_2)$
+			%\State Run $\mathsf{Update}(\textbf{H},u)$ and $\mathsf{Update}(\textbf{A}_2,u)$ simultaneously. At step~\ref{alg::dynamic::sum}, compute $\sum_{b\in\binary^{\ell-i}}h_g(u_1,\ldots, u_{i-1}, t, b)\cdot f_2(u_1,\ldots, u_{i-1}, t, b)$ for $t\in\{0,1,2\}$ and send to the verifier.
+			\State Run Algorithm 1 on $\textbf{H}$ and $\textbf{A}_2$, where $\textbf{A}_2$ is the array that defines $f_2$. 
+			\For{$i=1,\ldots,\ell$}
+			\For{$t\in\{0,1,2\}$}
+			\State \textbf{return}  $\sum_{b\in\binary^{\ell-i}}h_g(u_1,\ldots, u_{i-1}, t, b)\cdot f_2(u_1,\ldots, u_{i-1}, t, b)$.
+			\EndFor
+			\EndFor
 			\EndProcedure
 		\end{algorithmic}
 	\end{algorithm}
@@ -89,37 +127,46 @@ In this paper, we propose a new algorithm to reduce the prover time of the sumch
 \paragraph{Phase one.} 
 During the first $\ell$ rounds, as $y$ does not change (always being summed on the Boolean hypercube), we can write Equation~\ref{eq:linearsc} as 
 \[
-f_0(g) = \sum_{x\in\binary^\ell} h_g(x)f_2(x),
+f_0(g) = \sum\nolimits_{x\in\binary^\ell} h_g(x)f_2(x),
 \]
-where $h_g(x) = \sum_{y\in\binary^\ell}f_1(g,x,y)f_3(y)$. Note here that both $h_g(x)$ and $f_2(x)$ contain only $\ell$ variables. We can use algorithm $\mathsf{Update}$ in Algorithm~\ref{alg::dynamic} on both to compute the messages in this phase in linear time. However, $\mathsf{Update}$ requires an array initialized with $h_g(b)$ for all $b\in\binary^\ell$. Here we utilize the sparsity of $f_1$ to develop an efficient algorithm for the initialization.
+where $h_g(x) = \sum_{y\in\binary^\ell}f_1(g,x,y)f_3(y)$. Note here that both $h_g(x)$ and $f_2(x)$ contain only $\ell$ variables. We can use Algorithm~\ref{alg::dynamic} on both to compute the messages in this phase in linear time. However, Algorithm~\ref{alg::dynamic} requires an array that defines $h_g$, i.e., $h_g(b)$ for all $b\in\binary^\ell$. Here we utilize the sparsity of $f_1$ to develop an efficient algorithm for the initialization.
 
-The way to do so is as following: instead of iterating through all possible $g,x,y$s, we only go through the nonzero elements that defines $f_1$. We first compute an array \textbf{G} where $\textbf{G}[b] = \prod_{i=1}^\ell ((1-g_i)(1-b_i)+g_ib_i)$ for $b\in\binary^\ell$. This can be computed in $O(2^\ell)$ as shown in Algorithm~\ref{alg::phase1}. Then for each nonzero element in the array of $f_1$, let its index be $(b_1,b_2,b_3) \in\binary^{3\ell}$, add $\textbf{G}[b_1]\cdot f_3(b_3)$ to $\textbf{H}[b_2]$. One can see that by doing so, $\textbf{H}[b] = h_g(b)$ $\forall b\in\binary^\ell$. After initializing $\textbf{H}$, we can use the dynamic programming in Algorithm~\ref{alg::dynamic} to generate the messages and update both $h_g(x)$ and $f_2(x)$. In this way, the prover runs in $O(2^\ell)$ in phase one. The full protocol is presented in Algorithm~\ref{alg::phase1}.
+The way to do so is as following: instead of iterating through all possible $g,x,y$, we only go through the nonzero elements in the array that defines $f_1$. We first compute an array \textbf{G} where $\textbf{G}[b] = \prod_{i=1}^\ell ((1-g_i)(1-b_i)+g_ib_i)$ for $b\in\binary^\ell$. This can be computed in $O(2^\ell)$ as shown in Algorithm~\ref{alg::phase1}. Then for each nonzero element in the array of $f_1$, let its index be $(b_1,b_2,b_3) \in\binary^{3\ell}$, add $\textbf{G}[b_1]\cdot f_3(b_3)$ to $\textbf{H}[b_2]$. One can see that by doing so, $\textbf{H}[b] = h_g(b)$ $\forall b\in\binary^\ell$. After initializing $\textbf{H}$, we can use the dynamic programming in Algorithm~\ref{alg::dynamic} to generate the messages and update both $h_g(x)$ and $f_2(x)$. In this way, the prover runs in $O(2^\ell)$ in phase one. The full protocol is presented in Algorithm~\ref{alg::phase1}.
 
 
 \paragraph{Phase two.} At this point, all variables in $x$ have been bounded to random numbers $u$. In the second phase, the equation to sum on becomes 
 \[
-\sum_{y\in\{0,1\}^\ell}f_1(g,u,y)f_2(u)f_3(y)
+\sum\nolimits_{y\in\{0,1\}^\ell}f_1(g,u,y)f_2(u)f_3(y)
 \]
 Note here that $f_2(u)$ is merely a single value which we already computed in phase one at the end of the dynamic programming for $f_2(x)$. Both $f_1(g,u,y)$ and $f_3(y)$ are polynomials on $y$ with $\ell$ variables. Similar to phase one, it remains to initialize an array for $f_1(g,u,b)$ for $b\in\{0,1\}^\ell$, and we can then use Algorithm~\ref{alg::dynamic} on both of them.
 
-The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\ell ((1-u_i)(1-b_i)+u_ib_i)$ using procedure $\mathsf{Precompute}(u)$ in Algorithm~\ref{alg::phase1}. Then for each nonzero element with index $b_1,b_2,b_3$ that defines $f_1$, add $\textbf{G}[b_1]\cdot\textbf{U}[b_2]$ to $\textbf{A}_1[b_3]$. In this way, $\textbf{A}_1[b_3]=f_1(g,u,b_3)$ $\forall b_3\in\binary^\ell$. Then we use Algorithm~\ref{alg::dynamic} on both $\textbf{A}_1$ and $f_3(y)$ to run the sumcheck in this phase in linear time. The protocol is presented in Algorithm~\ref{alg::phase2}.
+The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\ell ((1-u_i)(1-b_i)+u_ib_i)$ using procedure $\mathsf{Precompute}(u)$ in Algorithm~\ref{alg::phase1}. Then for each nonzero element with index $b_1,b_2,b_3$ that defines $f_1$, add $\textbf{G}[b_1]\cdot\textbf{U}[b_2]$ to $\textbf{A}_1[b_3]$. In this way, $\textbf{A}_1[b_3]=f_1(g,u,b_3)$ $\forall b_3\in\binary^\ell$. Then we use Algorithm~\ref{alg::dynamic} on both $f_1(g,u,y)$ and $f_3(y)$ to run the sumcheck in this phase in linear time. The protocol is presented in Algorithm~\ref{alg::phase2}.
 
 
 \begin{figure}[t!]
 	\begin{algorithm}[H]
 		\caption{Phase 2 in sumcheck}\label{alg::phase2}
 		\begin{algorithmic}[1]
-			\Procedure{{\sf Init\_PhaseTwo}}{$u$}
-			\State Set $\textbf{U} = \mathsf{Precompute}(u)$
+			\Procedure{{$\textbf{A}_1\leftarrow$\sf Init\_PhaseTwo}}{$u, f_1, \textbf{G}$} \Comment{$u\in\F^\ell$, $\textbf{A}_1$ is an array of size $2^\ell$.}
+			\State Set $\textbf{U} \leftarrow \mathsf{Precompute}(u)$
 			\State Initialize $\textbf{A}_1[b] = 0$ for $b\in\binary^\ell$
 			\For{Every nonzero element in the array that defines $f_1$}
 			\State Parse the index of the element as $b_1,b_2,b_3\in\binary^\ell$
 			\State\label{alg::phase2::init} $\textbf{A}_1[b_3] = \textbf{A}_1[b_3]+ \textbf{G}[b_1]\cdot\textbf{U}[b_2]$
 			\EndFor
 			\EndProcedure
-			\Procedure{{\sf Prove\_PhaseTwo}}{$\textbf{A}_1, f_3$}
-			\State $\textbf{A}_3\leftarrow\mathsf{Init}(f_3)$
-			\State Run $\mathsf{Update}(\textbf{A}_1, v)$ and $\mathsf{Update}(\textbf{A}_3,v)$ simultaneously. At step~\ref{alg::dynamic::sum}, compute $\sum_{b\in\binary^{\ell-i}}f_1(g,u, v_1, \ldots,v_{i-1}, t, b)\cdot f_2(u)\cdot f_3(v_1, \ldots,v_{i-1}, t, b)$ for $t\in\{0,1,2\}$ and send to the verifier.
+			\Procedure{{\sf Prove\_PhaseTwo}}{$\textbf{G}, f_1, f_3, f_2(u), u, v$}
+			
+			\State $\textbf{A}_1\leftarrow\mathsf{Init\_PhaseTwo}(u,f_1,\textbf{G})$. 
+			\State Run Algorithm 1 on $\textbf{A}_1$ and $\textbf{A}_3$, where $\textbf{A}_3$ is the array that defines $f_3$. 
+			\For{$i=1,\ldots,\ell$}
+			\For{$t\in\{0,1,2\}$}
+			\State \textbf{return} $\sum_{b\in\binary^{\ell-i}}f_1(g,u, v_1, \ldots,v_{i-1}, t, b)\cdot f_2(u)\cdot f_3(v_1, \ldots,v_{i-1}, t, b)$
+			\EndFor
+			\EndFor
+			
+			%\State $\textbf{A}_3\leftarrow\mathsf{Init}(f_3)$
+			%\State Run $\mathsf{Update}(\textbf{A}_1, v)$ and $\mathsf{Update}(\textbf{A}_3,v)$ simultaneously. At step~\ref{alg::dynamic::sum}, compute $\sum_{b\in\binary^{\ell-i}}f_1(g,u, v_1, \ldots,v_{i-1}, t, b)\cdot f_2(u)\cdot f_3(v_1, \ldots,v_{i-1}, t, b)$ for $t\in\{0,1,2\}$ and send to the verifier.
 			\EndProcedure
 		\end{algorithmic}
 	\end{algorithm}
@@ -132,7 +179,7 @@ The way is to compute an array \textbf{U} where $\textbf{U}[b] = \prod_{i=0}^\el
 Our technique can be extended to sumchecks with a general form below:
 
 \[
-f(g) = \sum\limits_{x_1, x_2, ..., x_c\in\binary^\ell}f_0(g,x_1, x_2, ..., x_c)f_1(x_1)f_2(x_2)...f_c(x_c)\, ,
+f(g) = \sum\nolimits_{x_1, x_2, ..., x_c\in\binary^\ell}f_0(g,x_1, x_2, ..., x_c)f_1(x_1)f_2(x_2)...f_c(x_c)\, ,
 \]
 where $c$ is a constant, $f$s are multilinear and $f_0()$ is sparse and consists of linearly many nonzero monomials. We divide the protocol into $c$ phases similar to the algorithms described above. This generalization captures the sumcheck in the original GKR paper with identity polynomials (see~\cite{GKR}), and our new algorithms also improve the prover time of it to linear.
 

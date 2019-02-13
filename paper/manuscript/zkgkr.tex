@@ -10,8 +10,8 @@ In this paper, we follow the same blueprint of combining GKR and VPD to obtain a
 As a core step of the GKR protocol, $\P$ and $\V$ execute a sumcheck protocol on Equation~\ref{eq:GKR}, during which $\P$ sends $\V$ evaluations of the polynomial at several random points chosen by $\V$. These evaluations leak information about the values in the circuit, as they can be viewed as weighted sums of these values
 
 To make the sumcheck protocol zero-knowledge, we take the approach proposed by Chiesa et al. in \cite{zksumcheck}, which is masking the polynomial in the sumcheck protocol by a random polynomial. In this approach, to prove 
-$$H = \sum\nolimits_{x_1, x_2, \cdots, x_\ell \in \binary}f(x_1, x_2, \cdots, x_\ell)$$
-, the prover generates a random polynomial $g$ with the same variables and individual degrees of $f$. She commits to the polynomial $g$, and sends the verifier a claim $G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}g(x_1, x_2, \cdots, x_\ell)$. The verifier picks a random number $\rho$, and execute a sumcheck protocol with the prover on $$H + \rho G = \sum\nolimits_{x_1, x_2, \cdots, x_\ell \in \{0, 1\}}(f(x_1, x_2, \cdots, x_\ell) + \rho g(x_1, x_2, \cdots, x_\ell)).$$ At the last round of this sumcheck, the prover opens the commitment of $g$ at $g(r_1, \ldots, r_\ell)$, and the verifier computes $f(r_1, \ldots, r_l)$ by subtracting $\rho g(r_1, \ldots, r_\ell)$ from the last message, and compares it with the oracle access of $f$. It is shown that as long as the commitment and opening of $f$ are zero-knowledge, the protocol is zero-knowledge. Intuitively, this is because all the coefficients of $f$ are masked by those of $g$. The soundness still holds because of the random linear combination of $f$ and $g$. 
+$$H = \sum\nolimits_{x_1, x_2, \ldots, x_\ell \in \binary}f(x_1, x_2, \ldots, x_\ell)$$
+, the prover generates a random polynomial $g$ with the same variables and individual degrees of $f$. She commits to the polynomial $g$, and sends the verifier a claim $G = \sum\limits_{x_1, x_2, \ldots, x_\ell \in \binary}g(x_1, x_2, \ldots, x_\ell)$. The verifier picks a random number $\rho$, and execute a sumcheck protocol with the prover on $$H + \rho G = \sum\nolimits_{x_1, x_2, \ldots, x_\ell \in \{0, 1\}}(f(x_1, x_2, \ldots, x_\ell) + \rho g(x_1, x_2, \ldots, x_\ell)).$$ At the last round of this sumcheck, the prover opens the commitment of $g$ at $g(r_1, \ldots, r_\ell)$, and the verifier computes $f(r_1, \ldots, r_l)$ by subtracting $\rho g(r_1, \ldots, r_\ell)$ from the last message, and compares it with the oracle access of $f$. It is shown that as long as the commitment and opening of $f$ are zero-knowledge, the protocol is zero-knowledge. Intuitively, this is because all the coefficients of $f$ are masked by those of $g$. The soundness still holds because of the random linear combination of $f$ and $g$. 
 
 Unfortunately, the masking polynomial $g$ is as big as $f$, and opening it to a random point later is expensive. In~\cite{zksumcheck}, the prover sends a PCP oracle of $g$, and executes a zero-knowledge sumcheck to open it to a random point, which incurs an exponential complexity for the prover. Even replacing it with the zkVPD protocol in~\cite{zkvpd}, the prover time is slow in practice.
 
@@ -26,14 +26,14 @@ The intuition of our improvement is that the prover sends $O(d\ell)$ messages in
 \framebox{\parbox{.99\linewidth}{
 \begin{construction}
 \label{construction::zksumcheck}
-We assume the existence of a zkVPD protocol defined in Section~\ref{subsec::zkvpd}. For simplicity, we omit the randomness $r_f$ and public parameters $\pp,\vp$ without any ambiguity. To prove the claim $H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$:
+We assume the existence of a zkVPD protocol defined in Section~\ref{subsec::zkvpd}. For simplicity, we omit the randomness $r_f$ and public parameters $\pp,\vp$ without any ambiguity. To prove the claim $H = \sum\limits_{x_1, x_2, \ldots, x_\ell \in \binary} f(x_1, x_2, \ldots, x_\ell)$:
 \begin{enumerate}
 
-\item $\P$ selects a polynomial $g(x_1,\ldots, x_\ell) = a_{0} + g_1(x_1) + g_2(x_2) + \cdots + g_l(x_\ell)$, where $g_{i}(x_i) = a_{i,1}x_i + a_{i,2}x_i^2 + \cdots + a_{i,d}x_i^d$ and all $a_{i,j}$s are uniformly random. $\P$ sends $H = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$, $G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary} g(x_1, x_2, \cdots, x_\ell)$ and $\comm_g = \Commit(g)$ to $\V$.
+\item $\P$ selects a polynomial $g(x_1,\ldots, x_\ell) = a_{0} + g_1(x_1) + g_2(x_2) + \ldots + g_l(x_\ell)$, where $g_{i}(x_i) = a_{i,1}x_i + a_{i,2}x_i^2 + \ldots + a_{i,d}x_i^d$ and all $a_{i,j}$s are uniformly random. $\P$ sends $H = \sum\limits_{x_1, x_2, \ldots, x_\ell \in \binary} f(x_1, x_2, \ldots, x_\ell)$, $G = \sum\limits_{x_1, x_2, \ldots, x_\ell \in \binary} g(x_1, x_2, \ldots, x_\ell)$ and $\comm_g = \Commit(g)$ to $\V$.
 \item $\V$ uniformly selects $\rho \in \mathbb{F}^*$, computes $H+\rho G$ and sends $\rho$ to $\P$.
 \item $\P$ and $\V$ run the sumcheck protocol on
-$$H + \rho G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}(f(x_1, x_2, \cdots, x_\ell) + \rho g(x_1, x_2, \cdots, x_\ell))$$
-\item At the last round of the sumcheck protocol, $\V$ obtains a claim $h_\ell(r_\ell) = f(r_1, r_2, \cdots, r_\ell)+\rho g(r_1, r_2, \cdots, r_\ell)$. $\P$ and $\V$ opens the commitment of $g$ at $r = (r_1,\ldots, r_\ell)$ by $(g(r), \pi)\leftarrow\Open(g,r), \Verify(\comm_g,g(r),r,\pi)$. If $\Verify$ outputs $\reject$, $\V$ aborts.
+$$H + \rho G = \sum\limits_{x_1, x_2, \ldots, x_\ell \in \binary}(f(x_1, x_2, \ldots, x_\ell) + \rho g(x_1, x_2, \ldots, x_\ell))$$
+\item At the last round of the sumcheck protocol, $\V$ obtains a claim $h_\ell(r_\ell) = f(r_1, r_2, \ldots, r_\ell)+\rho g(r_1, r_2, \ldots, r_\ell)$. $\P$ and $\V$ opens the commitment of $g$ at $r = (r_1,\ldots, r_\ell)$ by $(g(r), \pi)\leftarrow\Open(g,r), \Verify(\comm_g,g(r),r,\pi)$. If $\Verify$ outputs $\reject$, $\V$ aborts.
 \item $\V$ computes $h_\ell(r_\ell)-\rho g(r_1,\ldots,r_\ell)$ and compares it with the oracle access of $f(r_1,\ldots, r_\ell)$.
 
 \end{enumerate}
@@ -43,7 +43,7 @@ $$H + \rho G = \sum\limits_{x_1, x_2, \cdots, x_\ell \in \binary}(f(x_1, x_2, \c
 The completeness of the protocol holds obviously. The soundness follows the soundness of the sumcheck protocol and the random linear combination in step 2 and 3, as proven in~\cite{zksumcheck}. We give a proof of zero knowledge in Appendix~\ref{app:proofsc}.
 
 \begin{theorem}[Zero knowledge]\label{thm:zksc}
-	For every verifier $\V^*$ and every $\ell$-variate polynomial $f:\F^\ell\rightarrow\F$ with variable degree $d$, there exists a simulator $\S$ such that given access to $H = \sum\nolimits_{x_1, x_2, \cdots, x_\ell \in \binary} f(x_1, x_2, \cdots, x_\ell)$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-4 of Construction~\ref{construction::zksumcheck}. 
+	For every verifier $\V^*$ and every $\ell$-variate polynomial $f:\F^\ell\rightarrow\F$ with variable degree $d$, there exists a simulator $\S$ such that given access to $H = \sum\nolimits_{x_1, x_2, \ldots, x_\ell \in \binary} f(x_1, x_2, \ldots, x_\ell)$, $\S$ is able to simulate the partial view of $\V^*$ in step 1-4 of Construction~\ref{construction::zksumcheck}. 
 \end{theorem}
 
 
