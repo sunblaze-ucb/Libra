@@ -27,7 +27,8 @@ Directly computing the sum requires exponential time in $\ell$, as there are $2^
 \end{protocol}}}}}
 \vspace{-0.2in}
 \end{figure}
-The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial for each variable in $f$\babis{you mean the maximum degree accross all variableS?}\yupeng{formally defined in 2.1}, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
+The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial of one variable in $f$%\babis{you mean the maximum degree accross all variableS?}\yupeng{formally defined in 2.1}\dawn{minor comment: this sentence can be interpreted wrongly; in each round, P only sends one univariate polynomial, not a univariate polynomial for each variable}
+, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
 
 
 \begin{definition}[\textbf{Multi-linear Extension}]
