@@ -2,7 +2,7 @@
 \section{GKR Protocol with Linear Prover Time}
 \label{sec::gkrlin}
 
-In this section we present a new algorithm for the prover of the GKR protocol~\cite{GKR} that runs in linear time for \emph{arbitrary layered circuits}. Before that we present some necessary building blocks.
+In this section we present a new algorithm (see Algorithm~\ref{final_alg}) for the prover of the GKR protocol~\cite{GKR} that runs in linear time for \emph{arbitrary layered circuits}. Before that we present some necessary building blocks.
 %We start with presenting a new linear time algorithm for the prover on certain type of sumcheck protocols, and then show how to apply it to build a linear time GRK prover.
 
 \subsection{Linear-time sumcheck for a multilinear function~\cite{JT_Thesis}}
@@ -21,7 +21,7 @@ To compute the above sums the prover maintains a \emph{bookkeeping table} $\text
 \text{ and } f(r_1,\ldots, r_{i-1}, 1, b_{i+1},\ldots, b_{\ell})\,.$$ This is performed in constant time in Step~\ref{alg:func_eval} of Algorithm~\ref{alg:evaluate} \textsf{FunctionEvaluations}\footnote{To be compatible with other protocols later, we use three values $t=0,1,2$ in our evaluations instead of just two.}. Once these function evaluations are in place, the prover can easily sum over them and compute the required sumcheck messages as reguired by Relations~\ref{0-message} and~\ref{1-message}. This is done in Algorithm~\ref{alg:sumcheck} \textsf{SumCheck}\footnote{We note here that although these two steps  can be performed together in a single algorithm and without the need to store function evaluations, we explicitly decouple them with two different algorithms (\textsf{FunctionEvaluations} and \textsf{SumCheckMessages}) for facilitating the presentation of more advanced protocols later. }. 
 
 \paragraph{Complexity analysis.} 
-At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time: The first iteration takes $O(2^\ell)$, the second $O(2^{\ell-1})$ and so on, and therefore the bound holds. However, this analysis is correct provided the bookkeeping table $\textbf{A}$ for $f$ can be initialized in $O(2^\ell)$ time in Step~\ref{bookkeeping_step} of Algorithm~\ref{alg:evaluate}. As we will see in Section~\ref{particular} this is not always trivial to achieve. However, in case $f$ is provided as an array of evaluations on the hypercube, both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time. 
+At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time: The first iteration takes $O(2^\ell)$, the second $O(2^{\ell-1})$ and so on, and therefore the bound holds. However, this analysis is correct provided the bookkeeping table $\textbf{A}$ for $f$ can be initialized in $O(2^\ell)$ time in Step~\ref{bookkeeping_step} of Algorithm~\ref{alg:evaluate}. As we will see in Section~\ref{particular} this is not always trivial to achieve. However, when $f$ is a multilinear extension (which means the evaluations on the hypercube are given), both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time. 
 
 
 
@@ -37,7 +37,7 @@ At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg
    
 		\begin{algorithmic}[1]
 		 
-\State \label{bookkeeping_step}Let $\textbf{A}$ be the bookeeping table storing the evaluations of $f$ on the hypecube
+\State \label{bookkeeping_step}Initialize the bookeeping table $\textbf{A}$  storing the evaluations of $f$ on the hypecube
 					\For{$i = 1, \ldots, \ell$} 
 				\For{$b\in\binary^{\ell-i}$} \Comment{$b$ is both a number and its binary representation.} \label{step:consider_b}
 	\For{$t= 0,1,2$} 				
@@ -175,10 +175,12 @@ where $h_g(x) = \sum_{y\in\binary^\ell}f_1(g,x,y) f_3(y)$.
 
 
 \subsubsection{Phase one.} 
-To compute the sumcheck messages for the first $\ell$ rounds we  call $$\textsf{SumCheckProduct}(h_g(x),f_2(x),u_1,\ldots,u_\ell)$$ since functions $h_g$ and $f_2$ can be viewed as functions only in $x$---$y$ can be considered constant (it is always summed on the hypercube). By Lemma~\ref{main_lemma_complexity} this will take $O(2^\ell+T)$ time where $T$ is the time required to compute the bookkeeping tables of $h_g$ and $f_2$. We now show how to compute the bookkeeping tables in linear time.
+To compute the sumcheck messages for the first $\ell$ rounds we  call $$\textsf{SumCheckProduct}(h_g(x),f_2(x),u_1,\ldots,u_\ell)$$ since functions $h_g$ and $f_2$ can be viewed as functions only in $x$---$y$ can be considered constant (it is always summed on the hypercube). By Lemma~\ref{main_lemma_complexity} this will take $O(2^\ell+T)$ time where $T$ is the time required to initialize the bookkeeping tables of $h_g$ and $f_2$. We now show how to initialize the bookkeeping tables in linear time.
 
 \smallskip
-\noindent{\underline{\emph{Computing the bookkeeping tables:}} \\Computing the bookkeeping table for $f_2$  in $O(2^\ell)$ time is trivial, since $f_2$ is a multilinear extension of an array and therefore the evaluations on the hypercube are known. Computing the bookkeeping table for $h_g$ in $O(2^\ell)$ time is more challenging but we can leverage the sparsity of $f_1$. Before we present our main result (see Theorem~\ref{final_time}), let us define $\textbf{G}[z]$ for $z\in \binary^\ell$, with respect to the fixed point $g$, as $\prod_{i=1}^\ell ((1-g_i)(1-z_i)+g_iz_i))$. We now have the following lemmata:
+\noindent{\underline{\emph{Initializing the bookkeeping tables:}} \\Initializing the bookkeeping table for $f_2$  in $O(2^\ell)$ time is trivial, since $f_2$ is a multilinear extension of an array and therefore the evaluations on the hypercube are known. Initializing the bookkeeping table for $h_g$ in $O(2^\ell)$ time is more challenging but we can leverage the sparsity of $f_1$. Before we present our main result (see Theorem~\ref{final_time}), let us define $\textbf{G}[z]$ for $z\in \binary^\ell$, with respect to the fixed point $g$, as 
+$$\textbf{G}[z]=\prod_{i=1}^\ell ((1-g_i)(1-z_i)+g_iz_i))\,.$$ 
+We now have the following lemmata:
 
 \babis{pls write formal proofs of the lemmata below}
 
@@ -203,7 +205,7 @@ There exists an algorithm that runs in $O(2^\ell)$ time that computes $\textbf{\
 \end{proof}
 \end{lemma}
 \begin{lemma}\label{lemma_h_g}
-Let $\mathcal{N}_x$ be the set of $(z,x,y)\in \binary^{3\ell}$ such that $f_1(g,x,y)$ is non-zero. Then it is
+Let $\mathcal{N}_x$ be the set of $(z,x,y)\in \binary^{3\ell}$ such that $f_1(z,x,y)$ is non-zero. Then it is
 $h_g(x) = \sum_{(z,x,y)\in \mathcal{N}_x} \textbf{\emph{G}}[z]\cdot f_3(y)$.
 \end{lemma}
 \begin{proof}
@@ -223,11 +225,11 @@ Since $f_1$ has $O(2^\ell)$ non-zero terms it follows that $\sum |N_x|=O(2^\ell)
 Note here that $f_2(u)$ is merely a single value which we already computed in phase one. Both $f_1(g,u,y)$ and $f_3(y)$ are polynomials on $y$ with $\ell$ variables. Similar to phase one, to compute the messages for the last $\ell$ rounds we can call 
 $$\textsf{SumCheckProduct}(f_1(g,u,y) ,f_3(y)\cdot f_2(u) ,v_1,\ldots,v_\ell)\,.$$ 
 \smallskip
-\noindent{\underline{\emph{Computing the bookkeeping table for $f_1$:}} \\
-It now remains to compute the bookkeeping table for $f_1(g,u,y)$ efficiently. Again, we define $\textbf{U}[x]$ for $x\in \binary^\ell$, with respect to the fixed point $u$ (previous randomness), as $\prod_{i=1}^\ell ((1-u_i)(1-x_i)+u_ix_i)$. Note that by Lemma~\ref{lemma_g}, $\textbf{U}[x]$ for $x\in \binary^\ell$ can be computed in $O(2^\ell)$ time. Similarly we now have the following lemma.
+\noindent{\underline{\emph{Initializing the bookkeeping table for $f_1$:}} \\
+It now remains to initialize the bookkeeping table for $f_1(g,u,y)$ efficiently. Again, we define $\textbf{U}[x]$ for $x\in \binary^\ell$, with respect to the fixed point $u$ (previous randomness), as $\prod_{i=1}^\ell ((1-u_i)(1-x_i)+u_ix_i)$. Note that by Lemma~\ref{lemma_g}, $\textbf{U}[x]$ for $x\in \binary^\ell$ can be computed in $O(2^\ell)$ time. Similarly we now have the following lemma.
 \begin{lemma}\label{lemma_f_1}
-Let $\mathcal{N}_x$ be the set of $(z,x,y)\in \binary^{3\ell}$ such that $f_1(g,x,y)$ is non-zero. Then it is
-$f_1(z,x,y) = \sum_{(z,x,y)\in \mathcal{N}_x} \textbf{\emph{G}}[z] \cdot \textbf{\emph{U}}[x]$.
+Let $\mathcal{N}_y$ be the set of $(z,x,y)\in \binary^{3\ell}$ such that $f_1(z,x,y)$ is non-zero. Then it is
+$f_1(z,x,y) = \sum_{(z,x,y)\in \mathcal{N}_y} \textbf{\emph{G}}[z] \cdot \textbf{\emph{U}}[x]$.
 \end{lemma}
 \begin{proof}
 \babis{pls provide proof}
