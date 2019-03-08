@@ -2,7 +2,7 @@
 \section{GKR Protocol with Linear Prover Time}
 \label{sec::gkrlin}
 
-In this section we present a new algorithm (see Algorithm~\ref{final_alg}) for the prover of the GKR protocol~\cite{GKR} that runs in linear time for \emph{arbitrary layered circuits}. Before that we present some necessary building blocks.
+In this section we present a new algorithm (see Algorithm~\ref{final_alg}) for the prover of the GKR protocol~\cite{GKR} that runs in linear time for \emph{arbitrary layered circuits}. Before that, we present some necessary building blocks.
 %We start with presenting a new linear time algorithm for the prover on certain type of sumcheck protocols, and then show how to apply it to build a linear time GRK prover.
 
 \subsection{Linear-time sumcheck for a multilinear function~\cite{JT_Thesis}}
@@ -17,12 +17,14 @@ where $r_1, \ldots, r_{i-1}$ are random values chosen by the verifier in previou
 
 
 
-To compute the above sums the prover maintains a \emph{bookkeeping table} $\textbf{A}$ for $f$. This table, at round $i$, has $2^{\ell-i+1}$ entries storing the values $$f(r_1,\ldots, r_{i-1}, b_{i}, b_{i+1},\ldots, b_{\ell})$$ for all $b_i,\ldots,b_\ell\in\binary$ and is initialized with evaluations of $f$ on the hypercube. For every entry of $\textbf{A}$, the prover subsequently computes two values $$f(r_1,\ldots, r_{i-1}, 0, b_{i+1},\ldots, b_{\ell}) 
-\text{ and } f(r_1,\ldots, r_{i-1}, 1, b_{i+1},\ldots, b_{\ell})\,.$$ This is performed in constant time in Step~\ref{alg:func_eval} of Algorithm~\ref{alg:evaluate} \textsf{FunctionEvaluations}\footnote{To be compatible with other protocols later, we use three values $t=0,1,2$ in our evaluations instead of just two.}. Once these function evaluations are in place, the prover can easily sum over them and compute the required sumcheck messages as reguired by Relations~\ref{0-message} and~\ref{1-message}. This is done in Algorithm~\ref{alg:sumcheck} \textsf{SumCheck}\footnote{We note here that although these two steps  can be performed together in a single algorithm and without the need to store function evaluations, we explicitly decouple them with two different algorithms (\textsf{FunctionEvaluations} and \textsf{SumCheckMessages}) for facilitating the presentation of more advanced protocols later. }. 
+To compute the above sums the prover maintains a \emph{bookkeeping table} $\textbf{A}$ for $f$. This table, at round $i$, has $2^{\ell-i+1}$ entries storing the values $$f(r_1,\ldots, r_{i-1}, b_{i}, b_{i+1},\ldots, b_{\ell})$$ for all $b_i,\ldots,b_\ell\in\binary$ and is initialized with evaluations of $f$ on the hypercube. For every entry of $\textbf{A}$, the prover subsequently computes, as in Step~\ref{alg:func_eval} of Algorithm~\ref{alg:evaluate} \textsf{FunctionEvaluations}\footnote{To be compatible with other protocols later, we use three values $t=0,1,2$ in our evaluations instead of just two.}  two values 
+$$
+f(r_1,\ldots, r_{i-1}, 0, b_{i+1},\ldots, b_{\ell}) 
+\text{ and } f(r_1,\ldots, r_{i-1}, 1, b_{i+1},\ldots, b_{\ell})\,.$$
+Once these function evaluations are in place, the prover can easily sum over them and compute the required sumcheck messages as reguired by Relations~\ref{0-message} and~\ref{1-message}. This is done in Algorithm~\ref{alg:sumcheck} \textsf{SumCheck}\footnote{We note here that although these two steps  can be performed together in a single algorithm and without the need to store function evaluations, we explicitly decouple them with two different algorithms (\textsf{FunctionEvaluations} and \textsf{SumCheck}) for facilitating the presentation of more advanced protocols later. }. 
 
 \paragraph{Complexity analysis.} 
-At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time: The first iteration takes $O(2^\ell)$, the second $O(2^{\ell-1})$ and so on, and therefore the bound holds. However, this analysis is correct provided the bookkeeping table $\textbf{A}$ for $f$ can be initialized in $O(2^\ell)$ time in Step~\ref{bookkeeping_step} of Algorithm~\ref{alg:evaluate}. As we will see in Section~\ref{particular} this is not always trivial to achieve. However, when $f$ is a multilinear extension (which means the evaluations on the hypercube are given), both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time. 
-
+Both Algorithms~\ref{alg:evaluate} and~\ref{alg:sumcheck} run in $O(2^\ell)$ time: The first iteration takes $O(2^\ell)$, the second $O(2^{\ell-1})$ and so on, and therefore the bound holds. 
 
 
 
@@ -31,13 +33,13 @@ At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg
 
 \begin{figure}
 \begin{algorithm}[H]
-		\caption{$\mathcal{F}\leftarrow \textsf{FunctionEvaluations}(f,r_1,\ldots,r_\ell)$}\label{alg:evaluate}
-		 \textbf{Input:} Multilinear function $f$ on $\ell$ variables and randomness $r_1,\ldots,r_\ell$;  \\
+		\caption{$\mathcal{F}\leftarrow \textsf{FunctionEvaluations}(f,\textbf{A},r_1,\ldots,r_\ell)$}\label{alg:evaluate}
+		 \textbf{Input:} Multilinear $f$ on $\ell$ variables, initial bookkeeping table $\textbf{A}$, random $r_1,\ldots,r_\ell$;  \\
     \textbf{Output:} All function evaluations $f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})$; 
    
 		\begin{algorithmic}[1]
 		 
-\State \label{bookkeeping_step}Initialize the bookeeping table $\textbf{A}$  storing the evaluations of $f$ on the hypecube
+%\State \label{bookkeeping_step}Initialize the bookeeping table $\textbf{A}$  storing the evaluations of $f$ on the hypecube
 					\For{$i = 1, \ldots, \ell$} 
 				\For{$b\in\binary^{\ell-i}$} \Comment{$b$ is both a number and its binary representation.} \label{step:consider_b}
 	\For{$t= 0,1,2$} 				
@@ -63,14 +65,14 @@ At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg
 \begin{figure}[t!]
     
 	\begin{algorithm}[H]
-		\caption{$\{a_1,\ldots,a_\ell \}\leftarrow \textsf{SumCheck}(f,r_1,\ldots,r_\ell)$}\label{alg:sumcheck}
-		 \textbf{Input:} Multilinear function $f$ on $\ell$ variables and randomness $r_1,\ldots,r_\ell$;  \\
+		\caption{$\{a_1,\ldots,a_\ell \}\leftarrow \textsf{SumCheck}(f,\textbf{A},r_1,\ldots,r_\ell)$}\label{alg:sumcheck}
+		 \textbf{Input:} Multilinear $f$ on $\ell$ variables, initial bookkeeping table $\textbf{A}$, random $r_1,\ldots,r_\ell$;  \\
     \textbf{Output:} 
     $\ell$ sumcheck messages for $\sum_{x\in\binary^\ell}f(x)$. Each message $a_i$ consists of 3 elements $(a_{i0},a_{i1},a_{i2})$; 
    
 		\begin{algorithmic}[1]
 		 
-\State $\mathcal{F}\leftarrow \textsf{FunctionEvaluations}(f,r_1,\ldots,r_\ell)$
+\State $\mathcal{F}\leftarrow \textsf{FunctionEvaluations}(f,\textbf{A},r_1,\ldots,r_\ell)$
 					\For{$i = 1, \ldots, \ell$} 
 								\For{$t\in\{0,1,2\}$}
 					\label{alg::dynamic::sum0} \State $a_{it}=\sum_{b\in\binary^{\ell-i}}f(r_1,\ldots, r_{i-1}, t, b)$ \Comment{All evaluations needed are in $\mathcal{F}$.}
@@ -87,15 +89,15 @@ At a first glance, it seems that both Algorithms~\ref{alg:evaluate} and~\ref{alg
 \end{figure}
 \begin{figure}
 \begin{algorithm}[H]
-		\caption{$\{a_1,\ldots,a_\ell \}\leftarrow \textsf{SumCheckProduct}(f,g,r_1,\ldots,r_\ell)$}\label{alg:sumcheckproduct}
-		 \textbf{Input:} Multilinear functions $f$ and $g$ on $\ell$ variables and randomness $r_1,\ldots,r_\ell$;  \\
+		\caption{$\{a_1,\ldots,a_\ell \}\leftarrow \textsf{SumCheckProduct}(f,\textbf{A}_f,g,\textbf{A}_g, r_1,\ldots,r_\ell)$}\label{alg:sumcheckproduct}
+		 \textbf{Input:} Multilinear $f$ and $g$, initial bookkeeping tables $\textbf{A}_f$ and $\textbf{A}_g$, random $r_1,\ldots,r_\ell$;  \\
     \textbf{Output:} 
     $\ell$ sumcheck messages for $\sum_{x\in\binary^\ell}f(x)g(x)$. Each message $a_i$ consists of 3 elements $(a_{i0},a_{i1},a_{i2})$; 
    
 		\begin{algorithmic}[1]
 		 
-\State $\mathcal{F}\leftarrow \textsf{FunctionEvaluations}(f,r_1,\ldots,r_\ell)$
-\State $\mathcal{G}\leftarrow \textsf{FunctionEvaluations}(g,r_1,\ldots,r_\ell)$
+\State $\mathcal{F}\leftarrow \textsf{FunctionEvaluations}(f,\textbf{A}_f, r_1,\ldots,r_\ell)$
+\State $\mathcal{G}\leftarrow \textsf{FunctionEvaluations}(g,\textbf{A}_g,r_1,\ldots,r_\ell)$
 
 					\For{$i = 1, \ldots, \ell$} 
 								\For{$t\in\{0,1,2\}$}
@@ -117,11 +119,9 @@ Let now $f$ and $g$ be two multilinear functions on $\ell$ variables each. In th
 $$\sum_{b_{i+1}, \ldots,b_{\ell, }\in\binary}f(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell})\cdot g(r_1,\ldots, r_{i-1}, t, b_{i+1},\ldots, b_{\ell}) $$
 The above can be easily computed by computing evaluations for functions $f$ and $g$ \emph{separately} using Algorithm~\ref{alg:evaluate} and the combining the results using our new Algorithm~\ref{alg:sumcheckproduct} $\textsf{SumCheckProduct}$. We now have the following lemma:
 \begin{lemma}\label{main_lemma_complexity}
-Algorithm $\textsf{\emph{SumCheckProduct}}(f,g,r_1,\ldots,r_\ell)$ runs in time $O(2^\ell + T)$, where $T$ is the time for initializing the bookkeeping tables of $f$ and $g$.
-\end{lemma}
+Algorithm $\textsf{\emph{SumCheckProduct}}$ runs in time $O(2^\ell)$\end{lemma}
 \begin{proof}
-All loops in \textsf{SumCheckProduct} require time $2^\ell+2^{\ell-1}+\ldots=O(2^\ell)$. Also $\textsf{SumCheckProduct}$ calls $\textsf{FunctionEvaluations}$ twice (one for $f$ and one for $g$) and each such call must initialize the respective bookkeeping table. Therefore the bound holds.
-\end{proof}
+All loops in \textsf{SumCheckProduct} require time $2^\ell+2^{\ell-1}+\ldots=O(2^\ell)$. Also $\textsf{SumCheckProduct}$ calls $\textsf{FunctionEvaluations}$ twice (one for $f$ and one for $g$) and each such call takes $O(2^\ell)$ time. \end{proof}
 
 
 
