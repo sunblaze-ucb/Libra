@@ -295,11 +295,11 @@ Note here that $\textbf{A}_{f_1}$ is the bookkeeping table for $f_1(g,u,y)$, not
 It now remains to initialize the bookkeeping table for $f_1(g,u,y)$ efficiently. Similar to phase one, we have the following lemma:
 \begin{lemma}\label{lemma_f_1}
 	Let $\mathcal{N}_y$ be the set of $(z,x)\in \binary^{2\ell}$ such that $f_1(z,x,y)$ is non-zero. Then for all $y\in\binary^\ell$, it is
-	$f_1(g,u,y) = \sum_{(z,x)\in \mathcal{N}_y}I(g,z)\cdot I(u,y) \cdot f_1(z,x,y)$.
+	$f_1(g,u,y) = \sum_{(z,x)\in \mathcal{N}_y}I(g,z)\cdot I(u,x) \cdot f_1(z,x,y)$.
 \end{lemma}
 
 \begin{proof}
-This immediately follows from the fact that $f_1$ is a multilinear extension. We have $f_1(g,u,y) = \sum_{z,y\in\binary^\ell}I(g,z)\cdot I(u,y) \cdot f_1(z,x,y)$, where the closed from of $I$ is given in Lemma~\ref{lemma_h_g}.
+This immediately follows from the fact that $f_1$ is a multilinear extension. We have $f_1(g,u,y) = \sum_{z,y\in\binary^\ell}I(g,z)\cdot I(u,x) \cdot f_1(z,x,y)$, where the closed from of $I$ is given in Lemma~\ref{lemma_h_g}.
 \end{proof}
 
 \begin{lemma}\label{lemma_f_1_alg}
