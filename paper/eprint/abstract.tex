@@ -1,0 +1,6 @@
+\begin{abstract}
+
+   We present \name, the first zero-knowledge proof system that has both optimal prover time and succinct proof size/verification time. In particular, if $C$ is the size of the circuit being proved (i) the prover time is $O(C)$ irrespective of the circuit type; (ii) the proof size and verification time are both $O(d\log C)$ for $d$-depth log-space uniform circuits (such as RAM programs). In addition \name features an one-time trusted setup that depends only on the size of the input to the circuit and not on the circuit logic. Underlying \name is a new linear-time algorithm for the prover of the interactive proof protocol by Goldwasser, Kalai and Rothblum (also known as GKR protocol), as well as an efficient approach to turn the GKR protocol to zero-knowledge using small masking polynomials. Not only does \name have excellent asymptotics, but it is also efficient in practice. For example, our implementation shows that it takes 200 seconds to generate a proof for constructing a SHA2-based Merkle tree root on 256 leaves, outperforming all existing zero-knowledge proof systems. Proof size and verification time of \name are also competitive. 
+    
+    
+\end{abstract}

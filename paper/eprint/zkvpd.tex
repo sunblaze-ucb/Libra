@@ -1,0 +1,30 @@
+%!TEX root = fastZKP.tex
+
+\subsection{Zero-Knowledge Verifiable Polynomial Delegation Scheme}
+\label{subsec::zkvpd}
+
+Let $\mathbb{F}$ be a finite field, $\mathcal{F}$ be a family of $\ell$-variate polynomial over $\mathbb{F}$, and $d$ be a variable-degree parameter \babis{this ``variable-degree" comes up all the time and you have not defined it. can you please define it?}\yupeng{defined at the beginning of section 2}. A zero-knowledge verifiable polynomial delegation scheme (zkVPD) for $f\in\mathcal{F}$ and $t\in\F^\ell$ consists of the following algorithms: 
+\begin{itemize}
+    \item $(\pp, \vp) \leftarrow \KeyGen(1^\lambda, \ell, d)$,
+    \item $\comm \leftarrow \Commit(f, r_f, \pp)$,
+    \item $\{\accept,\reject\}\leftarrow\CheckComm(\comm, \vp)$,
+    \item $(y,\pi)\leftarrow\Open(f,t,r_f,\pp)$,
+    \item $\{\accept,\reject\}\leftarrow\Verify(\comm,t,y,\pi,\vp)$.
+\end{itemize}    
+%\dawn{we should mention $f \in \mathcal{F}$, and $t\in \mathbb{F}$, right?}
+A zkVPD scheme satisfies correctness, soundness and zero knowledge, which we formally define in Appendix~\ref{app:zkvpd}.
+
+
+
+\ignore{
+	Zero-knowledge Verifiable Polynomial Delegation Commitment Scheme (Zk-VPD for short) is a important building block for our zero knowledge construction. We will use the construction from Zhang et al. \cite{zkvpd}.
+	
+	
+	
+	\subsubsection{Scheme Description}
+	
+	\begin{theorem} 
+		
+		Zhang et al.'s construction \cite{zkvpd} is a zero knowledge ex-tractable verifiable polynomial-delegation protocol. For a variable-degree-$d$ $l$-variate polynomial $f \in \mathcal{F}$ with $m$ monomials, algorithm \textnormal{KeyGen} runs in time $O(\binom{ld+l}{ld})$, \textnormal{CommitPoly} in time $O(m)$, \textnormal{CommitValue} in time $O(ldm)$, \textnormal{Ver} in time $O(l)$ and \textnormal{CheckCom} in time $O(1)$. The commitment produced by \textnormal{CommitPoly} consists of $O(1)$ group elements and the proof produced by \textnormal{CommitPoly} consists of $O(l)$ group elements.
+	\end{theorem}
+}

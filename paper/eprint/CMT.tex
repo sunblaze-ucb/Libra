@@ -1,0 +1,143 @@
+%!TEX root = fastZKP.tex
+
+\subsection{GKR Protocol}\label{subsec::GKR}
+
+In~\cite{GKR}, Goldwasser et al. proposed an efficient interactive proof protocol for layered arithmetic circuits, which we use as a building block for our new zero-knowledge argument and is referred as the \emph{GKR} protocol. We present the detailed protocol here.
+
+
+
+\subsubsection{Sumcheck Protocol.}
+\label{subsec::sumcheck}
+The sumcheck problem is a fundamental problem that has various applications. The problem is to sum a polynomial $f: \mathbb{F}^\ell \rightarrow \mathbb{F}$ on the binary hypercube $$\sum\nolimits_{b_1,b_2,\ldots,b_\ell\in\{0,1\}}f(b_1,b_2,...,b_\ell).$$ 
+Directly computing the sum requires exponential time in $\ell$, as there are $2^\ell$ combinations of $b_1,\ldots,b_\ell$. Lund et al.~\cite{sumcheck} proposed a \emph{sumcheck} protocol that allows a verifier $\mathcal{V}$ to delegate the computation to a computationally unbounded prover $\mathcal{P}$, who can convince $\mathcal{V}$ that $H$ is the correct sum. We provide a description of the sumcheck protocol in Protocol~\ref{prot::sumcheck}.
+\begin{figure}[t!]
+\small{
+\centering{\centering
+\framebox{\parbox{.99\linewidth}{
+\begin{protocol}[\textbf{Sumcheck}]
+	\label{prot::sumcheck}
+	The protocol proceeds in $\ell$ rounds. 
+	\begin{itemize}
+		\item In the first round, $\P$ sends a univariate polynomial $$f_1(x_1)\overset{def}{=}\sum\limits_{b_2,\ldots,b_\ell\in\{0,1\}}f(x_1,b_2,\ldots,b_\ell)\, ,$$ $\V$ checks $H=f_1(0)+f_1(1)$. Then $\V$ sends a random challenge $r_1\in\mathbb{F}$ to $\P$.
+		\item In the $i$-th round, where $2\le i \le l-1$, $\P$ sends a univariate polynomial
+		$$f_{i}(x_{i})\overset{def}{=}\sum\limits_{b_{i+1},\ldots,b_\ell\in\{0,1\}}f(r_1,\ldots, r_{i-1}, x_{i}, b_{i+1},\ldots, b_{\ell})\, ,$$ 
+		$\V$ checks $f_{i-1}(r_{i-1})=f_{i}(0)+f_{i}(1)$, and sends a random challenge $r_{i}\in\mathbb{F}$ to $\P$.
+		\item In the $\ell$-th round, $\P$ sends a univariate polynomial $$f_{\ell}(x_{\ell})\overset{def}{=}f(r_1, r_2, \ldots, r_{l-1}, x_{\ell})\, ,$$ $\V$ checks $f_{\ell-1}(r_{\ell-1})=f_{\ell}(0)+f_{\ell}(1)$. The verifier generates a random challenge $r_{\ell}\in\mathbb{F}$. Given oracle access to an evaluation $f(r_1, r_2, \ldots, r_\ell)$ of $f$, $\V$ will accept if and only if $f_{\ell}(r_\ell) = f(r_1, r_2, \ldots, r_\ell)$. The instantiation of the oracle access depends on the application of the sumcheck protocol.
+	\end{itemize}
+\end{protocol}}}}}
+\vspace{-0.2in}
+\end{figure}
+The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable-degree of $f$, as in each round, $\P$ sends a univariate polynomial of one variable in $f$%\babis{you mean the maximum degree accross all variableS?}\yupeng{formally defined in 2.1}\dawn{minor comment: this sentence can be interpreted wrongly; in each round, P only sends one univariate polynomial, not a univariate polynomial for each variable}
+, which can be uniquely defined by $d+1$ points. The verifier time of the protocol is $O(d\ell)$. The prover time depends on the degree and the sparsity of $f$, and we will give the complexity later in our scheme. The sumcheck protocol is complete and sound with $\epsilon = \frac{d\ell}{|\mathbb{F}|}$. 
+
+
+\begin{definition}[\textbf{Multi-linear Extension}]
+	Let $V:\{0, 1\}^\ell \rightarrow \mathbb{F}$ be a function. The \textit{multilinear extension} of $V$ is the unique polynomial $\tilde{V}: \mathbb{F}^l \rightarrow \mathbb{F}$ such that $\tilde{V}(x_1, x_2, ..., x_{l}) = V(x_1, x_2, ..., x_{l})$ for all $x_1, x_2, \ldots, x_{l}\in\{0,1\}^l$.
+	
+	
+	$\tilde{V}$ can be expressed as:
+	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum\nolimits_{b\in\{0,1\}^\ell}\prod\nolimits_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
+	where $b_i$ is $i$-th bit of b.
+	
+	
+\end{definition}
+
+\paragraph{Multilinear extensions of arrays.} Inspired by the close form equation of the multilinear extension given above, we can view an array $\textbf{A} = (a_0, a_1, \ldots, a_{n-1})$ as a function $A: \binary^{\log n}\rightarrow \F$ such that $\forall i\in[0,n-1], A(i) = a_i$. Therefore, in this paper, we abuse the use of multilinear extension on an array as the multilinear extension $\tilde{A}$ of $A$. Using the sumcheck protocol as a building block, Goldwasser et al.~\cite{GKR} showed an interactive proof protocol for layered arithmetic circuits. 
+
+\smallskip\noindent\textbf{High Level Ideas.} Let $C$ be a layered arithmetic circuit with depth $d$ over a finite field $\mathbb{F}$. Each gate in the $i$-th layer takes inputs from two gates in the $(i+1)$-th layer; layer $0$ is the output layer and layer $d$ is the input layer. The protocol proceeds layer by layer. Upon receiving the claimed output from $\P$, in the first round, $\V$ and $\P$ run the sumcheck protocol to reduce the claim about the output to a claim about the values in the layer above. In the $i$-th round, both parties reduce a claim about layer $i-1$ to a claim about layer $i$ through the sumcheck protocol. Finally, the protocol terminates with a claim about the input layer $d$, which can be checked directly by $\V$, or is given as an oracle access. If the check passes, $\V$ accepts the claimed output. 
+
+\paragraph{Notation.} Before describing the GKR protocol, we introduce some additional notations. We denote the number of gates in the $i$-th layer as $S_i$ and let $s_i = \ceil{\log S_i}$. (For simplicity, we assume $S_i$ is a power of 2, and we can pad the layer with dummy gates otherwise.) We then define a function $V_i:\binary^{s_i}\rightarrow\mathbb{F}$ that takes a binary string $b\in\binary^{s_i}$ and returns the output of gate $b$ in layer $i$, where $b$ is called the gate label. With this definition, $V_0$ corresponds to the output of the circuit, and $V_d$ corresponds to the input layer. Finally, we define two additional functions $add_i, mult_i: \binary^{s_{i-1}+2s_i}\rightarrow\binary$, referred as \emph{wiring predicates} in the literature. $add_i$ ($mult_i$) takes one gate label $z\in\binary^{s_{i-1}}$ in layer $i-1$ and two gate labels $x,y\in\binary^{s_i}$ in layer $i$, and outputs 1 if and only if gate $z$ is an addition (multiplication) gate that takes the output of gate $x,y$ as input. With these definitions, $V_i$ can be written as follows:
+\begin{equation}
+    \begin{aligned}
+	V_i(z)=\sum_{x, y \in\binary^{s_{i+1}}}(add_{i+1}(z,x,y)(V_{i+1}(x)+V_{i+1}(y))\\
+	+mult_{i+1}(z,x,y)(V_{i+1}(x)V_{i+1}(y)))
+	\end{aligned}
+\end{equation}
+for any $z\in\binary^{s_i}$. 
+
+
+
+
+
+
+
+
+
+\ignore{
+\yupeng{try to remove $\beta$.}
+
+\begin{definition}[Multilinear extension of identity function]
+Here we present a multilinear extension of identity function
+\begin{eqnarray}\beta_{l}(a, b)=
+	\begin{cases}
+	1, &a=b\cr 0, &a\neq b
+	\end{cases}
+\end{eqnarray}
+Where $a, b$ are binary strings with length $l$. The multilinear extension is the following:
+
+$$\tilde{\beta_{l}}(a,b)\overset{def}{=}\prod_{j=1}^{l}((1-a_{j})(1-b_{j})+a_{j}b_{j})$$
+
+We have $\tilde{\beta_{l}}(a,b)=\beta_{l}(a, b)$ when $a, b$ are binary.
+\end{definition}
+
+\begin{definition}[Multilinear extension of $add$, $mult$]
+We will define the multilinear extension of two component of $V_i$.
+$$\tilde{add}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, add}}\tilde{\beta}_{s_i}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')$$
+
+$$\tilde{mult}_{i}(g, u, v)=\sum_{(g', u', v') \in G_{i, mult}}\tilde{\beta}_{s_i}(g, g')\tilde{\beta}_{s_{i+1}}(u, u')\tilde{\beta}_{s_{i+1}}(v, v')$$
+\end{definition}
+
+\begin{definition}[Multilinear extension of $V_i(g)$]
+	\label{def::multilinear}
+	%$$\tilde{V}_{i}(z)=\sum_{g\in\{0,1\}^{s_i} u, v\in \{0,1\}^{s_{i+1}}}f_{i,z}(g,u,v)$$
+
+	%$$f_{i,z}(g,u,v)\overset{def}{=}\tilde{\beta_{i}}(z, g)[\tilde{mult}(g, u, v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v))+\tilde{add}(g,u,v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))]$$
+	%where $$\tilde{\beta_{i}}(z,g)\overset{def}{=}\prod_{j=1}^{s_{i}}((1-g_{j})(1-z_{j})+g_{j}z_{j})$$
+
+	%$$\tilde{mult}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,mult}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
+
+	%$$\tilde{add}(g,u,v)\overset{def}{=}\sum_{(g', u', v')\in G_{i,add}}\tilde{\beta_{i}}(g,g')\tilde{\beta_{i+1}}(u,u')\tilde{\beta_{i+1}}(v,v')$$
+
+	%when $a, b$ are binary strings, $\tilde{\beta_{i}}(a, b)$ will output $1$ when $a=b$, and $0$ otherwise. $\tilde{mult},\tilde{add}$ is the multilinear extension of the wiring predicates. A wiring predicates is a function of three gates $g_1, g_2, g_3$, and returns $1$ if $g_1$ takes $g_2, g_3$ as it's input.
+
+	We define the multilinear extension of $V_i(g)$ in the following way:
+
+	$$\tilde{V}_i(g)=\sum_{u, v \in \{0,1\}^{s_{i+1}}}(\tilde{add}_{i+1}(g, u, v)(\tilde{V}_{i+1}(u)+\tilde{V}_{i+1}(v))+\tilde{mult}_{i+1}(g,u,v)(\tilde{V}_{i+1}(u)\tilde{V}_{i+1}(v)))\textnormal{,}$$
+	where $\tilde{mult}$ and $\tilde{add}$ are multilinear extension of $mult$ and $add$.
+\end{definition}
+
+}
+
+
+In the equation above, $V_i$ is expressed as a summation, so $\V$ can use the sumcheck protocol to check that it is computed correctly. As the sumcheck protocol operates on polynomials defined on $\mathbb{F}$, we rewrite the equation with their multilinear extensions:
+
+\begin{align}\label{eq:GKR}
+\tV_i(g)=&\sum\nolimits_{x, y \in\binary^{s_{i+1}}}f_i(x,y)\nonumber\\
+=&\sum\nolimits_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(g,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
+&+\tmult_{i+1}(g,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\,,
+\end{align}
+where $g\in\mathbb{F}^{s_i}$ is a random vector. 
+
+\paragraph{Protocol.} With Equation~\ref{eq:GKR}, the GKR protocol proceeds as following. The prover $\P$ first sends the claimed output of the circuit to $\V$. From the claimed output, $\V$ defines polynomial $\tV_0$ and computes $\tV_0(g)$ for a random $g\in\mathbb{F}^{s_0}$. $\V$ and $\P$ then invoke a sumcheck protocol on Equation~\ref{eq:GKR} with $i=0$. As described in Section~\ref{subsec::sumcheck}, at the end of the sumcheck, $\V$ needs an oracle access to $f_i(u,v)$, where $u,v$ are randomly selected in $\mathbb{F}^{s_{i+1}}$. To compute $f_i(u,v)$, $\V$ computes $\tadd_{i+1}(u,v)$ and $\tmult_{i+1}(u,v)$ locally (they only depend on the wiring pattern of the circuit, but not on the values), asks $\P$ to send $\tV_1(u)$ and $\tV_1(v)$ and computes $f_i(u,v)$ to complete the sumcheck protocol. In this way, $\V$ and $\P$ reduces a claim about the output to two claims about values in layer 1. $\V$ and $\P$ could invoke two sumcheck protocols on $\tV_1(u)$ and $\tV_1(v)$ recursively to layers above, but the number of claims and the sumcheck protocols would increase exponentially in $d$. 
+
+\smallskip\noindent\textbf{Combining two claims: condensing to one claim.} In~\cite{GKR}, Goldwasser et al. presented a protocol to reduce two claims $\tV_i(u)$ and $\tV_i(v)$ to one as following. $\V$ defines a line $\gamma: \mathbb{F} \rightarrow \mathbb{F}^{s_i}$ such that $\gamma(0)=u, \gamma(1)=v$. $\V$ sends $\gamma(x)$ to $\P$. Then $\P$ sends $\V$ a degree $s_i$ univariate polynomial $h(x)=\tilde{V_i}(\gamma(x))$. $\V$ checks that $h(0)=\tV_i(u), h(1)=\tV_i(v)$. Then $\V$ randomly chooses $r\in\mathbb{F}$ and computes a new claim $h(r) = \tV_i(\gamma(r)) = \tV_i(w)$ on $w=\gamma(r) \in \mathbb{F}^{s_i}$. $\V$ sends $r, w$ to $\P$. In this way, the two claims are reduced to one claim $\tV_i(w)$. Combining this protocol with the sumcheck protocol on Equation~\ref{eq:GKR}, $\V$ and $\P$ can reduce a claim on layer $i$ to one claim on layer $i+1$, and eventually to a claim on the input, which completes the GKR protocol.
+
+
+
+
+\smallskip\noindent\textbf{Combining two claims: random linear combination.}  In~\cite{zksumcheck}, Chiesa et al. proposed an alternative approach using random linear combinations. Upon receiving the two claims $\tV_i(u)$ and $\tV_i(v)$, $\V$ selects $\alpha_i, \beta_i\in\mathbb{F}$ randomly and computes $\alpha_i\tV_i(u)+\beta_i\tV_i(v)$. Based on Equation~\ref{eq:GKR}, this random linear combination can be written as
+{\footnotesize
+\begin{align}\label{eq:randomGKR}
+&\alpha_i\tV_i(u)+\beta_i\tV_i(v)\nonumber\\
+=&\alpha_i\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(u,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(u,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\+&\beta_i\sum_{x, y \in\binary^{s_{i+1}}}(\tadd_{i+1}(v,x,y)(\tV_{i+1}(x)+\tV_{i+1}(y))+\tmult_{i+1}(v,x,y)(\tV_{i+1}(x)\tV_{i+1}(y)))\nonumber\\
+=&\sum_{x, y \in\binary^{s_{i+1}}}((\alpha_i\tadd_{i+1}(u,x,y)+\beta_i\tadd_{i+1}(v,x,y))(\tV_{i+1}(x)+\tV_{i+1}(y))\nonumber\\
+&+(\alpha_i\tmult_{i+1}(u,x,y)+\beta_i\tmult_{i+1}(v,x,y))(\tV_{i+1}(x)\tV_{i+1}(y)))
+\end{align}
+}
+$\V$ and $\P$ then execute the sumcheck protocol on Equation~\ref{eq:randomGKR} instead of Equation~\ref{eq:GKR}. At the end of the sumcheck protocol, $\V$ still receives two claims about $\tV_{i+1}$, computes their random linear combination and proceeds to an layer above recursively until the input layer.
+
+In our new ZKP scheme, we will mainly use the second approach. The full GKR protocol using random linear combinations is given in Protocol~\ref{protocol::GKR} of Appendix~\ref{app:gkr}.
+
+\begin{theorem}\cite{VSA13}\cite{JT_Thesis}\cite{CMT}\cite{GKR}. Let $C$ : $\mathbb{F}^n \rightarrow \mathbb{F}^k$ be a depth-$d$ layered arithmetic circuit. Protocol \ref{protocol::GKR} is an interactive proof for the function computed by $C$ with soundness $O(d\log {|C|}/|\mathbb{F}|)$. It uses $O(d \log |C|)$ rounds of interaction and running time of the prover $\mathcal{P}$ is $O(|C|\log |C|)$. Let the optimal computation time for all $\tilde{add_i}$ and $\tilde{mult_i}$ be $T$, the running time of $\V$ is $O(n+k+d\log |C|+T)$. For log-space uniform circuits it is $T=\poly{\log |C|}$.
+\end{theorem}
+\babis{is it possible to argue briefly why the prover time is $C\log C$? This is important for the paper motivation.}\yupeng{Explained in section 3.}
