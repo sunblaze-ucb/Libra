@@ -1,8 +1,9 @@
 %\documentclass[conference]{IEEEtran}
 %\documentclass[sigconf, anonymous]{acmart}
 %\documentclass[11pt,letterpaper]{book}
-\documentclass{llncs}
-\pagestyle{plain}
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+%\pagestyle{plain}
 %\usepackage[margin=1in]{geometry}
 %\usepackage{times}
 % \renewcommand*\sfdefault{cmss}
@@ -400,11 +401,11 @@
 
 \newtheorem{protocol}{Protocol}
 \newtheorem{construction}{Construction}
-%\newtheorem{theorem}{Theorem}
+\newtheorem{theorem}{Theorem}
 %\newtheorem{remark}{Remark}
 %\newtheorem{conjecture}{Conjecture}
 %\newtheorem{corollary}{Corollary}
-%\newtheorem{lemma}{Lemma}
+\newtheorem{lemma}{Lemma}
 %\newtheorem{proposition}{Proposition}
 \newtheorem{fact}{Fact}
 %\newtheorem{claim}{Claim}
@@ -412,7 +413,7 @@
 
 %{
 %\theoremstyle{definition}
-%\newtheorem{definition}{Definition}
+\newtheorem{definition}{Definition}
 %}
 
 
@@ -436,7 +437,7 @@
   %\renewcommand{\elaine}[1]{}
   \renewcommand{\tiancheng}[1]{}
   \renewcommand{\yupeng}[1]{}
-  %\renewcommand{\babis}[1]{}
+  \renewcommand{\babis}[1]{}
   \renewcommand{\dawn}[1]{}
 
 \newcommand{\es}{EbN\xspace}
@@ -693,8 +694,20 @@ elaine: \\
 
 \begin{titlepage}
 \title{\name: Succinct Zero-Knowledge Proofs with Optimal Prover Computation}
-\author{}
-\institute{}
+\author{
+	{\sc Tiacheng Xie}\thanks{Department of Electrical Engineering and Computer Science, University of California, Berkeley. {\bf Email:} {\tt \{tianc.x,jiaheng\_zhang,zhangyp,dawnsong\}@berkeley.edu}.}
+	\and
+	{\sc Jiaheng Zhang$^*$}
+	\and
+	{\sc Yupeng Zhang$^*$}
+	\and
+	{\sc Charalampos Papamanthou}\thanks{Department of Electrical and Computer
+		Engineering and UMIACS, University of Maryland. {\bf Email:} {\tt cpap@umd.edu}.}
+	\and
+	{\sc Dawn Song$^*$}
+} % end author
+\date{}
+%\institute{}
 \end{titlepage}
 \maketitle
 \input{abstract.tex}
