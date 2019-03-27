@@ -1,20 +1,22 @@
 Instructions to run the tests:
 
 # Lanczos
+`cd tests/lanczos`
+
 `python build.py`
 
 `python run.py`
-
-use `sudo` if necessary.
 
 # Matmul
+`cd tests/matmul`
+
 `python build.py`
 
 `python run.py`
 
-use `sudo` if necessary.
-
 # SHA256
+`cd tests/SHA256`
+
 `python build.py`
 
 `python run.py`
