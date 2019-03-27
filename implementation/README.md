@@ -1,4 +1,4 @@
-Instructions to run the tests:
+Instructions to run tests:
 
 # Lanczos
 `cd tests/lanczos`
