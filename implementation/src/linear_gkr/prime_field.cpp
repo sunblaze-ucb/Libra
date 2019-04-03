@@ -598,21 +598,6 @@ namespace prime_field
 			return 64 - __builtin_clzll(lo);
 		}
 	}
-	int field_element::testBit(int i)
-	{
-		if(i <= 128)
-		{
-			return (value.lo >> i) & 1;
-		}
-		else if(i <= 256)
-		{
-			return (value.mid >> (i - 128)) & 1;
-		}
-		else
-		{
-			return (value.hi.testBit(i - 256));
-		}
-	}
 	mpz_class field_element::to_gmp_class()
 	{
 		char* str_value;
