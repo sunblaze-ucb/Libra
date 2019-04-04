@@ -13,7 +13,7 @@ x=(2,4,8,16,32, 64, 128,256)
 time2 = (0.901627, 1.010725,1.080326, 1.525268, 2.000217, 3.559008, 4.936292, 9.872230)
 x2=(2,4,8,16,32, 64, 128,256)
 
-time6 = (0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02)
+time6 = (0.031, 0.032, 0.033, 0.034, 0.036, 0.038, 0.043, 0.044)
 x6=(2,4,8,16,32, 64, 128,256)
 
 time8 = (0.0036, 0.0036, 0.0036, 0.0036, 0.0036, 0.0036, 0.0036, 0.0036)
@@ -120,6 +120,6 @@ plt.subplots_adjust(left=0.19, bottom=0.22, top=0.97, right=0.98)
 figManager = plt.get_current_fig_manager()
 #figManager.window.showMaximized()
 fig.set_size_inches(14,10)
-plt.savefig('fig9.pdf')
+plt.savefig('C:/Users/star/Desktop/papers/fastZKP/paper/manuscript/fig9.pdf')
 
-#plt.show()
+plt.show()

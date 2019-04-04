@@ -16,7 +16,7 @@ x2=(2,4,8,16,32, 64, 128,256)#Hyrax
 time8 = (0.2833, 0.2833, 0.2833, 0.2833, 0.2833, 0.2833, 0.2833, 0.2833)
 x8 =(2,4,8,16,32, 64, 128,256)#libSNARK
 
-time6 = (500,537.6093284,571.4387253,603.6611637,635.1383612,666.2562357,697.1976303,728.0515635)
+time6 = (290,302,332,333,359,363,384,395)
 x6=(2,4,8,16,32, 64, 128, 256)#libSTARK
 
 time10 = (3, 3.5, 4, 4.5, 5, 5.5)
@@ -122,6 +122,6 @@ plt.subplots_adjust(left=0.19, bottom=0.22, top=0.97, right=0.98)
 figManager = plt.get_current_fig_manager()
 #figManager.window.showMaximized()
 fig.set_size_inches(14,10)
-plt.savefig('fig3.pdf')
+plt.savefig('C:/Users/star/Desktop/papers/fastZKP/paper/manuscript/fig3.pdf')
 
-#plt.show()
+plt.show()

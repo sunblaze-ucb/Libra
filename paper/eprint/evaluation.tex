@@ -119,7 +119,9 @@ In this section, we show the performance of \name as a whole and compare it with
 
 \item\textsf{Ligero:} As the system is not open-source, we use the same number reported in~\cite{ligero} on computing hashes.
 
-\item\textsf{libSTARK:} We tried the implementation of the system and failed to run it on the functions we consider in this section after communications with the authors. We use the numbers reported in~\cite{libstark} on computing hashes. 
+\item\textsf{libSTARK:} %We were not able to run the implementation of the system on the functions we consider in this section. 
+After communications with the authors, we obtain numbers for proving the same number of hashes in the 3rd benchmark below. The experiments are executed on the same server as in~\cite{libstark}, with 768GB of RAM and Intel(R) Xeon(R) platinum 8168 CPU with 24 2.70GHz cores (2 threads per core).
+
 
 \item\textsf{Hyrax:} We use the open-source implementation of the system at~\cite{hyrax_impl}.
 
@@ -220,13 +222,13 @@ We report the prover time, proof size and verification time in Figure~\ref{fig:A
 \end{figure}
 
 
-\paragraph{Prover time.} As shown in Figure~\ref{fig:Allcom}(a)(b)(c), the prover in \name is the fastest among all systems in all three benchmarks we tested. \textsf{Ligero} is one of the best existing ZKP systems on prover time as it is purely based on symmetric key operations. Comparing to \textsf{Ligero}, the prover time of \name is $1.15\times$ faster on a Merkle tree with 2 leaves and $2\times$ faster with 256 leaves. Comparing to other systems, \name improves the prover time by $3.4-8.9\times$ vs. \textsf{Hyrax}, $7.1-16.1\times$ vs. \textsf{Aurora}, $65-166\times$ vs. \textsf{Bulletproof} and $150-170\times$ vs. \textsf{libSTARK}. 
+\paragraph{Prover time.} As shown in Figure~\ref{fig:Allcom}(a)(b)(c), the prover in \name is the fastest among all systems in all three benchmarks we tested. \textsf{Ligero} is one of the best existing ZKP systems on prover time as it is purely based on symmetric key operations. Comparing to \textsf{Ligero}, the prover time of \name is $1.15\times$ faster on a Merkle tree with 2 leaves and $2\times$ faster with 256 leaves. Comparing to other systems, \name improves the prover time by $3.4-8.9\times$ vs. \textsf{Hyrax}, $7.1-16.1\times$ vs. \textsf{Aurora}, $10.1-12.4\times$ vs. \textsf{libSTARK} and $65-166\times$ vs. \textsf{Bulletproof}. 
 
 \name is also faster than \textsf{libSNARK} on general circuits by $5-10\times$, as shown in Figure~\ref{fig:Allcom}(a) and~\ref{fig:Allcom}(b). The performance of \name is comparable to \textsf{libSNARK} on Merkle trees in Figure~\ref{fig:Allcom}(c). This is because (1) most values in the circuit of SHA256 are binary, which is friendly to the prover of \textsf{libSNARK} as the time of exponentiation is proportional to the bit-length of the values; (2) The R1CS of SHA256 is highly optimized by jsnark~\cite{jsnark} and real world products like Zcash~\cite{zerocash}. There are only 26,000 constrains in one hash. In the arithmetic circuit used by \name, there are 60,000 gates with 38,000 of them being multiplication gates. Even so, \name is still as fast as \textsf{libSNARK} on a Merkle tree with 2 leaves and $2\times$ faster with 256 leaves. We plan to further optimize the implementation of SHA256 as an arithmetic circuit in the future.
 
 The gap between \name and other systems will become bigger as the size of the circuit grows, as the prover time in these systems (other than Bulletproof) scales quasi-linearly with the circuit size. The evaluations justify that the prover time in \name is both optimal asymptotically, and efficient in practice.
 
-\paragraph{Verification time.} Figure~\ref{fig:Allcom}(d)(e)(f) show the verification time. Our verifier is much slower than \textsf{libSNARK} and \textsf{libSTARK}, which runs in 1.8ms and 10-30ms respectively in all the benchmarks. 
+\paragraph{Verification time.} Figure~\ref{fig:Allcom}(d)(e)(f) show the verification time. Our verifier is much slower than \textsf{libSNARK} and \textsf{libSTARK}, which runs in 1.8ms and 28-44ms respectively in all the benchmarks. 
 
 Other than these two systems, the verification time of \name is faster, as it grows sub-linearly with the circuit size. In particular, our verification time ranges from $0.08-1.15$s in the benchmarks we consider. In Figure~\ref{fig:Allcom}(f), the verification time of \name is $8\times$ slower than \textsf{Aurora} when $M=2$, and $15\times$ faster when $M=256$. \name is $2.5\times$ slower than \textsf{Ligero} with $M=2$ and $4\times$ faster with $M=256$. Comparing to \textsf{Hyrax} and \textsf{Bulletproof}, our verification is $1.2-9\times$ and $27-900\times$ faster respectively. Again, the gap increases with the scale of the circuits as our verification is succinct.
 

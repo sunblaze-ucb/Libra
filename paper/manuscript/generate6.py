@@ -119,6 +119,6 @@ plt.subplots_adjust(left=0.19, bottom=0.22, top=0.97, right=0.98)
 figManager = plt.get_current_fig_manager()
 #figManager.window.showMaximized()
 fig.set_size_inches(14,10)
-plt.savefig('fig6.pdf')
+plt.savefig('C:/Users/star/Desktop/papers/fastZKP/paper/manuscript/fig6.pdf')
 
-#plt.show()
+plt.show()
