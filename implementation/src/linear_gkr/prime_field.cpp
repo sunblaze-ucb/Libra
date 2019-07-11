@@ -534,10 +534,6 @@ namespace prime_field
 	field_element field_element::operator * (const field_element &b) const
 	{
 		field_element ret;
-		if(b.value.mid == 0 && b.value.lo == 0)
-			return b;
-		if(value.mid == 0 && value.lo == 0)
-			return *this;
 		ret.value = (b.value * value) % mod;
 		return ret;
 	}
