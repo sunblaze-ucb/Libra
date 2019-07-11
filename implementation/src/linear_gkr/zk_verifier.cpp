@@ -1164,10 +1164,10 @@ bool zk_verifier::verify(const char* output_path)
 	{
 		fprintf(stderr, "Verification pass\n");
 		std::cerr << "Prove Time " << p -> total_time << std::endl;
-		std::cerr << "Verification Time " << verification_time << std::endl;
-		std::cerr << "Verification gate time " << predicates_calc_time << std::endl;
+	//	std::cerr << "Verification gate time " << predicates_calc_time << std::endl;
 		std::cerr << "Verification rdl time " << verification_rdl_time << std::endl;
-		std::cerr << "Proof size(bits) " << proof_size << std::endl;
+		std::cerr << "Verification Time " << verification_time - verification_rdl_time << std::endl;
+		std::cerr << "Proof size(bytes) " << proof_size << std::endl;
 		FILE *result = fopen(output_path, "w");
 		fprintf(result, "%lf %lf %lf %lf %lf %d\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, key_gen_time, proof_size);
 		fclose(result);

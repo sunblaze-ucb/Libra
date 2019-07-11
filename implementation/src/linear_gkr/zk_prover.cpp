@@ -881,10 +881,10 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 12: //exp sum gate
 			{
-				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
 								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
 				auto tmp_g_vu = tmp_g * v_u.value % prime_field::mod;
+				
 				for(int j = u; j <= v; ++j)
 				{
 					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;

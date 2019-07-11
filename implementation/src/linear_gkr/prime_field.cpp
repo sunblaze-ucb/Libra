@@ -358,7 +358,7 @@ namespace prime_field
 	}
 	u256b my_factor;
 	
-
+//https://www.nayuki.io/page/barrett-reduction-algorithm
 	u512b u512b::operator % (const u256b &x) const
 	{
 		if(lo == 0 && mid == 0 && hi.lo == 0 && hi.mid == 0 && hi.hi == 0)

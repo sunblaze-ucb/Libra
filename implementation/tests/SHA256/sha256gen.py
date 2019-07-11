@@ -48,7 +48,7 @@ def writeXORSfunction(fh, x, y, z, voffset):
 
     return (outs, voffset)
 
-#out[i]=(x[i]&y[i])^(y[i]&z[i])^(x[i]&z[i])
+#out[i]=(x[i]&y[i])^(y[i]&z[i])^(x[i]&z[i]) = (x[i]&y[i])|(y[i]&z[i])|(x[i]&z[i])
 def writeMAJfunction(fh, x, y, z, voffset):
     x_and_y = []
     y_and_z = []
@@ -123,7 +123,7 @@ def print_add_tree(fh, ivals, voffset, maxlength=1):
 def do_addition(fh, ivals, voffset, noconsts):
 	for i in range(len(ivals) - 1):
 		assert ivals[i] + 1 == ivals[i + 1]
-	fh.write("P V%d = V%d EXPSUM V%d E\n" % (voffset, ivals[0], ivals[len(ivals) - 1]));
+	fh.write("P V%d = V%d EXPSUM V%d E\n" % (voffset, ivals[0], ivals[len(ivals) - 1]))
 	voffset += 1
 	return (voffset - 1, voffset)
 #
