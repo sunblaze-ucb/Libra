@@ -98,7 +98,7 @@ void KeyGen(int d){
 	pub_g1.at(2 * d + 7) = pre_exp(g1_pre, s[d]);
 	pub_g2.at(2 * d + 1) = pre_exp(g2_pre, s[d]);
 
-	cout << "VPD Test KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD Test KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
@@ -127,7 +127,7 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 
 	digesta = digest * temp1;
 	
-	cout << "VPD test commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD test commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return r_f;
 	
