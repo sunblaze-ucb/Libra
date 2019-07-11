@@ -974,7 +974,7 @@ def write_merkle_rdl(fh, lgnleaves, padding, randzero):
     nblocks = 2 ** (lgnleaves + 1) - 1
 
     # start with V35 because V0--V34 are constants 0, 4, 8, 16, ...
-    v_initial = 34
+    v_initial = 0
     voffset = v_initial
 
     inVals = []
