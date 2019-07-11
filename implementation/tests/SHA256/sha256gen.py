@@ -120,7 +120,7 @@ def print_add_tree(fh, ivals, voffset, maxlength=1):
         return (ivals[0], voffset)
 
 # sum a bit vector into a single field element
-def do_addition(fh, ivals, voffset):
+def do_addition(fh, ivals, voffset, noconsts):
 	for i in range(len(ivals) - 1):
 		assert ivals[i] + 1 == ivals[i + 1]
 	fh.write("P V%d = V%d EXPSUM V%d E\n" % (voffset, ivals[0], ivals[len(ivals) - 1]))
@@ -158,8 +158,8 @@ def test_field_field(fh, fval1, fval2, condition, voffset):
 
     return (voffset - 1, voffset)
 
-def test_bitvec_field(fh, bvals, fval, condition, voffset):
-    (bsum, voffset) = do_addition(fh, bvals, voffset)
+def test_bitvec_field(fh, bvals, fval, condition, voffset, noconsts):
+    (bsum, voffset) = do_addition(fh, bvals, voffset, noconsts)
     return test_field_field(fh, bsum, fval, condition, voffset)
 
 def verify_bits(fh, ivals, voffset):
@@ -181,9 +181,9 @@ def allocate_input(voffset, inVals, extent=None):
         inVals.extend(outVals)
         return (outVals, voffset + extent)
 
-def write_4_rounds(fh, finfh, randzero):
+def write_4_rounds(fh, finfh, randzero, noconsts):
     # start with V34 because V0--V33 are constants 0, 4, 8, 16, 32, ...
-    v_initial = 0
+    v_initial = 34
     voffset = v_initial
 
     ########################### step 1: define all inputs
@@ -296,12 +296,12 @@ def write_4_rounds(fh, finfh, randzero):
     bit_tests = []
     round_tests = []
 
-    (a_field, voffset) = do_addition(fh, a_bits, voffset)
-    (b_field, voffset) = do_addition(fh, b_bits, voffset)
-    (c_field, voffset) = do_addition(fh, c_bits, voffset)
-    (e_field, voffset) = do_addition(fh, e_bits, voffset)
-    (f_field, voffset) = do_addition(fh, f_bits, voffset)
-    (g_field, voffset) = do_addition(fh, g_bits, voffset)
+    (a_field, voffset) = do_addition(fh, a_bits, voffset, noconsts)
+    (b_field, voffset) = do_addition(fh, b_bits, voffset, noconsts)
+    (c_field, voffset) = do_addition(fh, c_bits, voffset, noconsts)
+    (e_field, voffset) = do_addition(fh, e_bits, voffset, noconsts)
+    (f_field, voffset) = do_addition(fh, f_bits, voffset, noconsts)
+    (g_field, voffset) = do_addition(fh, g_bits, voffset, noconsts)
 
     # test all inputs that are purportedly bits
     for idx in W_i_bits:
@@ -314,9 +314,9 @@ def write_4_rounds(fh, finfh, randzero):
             bit_tests.extend(tmp)
 
     # make sure that d_out and h_out match the values they should
-    (tmp, voffset) = test_bitvec_field(fh, aout_bits[0][:32], d_out, None, voffset)
+    (tmp, voffset) = test_bitvec_field(fh, aout_bits[0][:32], d_out, None, voffset, noconsts)
     round_tests.append(tmp)
-    (tmp, voffset) = test_bitvec_field(fh, eout_bits[0][:32], h_out, None, voffset)
+    (tmp, voffset) = test_bitvec_field(fh, eout_bits[0][:32], h_out, None, voffset, noconsts)
     round_tests.append(tmp)
 
     # in the first round, make sure that the values for a-h match H0-H7
@@ -327,7 +327,7 @@ def write_4_rounds(fh, finfh, randzero):
 
     # in the final round, make sure the given field element equals sum of bottom 32 bits
     for (hbits, hval) in zip(Hout_i_bits, Hout_i):
-        (tmp, voffset) = test_bitvec_field(fh, hbits[:32], hval, in_final_round, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, hbits[:32], hval, in_final_round, voffset, noconsts)
         round_tests.append(tmp)
 
     # make sure that W_i and W_i_bits that will be generated in this ckt match
@@ -338,7 +338,7 @@ def write_4_rounds(fh, finfh, randzero):
             fh.write("P V%d = V%d NOT V%d E\n" % (voffset, in_first_round, in_first_round))
             condition = voffset
             voffset += 1
-        (tmp, voffset) = test_bitvec_field(fh, W_i_bits[i][:32], W_i[i], condition, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, W_i_bits[i][:32], W_i[i], condition, voffset, noconsts)
         round_tests.append(tmp)
 
     # check the generated Wi bits
@@ -346,8 +346,8 @@ def write_4_rounds(fh, finfh, randzero):
         # Wi = sigma1(Wi-2) + Wi-7 + sigma0(Wi-15) + Wi-16
         (sigma_0_wim15_bits, voffset) = writesigma0function(fh, W_i_bits[rnd - 15][:32], voffset)
         (sigma_1_wim2_bits, voffset) = writesigma1function(fh, W_i_bits[rnd - 2][:32], voffset)
-        (sigma_0_wim15, voffset) = do_addition(fh, sigma_0_wim15_bits, voffset)
-        (sigma_1_wim2, voffset) = do_addition(fh, sigma_1_wim2_bits, voffset)
+        (sigma_0_wim15, voffset) = do_addition(fh, sigma_0_wim15_bits, voffset, noconsts)
+        (sigma_1_wim2, voffset) = do_addition(fh, sigma_1_wim2_bits, voffset, noconsts)
         fh.write("P V%d = V%d + V%d E\n" % (voffset, sigma_0_wim15, sigma_1_wim2))
         fh.write("P V%d = V%d + V%d E\n" % (voffset + 1, W_i[rnd - 16], W_i[rnd - 7]))
         fh.write("P V%d = V%d + V%d E\n" % (voffset + 2, voffset + 1, voffset))
@@ -355,7 +355,7 @@ def write_4_rounds(fh, finfh, randzero):
         voffset += 3
 
         # test that the purported W_i bitvec is correct
-        (tmp, voffset) = test_bitvec_field(fh, W_i_bits[rnd], wival, not_early_round, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, W_i_bits[rnd], wival, not_early_round, voffset, noconsts)
         round_tests.append(tmp)
 
     ################################## step 3: run rounds
@@ -366,10 +366,10 @@ def write_4_rounds(fh, finfh, randzero):
         (Sigma_1_e_bits, voffset) = writeSigma1function(fh, e_bits[:32], voffset)
         (Maj_abc_bits, voffset) = writeMAJfunction(fh, a_bits[:32], b_bits[:32], c_bits[:32], voffset)
         (Ch_efg_bits, voffset) = writeCHfunction(fh, e_bits[:32], f_bits[:32], g_bits[:32], voffset)
-        (Sigma_0_a, voffset) = do_addition(fh, Sigma_0_a_bits, voffset)
-        (Sigma_1_e, voffset) = do_addition(fh, Sigma_1_e_bits, voffset)
-        (Maj_abc, voffset) = do_addition(fh, Maj_abc_bits, voffset)
-        (Ch_efg, voffset) = do_addition(fh, Ch_efg_bits, voffset)
+        (Sigma_0_a, voffset) = do_addition(fh, Sigma_0_a_bits, voffset, noconsts)
+        (Sigma_1_e, voffset) = do_addition(fh, Sigma_1_e_bits, voffset, noconsts)
+        (Maj_abc, voffset) = do_addition(fh, Maj_abc_bits, voffset, noconsts)
+        (Ch_efg, voffset) = do_addition(fh, Ch_efg_bits, voffset, noconsts)
 
         # T2 = Sigma0(a) + Maj(a, b, c)
         fh.write("P V%d = V%d + V%d E\n" % (voffset, Sigma_0_a, Maj_abc))
@@ -396,10 +396,10 @@ def write_4_rounds(fh, finfh, randzero):
         voffset += 3
 
         # now make sure the input bits equal the values
-        (a_test_out, voffset) = test_bitvec_field(fh, aout_bits[rnd], anext_field, None, voffset)
+        (a_test_out, voffset) = test_bitvec_field(fh, aout_bits[rnd], anext_field, None, voffset, noconsts)
         round_tests.append(a_test_out)
 
-        (e_test_out, voffset) = test_bitvec_field(fh, eout_bits[rnd], enext_field, None, voffset)
+        (e_test_out, voffset) = test_bitvec_field(fh, eout_bits[rnd], enext_field, None, voffset, noconsts)
         round_tests.append(e_test_out)
 
         # finally, update the round values
@@ -415,11 +415,11 @@ def write_4_rounds(fh, finfh, randzero):
         h_field = g_field
         g_field = f_field
         f_field = e_field
-        (e_field, voffset) = do_addition(fh, eout_bits[rnd][:32], voffset)
+        (e_field, voffset) = do_addition(fh, eout_bits[rnd][:32], voffset, noconsts)
         d_field = c_field
         c_field = b_field
         b_field = a_field
-        (a_field, voffset) = do_addition(fh, aout_bits[rnd][:32], voffset)
+        (a_field, voffset) = do_addition(fh, aout_bits[rnd][:32], voffset, noconsts)
 
     ########################## step 4: verify H_i outputs
     #####################################################
@@ -429,7 +429,7 @@ def write_4_rounds(fh, finfh, randzero):
         houtval = voffset
         voffset += 1
 
-        (tmp, voffset) = test_bitvec_field(fh, houtbits, houtval, in_final_round, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, houtbits, houtval, in_final_round, voffset, noconsts)
         round_tests.append(tmp)
 
     ####################### step 5: do randomized 0 tests
@@ -456,15 +456,15 @@ def write_4_rounds(fh, finfh, randzero):
     ############################# step 6: write final PWS
     #####################################################
     # write constants first
-#    if noconsts:
-#        for ionum in xrange(v_initial):
-#            finfh.write("P V%d = I%d E\n" % (ionum, ionum))
-#    else:
-#        finfh.write("P V0 = 0 E\n")
-#        exp = 4
-#        for i in range(1, v_initial):
-#            finfh.write("P V%d = %d E\n" % (i, exp))
-#            exp *= 2
+    if noconsts:
+        for ionum in xrange(v_initial):
+            finfh.write("P V%d = I%d E\n" % (ionum, ionum))
+    else:
+        finfh.write("P V0 = 0 E\n")
+        exp = 4
+        for i in range(1, v_initial):
+            finfh.write("P V%d = %d E\n" % (i, exp))
+            exp *= 2
 
     ionum = v_initial
     for inVal in inVals:
@@ -479,9 +479,9 @@ def write_4_rounds(fh, finfh, randzero):
         finfh.write("P O%d = V%d E\n" % (voffset, outVal))
         voffset += 1
 
-def write_64_rounds(fh, finfh, randzero):
+def write_64_rounds(fh, finfh, randzero, noconsts):
     # start with V34 because V0--V33 are constants 0, 4, 8, 16, 32, ...
-    v_initial = 0
+    v_initial = 34
     voffset = v_initial
 
     ########################### step 1: define all inputs
@@ -572,12 +572,12 @@ def write_64_rounds(fh, finfh, randzero):
 
     d_field = H_i[3]
     h_field = H_i[7]
-    (a_field, voffset) = do_addition(fh, a_bits, voffset)
-    (b_field, voffset) = do_addition(fh, b_bits, voffset)
-    (c_field, voffset) = do_addition(fh, c_bits, voffset)
-    (e_field, voffset) = do_addition(fh, e_bits, voffset)
-    (f_field, voffset) = do_addition(fh, f_bits, voffset)
-    (g_field, voffset) = do_addition(fh, g_bits, voffset)
+    (a_field, voffset) = do_addition(fh, a_bits, voffset, noconsts)
+    (b_field, voffset) = do_addition(fh, b_bits, voffset, noconsts)
+    (c_field, voffset) = do_addition(fh, c_bits, voffset, noconsts)
+    (e_field, voffset) = do_addition(fh, e_bits, voffset, noconsts)
+    (f_field, voffset) = do_addition(fh, f_bits, voffset, noconsts)
+    (g_field, voffset) = do_addition(fh, g_bits, voffset, noconsts)
 
     # test inputs that are purportedly bits
     for idx in W_i_bits:
@@ -586,7 +586,7 @@ def write_64_rounds(fh, finfh, randzero):
         if idx in W_i:
             # check that supplied W_i corresponds to W_i_bits
             # this should make the ckt shallower than requiring W_i to be recreated from W_i_bits
-            (tmp, voffset) = test_bitvec_field(fh, W_i_bits[idx][:32], W_i[idx], None, voffset)
+            (tmp, voffset) = test_bitvec_field(fh, W_i_bits[idx][:32], W_i[idx], None, voffset, noconsts)
             round_tests.append(tmp)
 
     for vecs in (Hout_i_bits, (a_bits, b_bits, c_bits, e_bits, f_bits, g_bits), aout_bits, eout_bits):
@@ -602,7 +602,7 @@ def write_64_rounds(fh, finfh, randzero):
 
     # make sure the output H values match the bottom bits of the sum bit expansion
     for (hbits, hval) in zip(Hout_i_bits, Hout_i):
-        (tmp, voffset) = test_bitvec_field(fh, hbits[:32], hval, None, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, hbits[:32], hval, None, voffset, noconsts)
         round_tests.append(tmp)
 
     # check the Wi bits
@@ -610,8 +610,8 @@ def write_64_rounds(fh, finfh, randzero):
         # Wi = sigma1(Wi-2) + Wi-7 + sigma0(Wi-15) + Wi-16
         (sigma_0_wim15_bits, voffset) = writesigma0function(fh, W_i_bits[rnd - 15][:32], voffset)
         (sigma_1_wim2_bits, voffset) = writesigma1function(fh, W_i_bits[rnd - 2][:32], voffset)
-        (sigma_0_wim15, voffset) = do_addition(fh, sigma_0_wim15_bits, voffset)
-        (sigma_1_wim2, voffset) = do_addition(fh, sigma_1_wim2_bits, voffset)
+        (sigma_0_wim15, voffset) = do_addition(fh, sigma_0_wim15_bits, voffset, noconsts)
+        (sigma_1_wim2, voffset) = do_addition(fh, sigma_1_wim2_bits, voffset, noconsts)
         fh.write("P V%d = V%d + V%d E\n" % (voffset, sigma_0_wim15, sigma_1_wim2))
         fh.write("P V%d = V%d + V%d E\n" % (voffset + 1, W_i[rnd - 16], W_i[rnd - 7]))
         fh.write("P V%d = V%d + V%d E\n" % (voffset + 2, voffset + 1, voffset))
@@ -619,7 +619,7 @@ def write_64_rounds(fh, finfh, randzero):
         voffset += 3
 
         # test that the purported W_i bitvec is correct
-        (tmp, voffset) = test_bitvec_field(fh, W_i_bits[rnd], wival, None, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, W_i_bits[rnd], wival, None, voffset, noconsts)
         round_tests.append(tmp)
 
     ################################## step 3: run rounds
@@ -630,10 +630,10 @@ def write_64_rounds(fh, finfh, randzero):
         (Sigma_1_e_bits, voffset) = writeSigma1function(fh, e_bits[:32], voffset)
         (Maj_abc_bits, voffset) = writeMAJfunction(fh, a_bits[:32], b_bits[:32], c_bits[:32], voffset)
         (Ch_efg_bits, voffset) = writeCHfunction(fh, e_bits[:32], f_bits[:32], g_bits[:32], voffset)
-        (Sigma_0_a, voffset) = do_addition(fh, Sigma_0_a_bits, voffset)
-        (Sigma_1_e, voffset) = do_addition(fh, Sigma_1_e_bits, voffset)
-        (Maj_abc, voffset) = do_addition(fh, Maj_abc_bits, voffset)
-        (Ch_efg, voffset) = do_addition(fh, Ch_efg_bits, voffset)
+        (Sigma_0_a, voffset) = do_addition(fh, Sigma_0_a_bits, voffset, noconsts)
+        (Sigma_1_e, voffset) = do_addition(fh, Sigma_1_e_bits, voffset, noconsts)
+        (Maj_abc, voffset) = do_addition(fh, Maj_abc_bits, voffset, noconsts)
+        (Ch_efg, voffset) = do_addition(fh, Ch_efg_bits, voffset, noconsts)
 
         # T2 = Sigma0(a) + Maj(a, b, c)
         fh.write("P V%d = V%d + V%d E\n" % (voffset, Sigma_0_a, Maj_abc))
@@ -660,10 +660,10 @@ def write_64_rounds(fh, finfh, randzero):
         voffset += 3
 
         # now make sure the input bits equal the values
-        (a_test_out, voffset) = test_bitvec_field(fh, aout_bits[rnd], anext_field, None, voffset)
+        (a_test_out, voffset) = test_bitvec_field(fh, aout_bits[rnd], anext_field, None, voffset, noconsts)
         round_tests.append(a_test_out)
 
-        (e_test_out, voffset) = test_bitvec_field(fh, eout_bits[rnd], enext_field, None, voffset)
+        (e_test_out, voffset) = test_bitvec_field(fh, eout_bits[rnd], enext_field, None, voffset, noconsts)
         round_tests.append(e_test_out)
 
         # finally, update the round values
@@ -679,11 +679,11 @@ def write_64_rounds(fh, finfh, randzero):
         h_field = g_field
         g_field = f_field
         f_field = e_field
-        (e_field, voffset) = do_addition(fh, eout_bits[rnd][:32], voffset)
+        (e_field, voffset) = do_addition(fh, eout_bits[rnd][:32], voffset, noconsts)
         d_field = c_field
         c_field = b_field
         b_field = a_field
-        (a_field, voffset) = do_addition(fh, aout_bits[rnd][:32], voffset)
+        (a_field, voffset) = do_addition(fh, aout_bits[rnd][:32], voffset, noconsts)
 
     ########################## step 4: verify H_i outputs
     #####################################################
@@ -693,7 +693,7 @@ def write_64_rounds(fh, finfh, randzero):
         houtval = voffset
         voffset += 1
 
-        (tmp, voffset) = test_bitvec_field(fh, houtbits, houtval, None, voffset)
+        (tmp, voffset) = test_bitvec_field(fh, houtbits, houtval, None, voffset, noconsts)
         round_tests.append(tmp)
 
     ####################### step 5: do randomized 0 tests
@@ -720,15 +720,15 @@ def write_64_rounds(fh, finfh, randzero):
     ############################# step 6: write final PWS
     #####################################################
     # write constants first
-#    if noconsts:
-#        for ionum in xrange(v_initial):
-#            finfh.write("P V%d = I%d E\n" % (ionum, ionum))
-#    else:
-#        finfh.write("P V0 = 0 E\n")
-#        exp = 4
-#        for i in range(1, v_initial):
-#            finfh.write("P V%d = %d E\n" % (i, exp))
-#            exp *= 2
+    if noconsts:
+        for ionum in xrange(v_initial):
+            finfh.write("P V%d = I%d E\n" % (ionum, ionum))
+    else:
+        finfh.write("P V0 = 0 E\n")
+        exp = 4
+        for i in range(1, v_initial):
+            finfh.write("P V%d = %d E\n" % (i, exp))
+            exp *= 2
 
     ionum = v_initial
     for inVal in inVals:
@@ -974,8 +974,7 @@ def write_merkle_rdl(fh, lgnleaves, padding, randzero):
     nblocks = 2 ** (lgnleaves + 1) - 1
 
     # start with V35 because V0--V34 are constants 0, 4, 8, 16, ...
-    # no constants for this version
-    v_initial = 0
+    v_initial = 34
     voffset = v_initial
 
     inVals = []
@@ -1152,7 +1151,7 @@ def write_merkle_rdl(fh, lgnleaves, padding, randzero):
         ionum += 1
 
     # write pass gates
-    expect_ins_len = 7226 - 34
+    expect_ins_len = 7226
     passVals = []
     block_inputs.append(block_inputs[-1]) # even power of 2 invocs
     for bkIns in block_inputs:
@@ -1197,7 +1196,7 @@ if __name__ == "__main__" :
     nrounds = 64
     call = write_64_rounds
     merkle = None
-#    noconsts = True
+    noconsts = True
     padding = True
     randzero = True
     global VERBOSE
@@ -1229,8 +1228,7 @@ if __name__ == "__main__" :
         elif opt == "-R":
             randzero = False
         elif opt == "-C":
-            pass
-#            noconsts = True #we don't want consts and don't need
+            noconsts = True #we don't want consts and don't need
         else:
             assert False, "logic error: got unexpected option %s from getopt" % opt
 
@@ -1243,7 +1241,7 @@ if __name__ == "__main__" :
     os.unlink(tempname)
     outname = "SHA256_%d.pws" % nrounds
     with os.fdopen(fd, 'w+') as fh, open(outname, 'w+') as finfh:
-        call(fh, finfh, randzero)
+        call(fh, finfh, randzero, noconsts)
 
     #  also write the RDL when nrounds == 4
     if nrounds == 4:
