@@ -43,7 +43,7 @@ enum gate_types
     naab_gate_id = 9,
     output_gate_id = 11,
     relay_gate_id = 10,
-	exp_sum_gate_id = 5
+	exp_sum_gate_id = 12
 };
 
 class gate
