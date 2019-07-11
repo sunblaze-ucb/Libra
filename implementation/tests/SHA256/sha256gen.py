@@ -974,6 +974,7 @@ def write_merkle_rdl(fh, lgnleaves, padding, randzero):
     nblocks = 2 ** (lgnleaves + 1) - 1
 
     # start with V35 because V0--V34 are constants 0, 4, 8, 16, ...
+    # no constants for this version
     v_initial = 0
     voffset = v_initial
 
@@ -1151,7 +1152,7 @@ def write_merkle_rdl(fh, lgnleaves, padding, randzero):
         ionum += 1
 
     # write pass gates
-    expect_ins_len = 7226
+    expect_ins_len = 7226 - 35
     passVals = []
     block_inputs.append(block_inputs[-1]) # even power of 2 invocs
     for bkIns in block_inputs:
