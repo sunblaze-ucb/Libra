@@ -510,6 +510,10 @@ namespace prime_field
 	{
 		value = (u256b)(unsigned long long)x;
 	}
+	field_element::field_element(const unsigned long long x)
+	{
+		value = (u256b)(unsigned long long)x;
+	}
 	field_element field_element::operator + (const field_element &b) const
 	{
 		field_element ret;

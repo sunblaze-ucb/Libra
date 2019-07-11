@@ -94,6 +94,7 @@ namespace prime_field
 
 		field_element();
 		field_element(const int);
+		field_element(const unsigned long long);
 		field_element operator + (const field_element &b) const;
 		field_element operator * (const field_element &b) const;
 		field_element operator / (const field_element &b) const;

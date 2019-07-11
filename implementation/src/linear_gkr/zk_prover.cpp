@@ -126,9 +126,10 @@ prime_field::field_element* zk_prover::evaluate()
 			else if(ty == 12)
 			{
 				circuit_value[i][g] = prime_field::field_element(0);
+				assert(v - u < 31);
 				for(int k = u; k <= v; ++k)
 				{
-					circuit_value[i][g] = circuit_value[i][g] + circuit_value[i - 1][k] * prime_field::field_element(1 << (k - u));
+					circuit_value[i][g] = circuit_value[i][g] + circuit_value[i - 1][k] * prime_field::field_element(1ULL << (k - u));
 				}
 			}
 			else
