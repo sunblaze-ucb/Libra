@@ -234,7 +234,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		}
 	}
 	ans = (ans + coeffs[2 * NumOfVar]) % p;
-	cout << "VPD test prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
+//	cout << "VPD test prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
 bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
@@ -281,7 +281,7 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 		flag = 0;
 	}
 
-	cout << "VPD test verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD test verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
 	return flag;
 	
 }

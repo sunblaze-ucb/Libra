@@ -287,6 +287,29 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					one_block_beta[5].value = one_block_beta[5].value % prime_field::mod;
 					break;
 				}
+				case 12:
+				{
+					int g_first_half = g & ((1 << first_half_g) - 1);
+					int g_second_half = (g >> first_half_g);
+					
+					auto beta_g_val_alpha = beta_g_r0_block_first_half[g_first_half] * beta_g_r0_block_second_half[g_second_half];
+					auto beta_g_val_beta = beta_g_r1_block_first_half[g_first_half] * beta_g_r1_block_second_half[g_second_half];
+					auto beta_v_0 = beta_v_block_first_half[0] * beta_v_block_second_half[0];
+					for(int j = u; j <= v; ++j)
+					{
+						int u_first_half = j & ((1 << first_half_uv) - 1);
+						int u_second_half = j >> first_half_uv;
+						one_block_alpha[5] = one_block_alpha[5] + beta_g_val_alpha * beta_v_0 * (beta_u_block_first_half[u_first_half] * beta_u_block_second_half[u_second_half]);
+						one_block_beta[5] = one_block_beta[5] + beta_g_val_beta * beta_v_0 * (beta_u_block_first_half[u_first_half] * beta_u_block_second_half[u_second_half]);
+
+						beta_v_0 = beta_v_0 + beta_v_0;
+						if(beta_v_0.value >= prime_field::mod)
+							beta_v_0.value = beta_v_0.value - prime_field::mod;
+					}
+					one_block_alpha[5].value = one_block_alpha[5].value % prime_field::mod;
+					one_block_beta[5].value = one_block_beta[5].value % prime_field::mod;
+					break;
+				}
 				case 6:
 				{
 					int g_first_half = g & ((1 << first_half_g) - 1);
@@ -491,6 +514,26 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 						int u_first_half = j & ((1 << first_half_uv) - 1);
 						int u_second_half = j >> first_half_uv;
 						ret[5] = ret[5] + beta_g_val * beta_v_0 * (beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]);
+					}
+					break;
+				}
+				case 12:
+				{
+					int g_first_half = g & ((1 << first_half_g) - 1);
+					int g_second_half = (g >> first_half_g);
+					
+					auto beta_g_val = beta_g_r0_first_half[g_first_half] * beta_g_r0_second_half[g_second_half] + beta_g_r1_first_half[g_first_half] * beta_g_r1_second_half[g_second_half];
+					auto beta_v_0 = beta_v_first_half[0] * beta_v_second_half[0];
+					for(int j = u; j <= v; ++j)
+					{
+						int u_first_half = j & ((1 << first_half_uv) - 1);
+						int u_second_half = j >> first_half_uv;
+						ret[5] = ret[5] + beta_g_val * beta_v_0 * (beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]);
+						beta_v_0 = beta_v_0 + beta_v_0;
+						if(beta_v_0.value >= prime_field::mod)
+						{
+							beta_v_0.value = beta_v_0.value - prime_field::mod;
+						}
 					}
 					break;
 				}

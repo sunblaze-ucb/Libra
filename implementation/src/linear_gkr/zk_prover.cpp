@@ -123,6 +123,14 @@ prime_field::field_element* zk_prover::evaluate()
 			{
 				circuit_value[i][g] = circuit_value[i - 1][u];
 			}
+			else if(ty == 12)
+			{
+				circuit_value[i][g] = prime_field::field_element(0);
+				for(int k = u; k <= v; ++k)
+				{
+					circuit_value[i][g] = circuit_value[i][g] + circuit_value[i - 1][k] * prime_field::field_element(1 << (k - u));
+				}
+			}
 			else
 			{
 				assert(false);
@@ -482,6 +490,22 @@ void zk_prover::sumcheck_phase1_init()
 					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp);
 					if(add_mult_sum[j].b.value >= prime_field::mod)
 						add_mult_sum[j].b.value = add_mult_sum[j].b.value - prime_field::mod;
+				}
+				break;
+			}
+			case 12: //exp sum gate
+			{
+				auto tmp = beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+					+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value;
+				tmp = tmp % prime_field::mod;
+				for(int j = u; j <= v; ++j)
+				{
+					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp);
+					if(add_mult_sum[j].b.value >= prime_field::mod)
+						add_mult_sum[j].b.value = add_mult_sum[j].b.value - prime_field::mod;
+					tmp = tmp + tmp;
+					if(tmp >= prime_field::mod)
+						tmp = tmp - prime_field::mod;
 				}
 				break;
 			}
@@ -851,6 +875,22 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				{
 					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;
 					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
+				}
+				break;
+			}
+			case 12: //exp sum gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				auto tmp_g_vu = tmp_g * v_u.value % prime_field::mod;
+				for(int j = u; j < v; ++j)
+				{
+					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;
+					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
+					tmp_g_vu = tmp_g_vu + tmp_g_vu;
+					if(tmp_g_vu >= prime_field::mod)
+						tmp_g_vu = tmp_g_vu - prime_field::mod;
 				}
 				break;
 			}

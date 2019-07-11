@@ -173,7 +173,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 	ans = coeffs[0] + ((coeffs[1] * r[0]) % p) + ((coeffs[2] * square0) % p) + ((coeffs[3] * r[1]) % p) + ((coeffs[4] * square1) % p) + ((coeffs[5] * cross) % p);
 	ans = ans % p;
 	if(ans < 0) ans += p;
-	cout << "VPD R prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
+//	cout << "VPD R prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
 bool verify(vector<mpz_class> r, Ec1 digest, mpz_class ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
@@ -219,7 +219,7 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class ans, vector<Ec1>& witness
 		flag = 0;
 	}
 
-	cout << "VPD R verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD R verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
 	return flag;
 	
 }
