@@ -6,7 +6,7 @@ using namespace bn;
 namespace input_vpd
 {
 #define P 512
-const int multi_scalar_w = 16;
+const int multi_scalar_w = 8;
 
 unsigned long int seed;
 int NumOfVar;
