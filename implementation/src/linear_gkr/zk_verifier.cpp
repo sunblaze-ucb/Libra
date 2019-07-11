@@ -860,7 +860,7 @@ bool zk_verifier::verify(const char* output_path)
 	for(int i = C.total_depth - 1; i >= 1; --i)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
-		std::cerr << "Bound u start" << std::endl;
+	//	std::cerr << "Bound u start" << std::endl;
 		auto rho = prime_field::random();
 		std::vector<bn::Ec1> digest_mask;
 
@@ -939,7 +939,7 @@ bool zk_verifier::verify(const char* output_path)
 		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 		std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t1 - t0);
-		std::cerr << "Bound v start" << std::endl;
+	//	std::cerr << "Bound v start" << std::endl;
 		t0 = std::chrono::high_resolution_clock::now();
 		p -> sumcheck_phase2_init(previous_random, r_u, one_minus_r_u);
 		previous_random = prime_field::field_element(0);
