@@ -121,26 +121,32 @@ def print_add_tree(fh, ivals, voffset, maxlength=1):
 
 # sum a bit vector into a single field element
 def do_addition(fh, ivals, voffset, noconsts):
-    ovals = [ivals[0]] + list(range(voffset, voffset + len(ivals) - 1))
+	for i in range(len(ivals) - 1):
+		assert ivals[i] + 1 == ivals[i + 1]
+	fh.write("P V%d = V%d EXPSUM V%d E\n" % (voffset, ivals[0], ivals[len(ivals) - 1]));
+	voffset += 1
+	return (voffset - 1, voffset)
+#
+#    ovals = [ivals[0]] + list(range(voffset, voffset + len(ivals) - 1))
 
     # unnecessary optimization: 2x = x + x
-    fh.write("P V%d = V%d + V%d E\n" % (voffset, ivals[1], ivals[1]))
-    voffset += 1
+#    fh.write("P V%d = V%d + V%d E\n" % (voffset, ivals[1], ivals[1]))
+#    voffset += 1
 
-    if noconsts:
-        expIn = 1
-        for ival in ivals[2:]:
-            fh.write("P V%d = V%d * V%d E\n" % (voffset, expIn, ival))
-            voffset += 1
-            expIn += 1
-    else:
-        exp = 4
-        for ival in ivals[2:]:
-            fh.write("P V%d = %d * V%d E\n" % (voffset, exp, ival))
-            voffset += 1
-            exp *= 2
+#    if noconsts:
+#        expIn = 1
+#        for ival in ivals[2:]:
+#            fh.write("P V%d = V%d * V%d E\n" % (voffset, expIn, ival))
+#            voffset += 1
+#            expIn += 1
+#    else:
+#        exp = 4
+#        for ival in ivals[2:]:
+#            fh.write("P V%d = %d * V%d E\n" % (voffset, exp, ival))
+#            voffset += 1
+#            exp *= 2
 
-    return print_add_tree(fh, ovals, voffset)
+#    return print_add_tree(fh, ovals, voffset)
 
 def test_field_field(fh, fval1, fval2, condition, voffset):
     fh.write("P V%d = V%d minus V%d E\n" % (voffset, fval1, fval2))

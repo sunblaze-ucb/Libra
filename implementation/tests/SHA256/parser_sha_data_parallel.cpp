@@ -26,6 +26,7 @@ regex xor_gate("P V[0-9]+ = V[0-9]+ XOR V[0-9]+ E");
 regex minus_gate("P V[0-9]+ = V[0-9]+ minus V[0-9]+ E");
 regex naab_gate("P V[0-9]+ = V[0-9]+ NAAB V[0-9]+ E");
 regex not_gate("P V[0-9]+ = V[0-9]+ NOT V[0-9]+ E");
+regex exp_sum_gate("P V[0-9]+ = V[0-9]+ EXPSUM V[0-9]+ E");
 
 smatch base_match;
 int repeat_num;
@@ -41,7 +42,8 @@ enum gate_types
     xor_gate_id = 8,
     naab_gate_id = 9,
     output_gate_id = 11,
-    relay_gate_id = 10
+    relay_gate_id = 10,
+	exp_sum_gate_id = 5
 };
 
 class gate
@@ -240,6 +242,16 @@ void DAG_to_layered()
 				add_relay(id, input0, 0);
 				break;
 			}
+			case exp_sum_gate_id:
+			{
+				auto input0 = g.input0;
+				auto input1 = g.input1;
+				for(int i = input0.second; i <= input1.second; ++i)
+				{
+					auto &g0 = sha256_dag_copy.circuit[make_pair((int)'V', i)];
+					assert(g0.layered_lvl + 1 == g.layered_lvl);
+				}
+			}
 		}
 	}
 	layer_gate_count.resize(max_lvl + 1);
@@ -426,6 +438,22 @@ void read_circuit(ifstream &circuit_in)
             sha256_dag.circuit[g.input0].outputs.push_back(g.id);
             sha256_dag.circuit[g.input1].outputs.push_back(g.id);
         }
+		else if(std::regex_match(source_line, base_match, exp_sum_gate))
+		{
+			sscanf(source_line.c_str(), "P V%d = V%lld EXPSUM V%lld E", &tgt, &src0, &src1);
+			DAG_gate g;
+			g.is_output = false;
+			g.ty = exp_sum_gate_id;
+			g.id = make_pair((int)'V', (int)tgt);
+            g.input0 = make_pair((int)'V', (int)src0);
+            g.input1 = make_pair((int)'V', (int)src1);
+            sha256_dag.circuit[make_pair((int)'V', tgt)] = g;
+			for(int i = g.input0.second; i <= g.input1.second; ++i)
+			{
+            	sha256_dag.circuit[make_pair((int)'V', i)].outputs.push_back(g.id);
+			}
+
+		}
         else
         {
             cout << source_line << endl;
@@ -589,7 +617,7 @@ void merge_and_output(const char *output_path, const char *meta_output_path)
 		fprintf(sha256_circuit_file, "%d %d %015lld %lld ", input, rdl.layers[0].gates[i].g, rdl.layers[0].gates[i].u, rdl.layers[0].gates[i].v);
 	}
 	
-	fprintf(meta, "0 0 0 0 0\n");
+	fprintf(meta, "0 0 1 0 0\n");
 	
 	fprintf(sha256_circuit_file, "\n%d ", (int)rdl.layers[1].gates.size());
 	
