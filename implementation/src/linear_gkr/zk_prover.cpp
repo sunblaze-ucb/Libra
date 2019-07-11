@@ -834,7 +834,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 
 	for(int u = 0; u < total_uv; ++u)
 	{
-		beta_u[u].value = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+//		beta_u[u].value = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 	}
 	
 	for(int i = 0; i < total_g; ++i)
@@ -846,7 +846,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 		{
 			case 1: //mult gate
 			{
-				const auto& tmp_u = beta_u[u].value;
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				const auto& tmp_g = beta_g[i].value;
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
@@ -854,7 +854,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 0: //add gate
 			{
-				const auto& tmp_u = beta_u[u].value;
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				const auto& tmp_g = beta_g[i].value;
 				auto tmp_g_u = tmp_g * tmp_u % prime_field::mod;
 				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g_u);
@@ -868,11 +868,12 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 5: //sum gate
 			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
 				const auto& tmp_g = beta_g[i].value;
 				auto tmp_g_vu = tmp_g * v_u.value % prime_field::mod;
 				for(int j = u; j < v; ++j)
 				{
-					const auto& tmp_u = beta_u[u].value;
+					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;
 					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
 				}
 				break;
@@ -884,7 +885,7 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				
 				for(int j = u; j <= v; ++j)
 				{
-					const auto& tmp_u = beta_u[j].value;
+					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;
 					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
 					tmp_g_vu = tmp_g_vu + tmp_g_vu;
 					if(tmp_g_vu >= prime_field::mod_512)
