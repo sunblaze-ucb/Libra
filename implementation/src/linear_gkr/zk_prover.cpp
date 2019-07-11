@@ -389,6 +389,7 @@ void zk_prover::init_array(int max_bit_length)
 	beta_u_fhalf = new prime_field::field_element[(1 << half_length)];
 	beta_u_shalf = new prime_field::field_element[(1 << half_length)];
 	beta_u = new prime_field::field_element[(1 << max_bit_length)];
+	beta_v = new prime_field::field_element[(1 << max_bit_length)];
 	beta_g = new prime_field::field_element[(1 << max_bit_length)];
 }
 
@@ -405,6 +406,7 @@ void zk_prover::delete_self()
 	delete[] beta_u_fhalf;
 	delete[] beta_u_shalf;
 	delete[] beta_u;
+	delete[] beta_v;
 	for(int i = 0; i < C.total_depth; ++i)
 		delete[] circuit_value[i];
 	delete[] maskpoly;
@@ -475,20 +477,20 @@ void zk_prover::sumcheck_phase1_init()
 		{
 			case 0: //add gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				addV_array[u].b.value = (addV_array[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp) % prime_field::mod;
 				break;
 			}
 			case 1: //mult gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + circuit_value[sumcheck_layer_id - 1][v].value * tmp) % prime_field::mod;
 				break;
 			}
 			case 5: //sum gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				for(int j = u; j < v; ++j)
 				{
 					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp);
@@ -499,7 +501,7 @@ void zk_prover::sumcheck_phase1_init()
 			}
 			case 12: //exp sum gate
 			{
-				auto& tmp = beta_g[i].value;
+				auto tmp = beta_g[i].value;
 				for(int j = u; j <= v; ++j)
 				{
 					add_mult_sum[j].b.value = (add_mult_sum[j].b.value + tmp);
@@ -519,7 +521,7 @@ void zk_prover::sumcheck_phase1_init()
 			}
 			case 6: //NOT gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + prime_field::mod - tmp);
 				while(add_mult_sum[u].b.value >= prime_field::mod_512)
 					add_mult_sum[u].b.value = add_mult_sum[u].b.value + prime_field::minus_mod_512;
@@ -530,7 +532,7 @@ void zk_prover::sumcheck_phase1_init()
 			}
 			case 7: //minus gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				addV_array[u].b.value = (addV_array[u].b.value + prime_field::mod - (circuit_value[sumcheck_layer_id - 1][v].value * tmp % prime_field::mod)) % prime_field::mod;
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp);
 				if(add_mult_sum[u].b.value >= prime_field::mod_512)
@@ -539,7 +541,7 @@ void zk_prover::sumcheck_phase1_init()
 			}
 			case 8: //XOR gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				auto tmp_V = tmp * circuit_value[sumcheck_layer_id - 1][v].value % prime_field::mod;
 				auto tmp_2V = tmp_V + tmp_V;
 				if(tmp_2V >= prime_field::mod_512)
@@ -554,7 +556,7 @@ void zk_prover::sumcheck_phase1_init()
 			}
 			case 9: //NAAB gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				auto tmpV = tmp * circuit_value[sumcheck_layer_id - 1][v].value % prime_field::mod;
 				addV_array[u].b.value = (addV_array[u].b.value + tmpV) % prime_field::mod;
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + prime_field::mod - tmpV);
@@ -566,7 +568,7 @@ void zk_prover::sumcheck_phase1_init()
 			}
 			case 10: //relay gate
 			{
-				auto& tmp = beta_g[i].value;
+				const auto& tmp = beta_g[i].value;
 				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp);
 				if(add_mult_sum[u].b.value >= prime_field::mod_512)
 					add_mult_sum[u].b.value = add_mult_sum[u].b.value + prime_field::minus_mod_512;
@@ -844,16 +846,16 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 		{
 			case 1: //mult gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value + (tmp_g * tmp_u % prime_field::mod * v_u.value);
 				add_mult_sum[v].b.value = add_mult_sum[v].b.value % prime_field::mod;
 				break;
 			}
 			case 0: //add gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp_g_u = tmp_g * tmp_u % prime_field::mod;
 				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp_g_u);
 				addV_array[v].b.value = (tmp_g_u * v_u.value + addV_array[v].b.value);
@@ -866,24 +868,23 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 5: //sum gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp_g_vu = tmp_g * v_u.value % prime_field::mod;
 				for(int j = u; j < v; ++j)
 				{
-					auto tmp_u = beta_u_fhalf[j & mask_fhalf].value * beta_u_shalf[j >> first_half].value % prime_field::mod;
+					const auto& tmp_u = beta_u[u].value;
 					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
 				}
 				break;
 			}
 			case 12: //exp sum gate
 			{
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp_g_vu = tmp_g * v_u.value % prime_field::mod;
 				
 				for(int j = u; j <= v; ++j)
 				{
-					auto& tmp_u = beta_u[j].value;
+					const auto& tmp_u = beta_u[u].value;
 					addV_array[0].b.value = (addV_array[0].b.value + tmp_g_vu * tmp_u) % prime_field::mod;
 					tmp_g_vu = tmp_g_vu + tmp_g_vu;
 					if(tmp_g_vu >= prime_field::mod_512)
@@ -893,16 +894,16 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 6: //not gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp_g_u = tmp_g * tmp_u % prime_field::mod;
 				addV_array[v].b.value = (addV_array[v].b.value + tmp_g_u + prime_field::mod - tmp_g_u * v_u.value % prime_field::mod) % prime_field::mod;
 				break;
 			}
 			case 7: //minus gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
 				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + prime_field::mod - tmp);
 				while(add_mult_sum[v].b.value >= prime_field::mod_512)
@@ -912,8 +913,8 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 8: //xor gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
 				auto tmp_v_u = tmp * v_u.value % prime_field::mod;
 				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod + prime_field::mod - tmp_v_u - tmp_v_u);
@@ -926,8 +927,8 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 9: //NAAB gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
 				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + tmp + prime_field::mod - v_u.value * tmp % prime_field::mod);
 				while(add_mult_sum[v].b.value >= prime_field::mod_512)
@@ -936,8 +937,8 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 			}
 			case 10: //relay gate
 			{
-				auto& tmp_u = beta_u[u].value;
-				auto& tmp_g = beta_g[i].value;
+				const auto& tmp_u = beta_u[u].value;
+				const auto& tmp_g = beta_g[i].value;
 				auto tmp = tmp_g * tmp_u % prime_field::mod;
 				addV_array[v].b.value = (addV_array[v].b.value + tmp * v_u.value) % prime_field::mod;
 				break;
