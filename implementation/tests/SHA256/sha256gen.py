@@ -48,7 +48,7 @@ def writeXORSfunction(fh, x, y, z, voffset):
 
     return (outs, voffset)
 
-#out[i]=(x[i]&y[i])^(y[i]&z[i])^(x[i]&z[i]) = (x[i]&y[i])|(y[i]&z[i])|(x[i]&z[i])
+#out[i]=(x[i]&y[i])^(y[i]&z[i])^(x[i]&z[i])
 def writeMAJfunction(fh, x, y, z, voffset):
     x_and_y = []
     y_and_z = []
@@ -720,15 +720,15 @@ def write_64_rounds(fh, finfh, randzero, noconsts):
     ############################# step 6: write final PWS
     #####################################################
     # write constants first
-    if noconsts:
-        for ionum in xrange(v_initial):
-            finfh.write("P V%d = I%d E\n" % (ionum, ionum))
-    else:
-        finfh.write("P V0 = 0 E\n")
-        exp = 4
-        for i in range(1, v_initial):
-            finfh.write("P V%d = %d E\n" % (i, exp))
-            exp *= 2
+ #   if noconsts:
+ #       for ionum in xrange(v_initial):
+ #           finfh.write("P V%d = I%d E\n" % (ionum, ionum))
+ #   else:
+ #       finfh.write("P V0 = 0 E\n")
+ #       exp = 4
+ #       for i in range(1, v_initial):
+ #           finfh.write("P V%d = %d E\n" % (i, exp))
+ #           exp *= 2
 
     ionum = v_initial
     for inVal in inVals:

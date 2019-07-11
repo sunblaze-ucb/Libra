@@ -550,7 +550,7 @@ void zk_prover::sumcheck_phase1_init()
 				addV_array[u].b.value = (addV_array[u].b.value + tmp_V);
 				if(addV_array[u].b.value >= prime_field::mod)
 					addV_array[u].b.value = addV_array[u].b.value - prime_field::mod;
-				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp + prime_field::mod - tmp_2V) % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + tmp + prime_field::mod - tmp_2V);
 				while(add_mult_sum[u].b.value >= prime_field::mod)
 					add_mult_sum[u].b.value = add_mult_sum[u].b.value - prime_field::mod;
 				break;
