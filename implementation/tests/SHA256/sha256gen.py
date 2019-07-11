@@ -1228,7 +1228,7 @@ if __name__ == "__main__" :
         elif opt == "-R":
             randzero = False
         elif opt == "-C":
-            noconsts = True
+            noconsts = True #we don't want consts and don't need
         else:
             assert False, "logic error: got unexpected option %s from getopt" % opt
 
