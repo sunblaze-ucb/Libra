@@ -52,7 +52,6 @@ namespace prime_field
 	//extern independent_bits_engine<mt19937, 256, cpp_int> gen;
 	
 	extern u256b mod;
-	extern u512b mod_512, minus_mod_512;
 
 	class u512b
 	{
@@ -80,6 +79,7 @@ namespace prime_field
 		bool operator < (const u512b &x) const;
 		void random();
 	};
+	extern u512b mod_512, minus_mod_512;
 
 	void init(std::string, int);
 	void init_random();
