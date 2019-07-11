@@ -1152,7 +1152,7 @@ def write_merkle_rdl(fh, lgnleaves, padding, randzero):
         ionum += 1
 
     # write pass gates
-    expect_ins_len = 7226 - 35
+    expect_ins_len = 7226 - 34
     passVals = []
     block_inputs.append(block_inputs[-1]) # even power of 2 invocs
     for bkIns in block_inputs:
