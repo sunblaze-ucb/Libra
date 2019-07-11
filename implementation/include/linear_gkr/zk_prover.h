@@ -30,6 +30,7 @@ public:
 	linear_poly *V_mult_add;
 	//prime_field::field_element *beta_u;
 	prime_field::field_element *beta_g_r0_fhalf, *beta_g_r0_shalf, *beta_g_r1_fhalf, *beta_g_r1_shalf, *beta_u_fhalf, *beta_u_shalf;
+	prime_field::field_element *beta_u, *beta_g;
 	//prime_field::field_element *beta_g_sum;
 	linear_poly *add_mult_sum;
 
