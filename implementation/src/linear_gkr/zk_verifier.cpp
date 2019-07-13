@@ -851,6 +851,7 @@ prime_field::field_element zk_verifier::V_in(const prime_field::field_element* r
 bool zk_verifier::verify(const char* output_path)
 {
 	int proof_size = 0;
+	int bilinear_pairing_factor = 3;
 	double verification_time = 0;
 	double predicates_calc_time = 0;
 	double verification_rdl_time = 0;
@@ -860,7 +861,7 @@ bool zk_verifier::verify(const char* output_path)
 	auto result = p -> evaluate();
 	double key_gen_time = 0;
 	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length, key_gen_time);
-	proof_size += sizeof(bn::Ec1) * (digest_input.first.size() + digest_input.second.size());
+	proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (digest_input.first.size() + digest_input.second.size());
 
 	prime_field::field_element alpha, beta;
 	alpha.value = 1;
@@ -900,7 +901,7 @@ bool zk_verifier::verify(const char* output_path)
 		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 
 		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
-		proof_size += sizeof(bn::Ec1) * (digest_mask.size() + digest_maskR.size());
+		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (digest_mask.size() + digest_maskR.size());
 		p -> rho = rho;
 		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		bool r_verify_cc = vpdR::check_commit(digest_maskR[0], digest_maskR[1]);
@@ -1061,7 +1062,7 @@ bool zk_verifier::verify(const char* output_path)
 		r[0] = p -> prepreu1.to_gmp_class(), r[1] = r_c[0].to_gmp_class();
 		auto witnesses = p -> prove_R(r, maskRg1_value_mpz);
 		prime_field::field_element tmp_rg1;
-		proof_size += sizeof(bn::Ec1) * (witnesses.first.size() + witnesses.second.size());
+		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses.first.size() + witnesses.second.size());
 
 		std::chrono::high_resolution_clock::time_point vpdr_verify_0_0 = std::chrono::high_resolution_clock::now();
 		bool r_verify_verify = vpdR::verify(r, digest_maskR[0], maskRg1_value_mpz, witnesses.first, witnesses.second);
@@ -1071,7 +1072,7 @@ bool zk_verifier::verify(const char* output_path)
 
 		r[0] = p -> preprev1.to_gmp_class();
 		witnesses = p -> prove_R(r, maskRg2_value_mpz);
-		proof_size += sizeof(bn::Ec1) * (witnesses.first.size() + witnesses.second.size());
+		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses.first.size() + witnesses.second.size());
 		
 		std::chrono::high_resolution_clock::time_point vpdr_verify_1_0 = std::chrono::high_resolution_clock::now();
 		r_verify_verify &= vpdR::verify(r, digest_maskR[0], maskRg2_value_mpz, witnesses.first, witnesses.second);
@@ -1096,7 +1097,7 @@ bool zk_verifier::verify(const char* output_path)
 		r.push_back(r_c[0].to_gmp_class());
 		mpz_class maskpoly_value_mpz = 0;
 		witnesses = p -> prove_mask(r, maskpoly_value_mpz);
-		proof_size += sizeof(bn::Ec1) * (witnesses.first.size() + witnesses.second.size());
+		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses.first.size() + witnesses.second.size());
 
 
 
@@ -1162,7 +1163,7 @@ bool zk_verifier::verify(const char* output_path)
 
 	input_0_mpz = 0, input_1_mpz = 0;
 	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
-	proof_size += sizeof(bn::Ec1) * (witnesses_0.first.size() + witnesses_0.second.size());
+	proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses_0.first.size() + witnesses_0.second.size());
 	
 
 	std::chrono::high_resolution_clock::time_point vpd_input_0 = std::chrono::high_resolution_clock::now();
