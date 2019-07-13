@@ -851,6 +851,7 @@ prime_field::field_element zk_verifier::V_in(const prime_field::field_element* r
 bool zk_verifier::verify(const char* output_path)
 {
 	int proof_size = 0;
+	//there is a way to compress binlinear pairing element
 	int bilinear_pairing_factor = 3;
 	double verification_time = 0;
 	double predicates_calc_time = 0;
