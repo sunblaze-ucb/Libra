@@ -53,7 +53,6 @@ namespace prime_field
 	
 	extern u256b mod;
 
-
 	class u512b
 	{
 	public:
@@ -80,6 +79,7 @@ namespace prime_field
 		bool operator < (const u512b &x) const;
 		void random();
 	};
+	extern u512b mod_512, minus_mod_512;
 
 	void init(std::string, int);
 	void init_random();
@@ -94,6 +94,7 @@ namespace prime_field
 
 		field_element();
 		field_element(const int);
+		field_element(const unsigned long long);
 		field_element operator + (const field_element &b) const;
 		field_element operator * (const field_element &b) const;
 		field_element operator / (const field_element &b) const;

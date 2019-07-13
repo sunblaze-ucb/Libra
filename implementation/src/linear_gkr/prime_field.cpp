@@ -358,7 +358,7 @@ namespace prime_field
 	}
 	u256b my_factor;
 	
-
+//https://www.nayuki.io/page/barrett-reduction-algorithm
 	u512b u512b::operator % (const u256b &x) const
 	{
 		if(lo == 0 && mid == 0 && hi.lo == 0 && hi.mid == 0 && hi.hi == 0)
@@ -482,6 +482,7 @@ namespace prime_field
 
 
 	u256b mod;
+	u512b minus_mod_512, mod_512;
 	const int shift = 508;
 	bool initialized = false;
 
@@ -498,6 +499,8 @@ namespace prime_field
 
 		std::string factor_s = "49885853761272603568320884710755151782187486770207743353506441985236025007921";
 		my_factor = u256b(factor_s.c_str(), factor_s.length(), 10);
+		minus_mod_512 = prime_field::field_element(0).value - mod;
+		mod_512 = mod;
 	}
 	void init_random()
 	{
@@ -510,12 +513,16 @@ namespace prime_field
 	{
 		value = (u256b)(unsigned long long)x;
 	}
+	field_element::field_element(const unsigned long long x)
+	{
+		value = (u256b)(unsigned long long)x;
+	}
 	field_element field_element::operator + (const field_element &b) const
 	{
 		field_element ret;
 		ret.value = (b.value + value);
-		if(ret.value >= mod)
-			ret.value = ret.value - mod;
+		if(ret.value >= mod_512)
+			ret.value = ret.value + minus_mod_512;
 		return ret;
 	}
 	field_element field_element::mul_non_mod(const field_element &b) const
@@ -527,10 +534,6 @@ namespace prime_field
 	field_element field_element::operator * (const field_element &b) const
 	{
 		field_element ret;
-		if(b.value.mid == 0 && b.value.lo == 0)
-			return b;
-		if(value.mid == 0 && value.lo == 0)
-			return *this;
 		ret.value = (b.value * value) % mod;
 		return ret;
 	}
@@ -546,7 +549,7 @@ namespace prime_field
 		if(value >= b.value)
 			ret.value = value - b.value;
 		else
-			ret.value = value + mod - b.value;
+			ret.value = value + mod_512 - b.value;
 		return ret;
 	}
 	char* field_element::to_string()

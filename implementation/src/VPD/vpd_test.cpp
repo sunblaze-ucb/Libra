@@ -98,7 +98,7 @@ void KeyGen(int d){
 	pub_g1.at(2 * d + 7) = pre_exp(g1_pre, s[d]);
 	pub_g2.at(2 * d + 1) = pre_exp(g2_pre, s[d]);
 
-	cout << "VPD Test KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD Test KeyGen time: " << (double)(clock() - KeyGen_t) / CLOCKS_PER_SEC << endl;
 	
 	return;
 }
@@ -127,7 +127,7 @@ mpz_class commit(Ec1& digest, Ec1& digesta, vector<mpz_class>& input){
 
 	digesta = digest * temp1;
 	
-	cout << "VPD test commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD test commit time: " << (double)(clock() - commit_t) / CLOCKS_PER_SEC << endl;
 	
 	return r_f;
 	
@@ -234,7 +234,7 @@ void prove(vector<mpz_class> r, mpz_class& ans, vector<mpz_class>& input, vector
 		}
 	}
 	ans = (ans + coeffs[2 * NumOfVar]) % p;
-	cout << "VPD test prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
+//	cout << "VPD test prove time: " << (double)(clock() - prove_t) / CLOCKS_PER_SEC << endl;	
 }
 
 bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witness, vector<Ec1>& witnessa){
@@ -281,7 +281,7 @@ bool verify(vector<mpz_class> r, Ec1 digest, mpz_class& ans, vector<Ec1>& witnes
 		flag = 0;
 	}
 
-	cout << "VPD test verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
+//	cout << "VPD test verify time: "<<(double)(clock() - verify_t) / CLOCKS_PER_SEC << endl;
 	return flag;
 	
 }
