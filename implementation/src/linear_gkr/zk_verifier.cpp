@@ -881,7 +881,6 @@ bool zk_verifier::verify(const char* output_path)
 	std::chrono::high_resolution_clock::time_point t_a = std::chrono::high_resolution_clock::now();
 	std::cerr << "Calc V_output(r)" << std::endl;
 	prime_field::field_element a_0 = p -> V_res(one_minus_r_0, r_0, result, C.circuit[C.total_depth - 1].bit_length, (1 << (C.circuit[C.total_depth - 1].bit_length)));
-	proof_size += sizeof(prime_field::field_element) * C.circuit[C.total_depth - 1].bit_length;
 	std::chrono::high_resolution_clock::time_point t_b = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> ts = std::chrono::duration_cast<std::chrono::duration<double>>(t_b - t_a);
@@ -900,10 +899,8 @@ bool zk_verifier::verify(const char* output_path)
 
 		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 
-		proof_size += 2 * sizeof(prime_field::field_element) + 2 * sizeof(prime_field::field_element) * C.circuit[i].bit_length;
-
 		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
-		proof_size += sizeof(bn::Ec1) * digest_mask.size() + sizeof(prime_field::field_element);
+		proof_size += sizeof(bn::Ec1) * (digest_mask.size() + digest_maskR.size());
 		p -> rho = rho;
 		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		bool r_verify_cc = vpdR::check_commit(digest_maskR[0], digest_maskR[1]);
@@ -1017,14 +1014,12 @@ bool zk_verifier::verify(const char* output_path)
 			}
 		}
 
-		proof_size += sizeof(prime_field::field_element) * 2 * C.circuit[i - 1].bit_length;
 	
 		//Add one more round for maskR
 		//quadratic_poly poly p->sumcheck_finalroundR(previous_random, C.current[i - 1].bit_length);
 		
 		auto final_claims = p -> sumcheck_finalize(previous_random);
 		
-		proof_size += sizeof(prime_field::field_element) * 2;
 
 		auto v_u = final_claims.first;
 		auto v_v = final_claims.second;
