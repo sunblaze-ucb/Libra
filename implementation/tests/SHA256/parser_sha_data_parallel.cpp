@@ -27,6 +27,7 @@ regex minus_gate("P V[0-9]+ = V[0-9]+ minus V[0-9]+ E");
 regex naab_gate("P V[0-9]+ = V[0-9]+ NAAB V[0-9]+ E");
 regex not_gate("P V[0-9]+ = V[0-9]+ NOT V[0-9]+ E");
 regex exp_sum_gate("P V[0-9]+ = V[0-9]+ EXPSUM V[0-9]+ E");
+regex bit_test_gate("P V[0-9]+ = V[0-9]+ BIT V[0-9]+ E");
 
 smatch base_match;
 int repeat_num;
@@ -43,7 +44,8 @@ enum gate_types
     naab_gate_id = 9,
     output_gate_id = 11,
     relay_gate_id = 10,
-	exp_sum_gate_id = 12
+	exp_sum_gate_id = 12,
+	bit_test_gate_id = 13
 };
 
 class gate
@@ -251,6 +253,14 @@ void DAG_to_layered()
 					auto &g0 = sha256_dag_copy.circuit[make_pair((int)'V', i)];
 					assert(g0.layered_lvl + 1 == g.layered_lvl);
 				}
+				break;
+			}
+			case bit_test_gate_id:
+			{
+				auto input0 = g.input0;
+				assert(g.input0 == g.input1);
+				add_relay(id, input0, 0);
+				break;
 			}
 		}
 	}
@@ -452,7 +462,19 @@ void read_circuit(ifstream &circuit_in)
 			{
             	sha256_dag.circuit[make_pair((int)'V', i)].outputs.push_back(g.id);
 			}
-
+		}
+		else if(std::regex_match(source_line, base_match, bit_test_gate))
+		{
+			sscanf(source_line.c_str(), "P V%d = V%lld BIT V%lld E", &tgt, &src0, &src1);
+            DAG_gate g;
+            g.is_output = false;
+            g.ty = bit_test_gate_id;
+            g.id = make_pair((int)'V', (int)tgt);
+            g.input0 = make_pair((int)'V', (int)src0);
+            g.input1 = make_pair((int)'V', (int)src1);
+            sha256_dag.circuit[make_pair((int)'V', tgt)] = g;
+            sha256_dag.circuit[g.input0].outputs.push_back(g.id);
+            sha256_dag.circuit[g.input1].outputs.push_back(g.id);
 		}
         else
         {

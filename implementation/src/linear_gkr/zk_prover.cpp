@@ -132,6 +132,11 @@ prime_field::field_element* zk_prover::evaluate()
 					circuit_value[i][g] = circuit_value[i][g] + circuit_value[i - 1][k] * prime_field::field_element(1ULL << (k - u));
 				}
 			}
+			else if(ty == 13)
+			{
+				assert(u == v);
+				circuit_value[i][g] = circuit_value[i - 1][u] * (prime_field::field_element(1) - circuit_value[i - 1][v]);
+			}
 			else
 			{
 				assert(false);
@@ -555,6 +560,16 @@ void zk_prover::sumcheck_phase1_init()
 					add_mult_sum[u].b.value = add_mult_sum[u].b.value + prime_field::minus_mod_512;
 				break;
 			}
+			case 13: //bit-test gate
+			{
+				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
+						+ beta_g_r1_fhalf[i & mask_fhalf].value * beta_g_r1_shalf[i >> first_half].value) % prime_field::mod;
+				auto tmp_V = tmp * circuit_value[sumcheck_layer_id - 1][v].value % prime_field::mod;
+				add_mult_sum[u].b.value = (add_mult_sum[u].b.value + prime_field::mod - tmp_V + tmp);
+				while(add_mult_sum[u].b.value >= prime_field::mod)
+					add_mult_sum[u].b.value = add_mult_sum[u].b.value - prime_field::mod;
+				break;
+			}
 			case 9: //NAAB gate
 			{
 				auto tmp = (beta_g_r0_fhalf[i & mask_fhalf].value * beta_g_r0_shalf[i >> first_half].value 
@@ -934,6 +949,21 @@ void zk_prover::sumcheck_phase2_init(prime_field::field_element previous_random,
 				addV_array[v].b.value = (addV_array[v].b.value + tmp_v_u);
 				if(addV_array[v].b.value >= prime_field::mod_512)
 					addV_array[v].b.value = addV_array[v].b.value + prime_field::minus_mod_512;
+				break;
+			}
+			case 13: //bit-test gate
+			{
+				auto tmp_u = beta_u_fhalf[u & mask_fhalf].value * beta_u_shalf[u >> first_half].value % prime_field::mod;
+				auto tmp_g = (beta_g_r0_fhalf[i & mask_g_fhalf].value * beta_g_r0_shalf[i >> first_g_half].value 
+								+ beta_g_r1_fhalf[i & mask_g_fhalf].value * beta_g_r1_shalf[i >> first_g_half].value) % prime_field::mod;
+				auto tmp = tmp_g * tmp_u % prime_field::mod;
+				auto tmp_v_u = tmp * v_u.value % prime_field::mod;
+				add_mult_sum[v].b.value = (add_mult_sum[v].b.value + prime_field::mod - tmp_v_u);
+				while(add_mult_sum[v].b.value >= prime_field::mod)
+					add_mult_sum[v].b.value = add_mult_sum[v].b.value - prime_field::mod;
+				addV_array[v].b.value = (addV_array[v].b.value + tmp_v_u);
+				if(addV_array[v].b.value >= prime_field::mod)
+					addV_array[v].b.value = addV_array[v].b.value - prime_field::mod;
 				break;
 			}
 			case 9: //NAAB gate

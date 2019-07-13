@@ -165,10 +165,11 @@ def test_bitvec_field(fh, bvals, fval, condition, voffset, noconsts):
 def verify_bits(fh, ivals, voffset):
     outs = []
     for ival in ivals:
-        fh.write("P V%d = V%d NOT V%d E\n" % (voffset, ival, ival))
-        fh.write("P V%d = V%d * V%d E\n" % (voffset+1, voffset, ival))
-        outs.append(voffset+1)
-        voffset += 2
+        #fh.write("P V%d = V%d NOT V%d E\n" % (voffset, ival, ival))
+        #fh.write("P V%d = V%d * V%d E\n" % (voffset+1, voffset, ival))
+        fh.write("P V%d = V%d BIT V%d E\n" % (voffset, ival, ival))
+        outs.append(voffset)
+        voffset += 1
 
     return (outs, voffset)
 

@@ -86,6 +86,10 @@ void zk_verifier::read_circuit(const char *path, const char *meta_path)
 					fprintf(stderr, "WARNING, v!=0 for relay gate. %d\n", i);
 				v = 0;
 			}
+			if(ty == 13)
+			{
+				assert(u == v);
+			}
 			if(g != previous_g + 1)
 			{
 				printf("Error, gates must be in sorted order, and full [0, 2^n - 1]. %d %d %d %d\n", i, j, g, previous_g);
@@ -152,6 +156,7 @@ void zk_verifier::read_circuit(const char *path, const char *meta_path)
 		int is_para;
 		fscanf(meta_in, "%d", &is_para);
 		fscanf(meta_in, "%d%d%d%d", &C.circuit[i].block_size, &C.circuit[i].repeat_num, &C.circuit[i].log_block_size, &C.circuit[i].log_repeat_num);
+		assert(1 << C.circuit[i].log_repeat_num == C.circuit[i].repeat_num);
 		if(is_para)
 		{
 			C.circuit[i].is_parallel = true;
@@ -190,9 +195,10 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 {
 	vector<prime_field::field_element> ret_para;
 	vector<prime_field::field_element> ret;
-	ret.resize(11);
-	ret_para.resize(11);
-	for(int i = 0; i < 11; ++i)
+	const int gate_type_count = 14;
+	ret.resize(gate_type_count);
+	ret_para.resize(gate_type_count);
+	for(int i = 0; i < gate_type_count; ++i)
 	{
 		ret[i] = prime_field::field_element(0);
 		ret_para[i] = prime_field::field_element(0);
@@ -210,9 +216,9 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 		int second_half_uv = C.circuit[depth - 1].log_block_size - first_half_uv;
 		int block_size = C.circuit[depth].block_size;
 		vector<prime_field::field_element> one_block_alpha, one_block_beta;
-		one_block_alpha.resize(11);
-		one_block_beta.resize(11);
-		for(int i = 0; i < 11; ++i)
+		one_block_alpha.resize(gate_type_count);
+		one_block_beta.resize(gate_type_count);
+		for(int i = 0; i < gate_type_count; ++i)
 		{
 			one_block_alpha[i] = prime_field::field_element(0);
 			one_block_beta[i] = prime_field::field_element(0);
@@ -299,15 +305,15 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					{
 						int u_first_half = j & ((1 << first_half_uv) - 1);
 						int u_second_half = j >> first_half_uv;
-						one_block_alpha[5] = one_block_alpha[5] + beta_g_val_alpha * beta_v_0 * (beta_u_block_first_half[u_first_half] * beta_u_block_second_half[u_second_half]);
-						one_block_beta[5] = one_block_beta[5] + beta_g_val_beta * beta_v_0 * (beta_u_block_first_half[u_first_half] * beta_u_block_second_half[u_second_half]);
+						one_block_alpha[12] = one_block_alpha[12] + beta_g_val_alpha * beta_v_0 * (beta_u_block_first_half[u_first_half] * beta_u_block_second_half[u_second_half]);
+						one_block_beta[12] = one_block_beta[12] + beta_g_val_beta * beta_v_0 * (beta_u_block_first_half[u_first_half] * beta_u_block_second_half[u_second_half]);
 
 						beta_v_0 = beta_v_0 + beta_v_0;
 						if(beta_v_0.value >= prime_field::mod)
 							beta_v_0.value = beta_v_0.value - prime_field::mod;
 					}
-					one_block_alpha[5].value = one_block_alpha[5].value % prime_field::mod;
-					one_block_beta[5].value = one_block_beta[5].value % prime_field::mod;
+					one_block_alpha[12].value = one_block_alpha[12].value % prime_field::mod;
+					one_block_beta[12].value = one_block_beta[12].value % prime_field::mod;
 					break;
 				}
 				case 6:
@@ -385,6 +391,21 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					one_block_beta[10].value = one_block_beta[10].value % prime_field::mod;
 					break;
 				}
+				case 13:
+				{
+					int g_first_half = g & ((1 << first_half_g) - 1);
+					int g_second_half = (g >> first_half_g);
+					int u_first_half = u & ((1 << first_half_uv) - 1);
+					int u_second_half = u >> first_half_uv;
+					int v_first_half = v & ((1 << first_half_uv) - 1);
+					int v_second_half = v >> first_half_uv;
+					auto uv_value = (beta_u_block_first_half[u_first_half].value * beta_u_block_second_half[u_second_half].value % prime_field::mod) * (beta_v_block_first_half[v_first_half].value * beta_v_block_second_half[v_second_half].value % prime_field::mod) % prime_field::mod;
+					one_block_alpha[13].value = one_block_alpha[13].value + (beta_g_r0_block_first_half[g_first_half].value * beta_g_r0_block_second_half[g_second_half].value) % prime_field::mod * uv_value;
+					one_block_beta[13].value = one_block_beta[13].value + (beta_g_r1_block_first_half[g_first_half].value * beta_g_r1_block_second_half[g_second_half].value) % prime_field::mod * uv_value;
+					one_block_alpha[13].value = one_block_alpha[13].value % prime_field::mod;
+					one_block_beta[13].value = one_block_beta[13].value % prime_field::mod;
+					break;
+				}
 			}
 		}
 		for(int i = 0; i < C.circuit[depth].repeat_num; ++i)
@@ -425,9 +446,9 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					prefix_beta_v0 = prefix_beta_v0 * (prime_field::field_element(1) - r_1[j + C.circuit[depth].log_block_size]) * uv_value;
 				}
 			}
-			for(int j = 0; j < 11; ++j)
+			for(int j = 0; j < gate_type_count; ++j)
 			{
-				if(j == 6 || j == 10 || j == 5)
+				if(j == 6 || j == 10 || j == 5 || j == 12)
 				{
 					ret_para[j].value = ret_para[j].value + prefix_alpha_v0.value * one_block_alpha[j].value + prefix_beta_v0.value * one_block_beta[j].value;
 					ret_para[j].value = ret_para[j].value % prime_field::mod;
@@ -528,7 +549,7 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					{
 						int u_first_half = j & ((1 << first_half_uv) - 1);
 						int u_second_half = j >> first_half_uv;
-						ret[5] = ret[5] + beta_g_val * beta_v_0 * (beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]);
+						ret[12] = ret[12] + beta_g_val * beta_v_0 * (beta_u_first_half[u_first_half] * beta_u_second_half[u_second_half]);
 						beta_v_0 = beta_v_0 + beta_v_0;
 						if(beta_v_0.value >= prime_field::mod)
 						{
@@ -597,10 +618,23 @@ vector<prime_field::field_element> zk_verifier::predicates(int depth, prime_fiel
 					ret[10].value = ret[10].value % prime_field::mod;
 					break;
 				}
+				case 13:
+				{
+					int g_first_half = g & ((1 << first_half_g) - 1);
+					int g_second_half = (g >> first_half_g);
+					int u_first_half = u & ((1 << first_half_uv) - 1);
+					int u_second_half = u >> first_half_uv;
+					int v_first_half = v & ((1 << first_half_uv) - 1);
+					int v_second_half = v >> first_half_uv;
+					ret[13].value = ret[13].value + (beta_g_r0_first_half[g_first_half].value * beta_g_r0_second_half[g_second_half].value + beta_g_r1_first_half[g_first_half].value * beta_g_r1_second_half[g_second_half].value) % prime_field::mod * 
+								(beta_u_first_half[u_first_half].value * beta_u_second_half[u_second_half].value % prime_field::mod) % prime_field::mod * (beta_v_first_half[v_first_half].value * beta_v_second_half[v_second_half].value % prime_field::mod);
+					ret[13].value = ret[13].value % prime_field::mod;
+					break;
+				}
 			}
 		}
 	}
-	for(int i = 0; i < 11; ++i)
+	for(int i = 0; i < gate_type_count; ++i)
 	{
 		ret_para[i].value = ret_para[i].value % prime_field::mod;
 		ret[i].value = ret[i].value % prime_field::mod;
@@ -1013,7 +1047,9 @@ bool zk_verifier::verify(const char* output_path)
 		auto naab_value = predicates_value[9];
 		auto sum_value = predicates_value[5];
 		auto relay_value = predicates_value[10];
-		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u + relay_value * v_u);
+		auto exp_sum_value = predicates_value[12];
+		auto bit_test_value = predicates_value[13];
+		quadratic_poly poly = p->sumcheck_finalround(previous_random, C.circuit[i - 1].bit_length << 1, add_value * (v_u + v_v) + mult_value * v_u * v_v + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u + relay_value * v_u + exp_sum_value * v_u + bit_test_value * (v_u * (prime_field::field_element(1) - v_v)));
 
 		if(poly.eval(0) + poly.eval(1) + direct_relay_value * v_u != alpha_beta_sum)
 		{
@@ -1090,7 +1126,7 @@ bool zk_verifier::verify(const char* output_path)
 		maskpoly_value.value = prime_field::u512b(maskpoly_value_mpz.get_str().c_str(), maskpoly_value_mpz.get_str().length(), 10);
 		maskRg1_value.value = prime_field::u512b(maskRg1_value_mpz.get_str().c_str(), maskRg1_value_mpz.get_str().length(), 10);
 		maskRg2_value.value = prime_field::u512b(maskRg2_value_mpz.get_str().c_str(), maskRg2_value_mpz.get_str().length(), 10);
-		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u + relay_value * v_u) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value + direct_relay_value * v_u)
+		if(alpha_beta_sum != r_c[0] * (add_value * (v_u + v_v) + mult_value * v_u * v_v + not_value * (prime_field::field_element(1) - v_u) + minus_value * (v_u - v_v) + xor_value * (v_u + v_v - prime_field::field_element(2) * v_u * v_v) + naab_value * (v_v - v_u * v_v) + sum_value * v_u + relay_value * v_u + exp_sum_value * v_u + bit_test_value * (prime_field::field_element(1) - v_v) * v_u) + alpha * p -> Iuv * p ->preZu * maskRg1_value + beta * p -> Iuv * p -> preZv * maskRg2_value + rho * maskpoly_value + direct_relay_value * v_u)
 		{
 			fprintf(stderr, "Verification fail, semi final, circuit level %d\n", i);
 			return false;

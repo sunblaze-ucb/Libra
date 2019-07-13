@@ -6,3 +6,4 @@ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-7 1
 git submodule init
 git submodule update
 make -C implementation/include/ate-pairing
+
