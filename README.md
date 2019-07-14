@@ -24,7 +24,7 @@ Or:
     apt update
     apt -y install make git clang++-7 libgmp-dev g++ parallel
 
-In other words, you'll need a C++11-compatible compiler (we use clang-7. g++ 5, 6, or 7 will work).
+In other words, you'll need a C++11-compatible compiler (we use clang-7) (g++ 5, 6, or 7 will work).
 
 ## building ##
 
