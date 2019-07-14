@@ -11,7 +11,7 @@ Please read the README files in each of the following repositories:
 
 - [Paper](https://github.com/sunblaze-ucb/fastZKP/tree/master/paper): the paper with all versions
 
-Please read through the [Wiki](https://github.com/sunblaze-ucb/fastZKP/wiki) page to learn the circuit representation of this implementation.
+Please read through the [Wiki](https://github.com/sunblaze-ucb/fastZKP/wiki/Circuit-description) page to learn the circuit representation of this implementation.
 
 ## prerequisites ##
 
