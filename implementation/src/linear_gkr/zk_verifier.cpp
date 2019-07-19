@@ -933,7 +933,7 @@ bool zk_verifier::verify(const char* output_path)
 		{	
 			if(j == C.circuit[i - 1].bit_length - 1){
 				quintuple_poly poly = p->sumcheck_phase1_updatelastbit(previous_random, j);
-				proof_size += sizeof(quintuple_poly);
+				proof_size += sizeof(quintuple_poly) / 2;
 				previous_random = r_u[j];
 
 
@@ -952,7 +952,7 @@ bool zk_verifier::verify(const char* output_path)
 
 			else{
 				quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
-				proof_size += sizeof(quadratic_poly);
+				proof_size += sizeof(quadratic_poly) / 2;
 				previous_random = r_u[j];
 			
 
@@ -982,7 +982,7 @@ bool zk_verifier::verify(const char* output_path)
 				r_v[j] = prime_field::field_element(0);
 			if(j == C.circuit[i - 1].bit_length - 1){
 				quintuple_poly poly = p -> sumcheck_phase2_updatelastbit(previous_random, j);
-				proof_size += sizeof(quintuple_poly);
+				proof_size += sizeof(quintuple_poly) / 2;
 				poly.f = poly.f;
 				previous_random = r_v[j];
 				if(poly.eval(0) + poly.eval(1) + direct_relay_value * p -> v_u != alpha_beta_sum)
@@ -999,7 +999,7 @@ bool zk_verifier::verify(const char* output_path)
 			else
 			{
 				quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
-				proof_size += sizeof(quadratic_poly);
+				proof_size += sizeof(quadratic_poly) / 2;
 				poly.c = poly.c;
 			
 				previous_random = r_v[j];
