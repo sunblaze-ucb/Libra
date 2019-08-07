@@ -8,6 +8,7 @@
 #include <string>
 #include <gmp.h>
 #include <gmpxx.h>
+#include <vector>
 
 //using namespace boost::multiprecision;
 //using namespace boost::random;
@@ -105,6 +106,7 @@ namespace prime_field
 		int bitLen();
 		bool operator != (const field_element &b) const;
 		mpz_class to_gmp_class();
+		std::vector<bool> bit_stream();
 	};
 	field_element random();
 }

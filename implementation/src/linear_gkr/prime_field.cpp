@@ -627,4 +627,18 @@ namespace prime_field
 	{
 		return !(*this != b);
 	}
+	std::vector<bool> field_element::bit_stream()
+	{
+		std::vector<bool> out;
+		for(int i = 0; i < 128; ++i)
+		{
+			out.push_back((value.lo >> i) & 1);
+		}
+		
+		for(int i = 0; i < 128; ++i)
+		{
+			out.push_back((value.mid >> i) & 1);
+		}
+		return out;
+	}
 }

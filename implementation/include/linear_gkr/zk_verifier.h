@@ -7,6 +7,7 @@
 #include "linear_gkr/polynomial.h"
 #include "VPD/vpdR.h"
 #include "VPD/vpd_test.h"
+#include "linear_gkr/transcript.h"
 #include <utility>
 
 class zk_verifier
@@ -23,6 +24,7 @@ public:
 	prime_field::field_element *beta_u_block_first_half, *beta_u_block_second_half;
 	prime_field::field_element *beta_v_block_first_half, *beta_v_block_second_half;
 	
+	proof_transcript trans;
 	layered_circuit C;
 	zk_prover *p;
 	void beta_init(int depth, prime_field::field_element alpha, prime_field::field_element beta,

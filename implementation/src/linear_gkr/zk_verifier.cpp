@@ -822,7 +822,7 @@ prime_field::field_element* generate_randomness(unsigned int size)
 
 	for(int i = 0; i < k; ++i)
 	{
-		ret[i] = prime_field::random();
+		ret[i] = trans.random();
 		ret[i].value = ret[i].value % prime_field::mod;
 	}
 	return ret;
