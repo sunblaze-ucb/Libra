@@ -36,6 +36,7 @@ public:
 	bool verify(const char*);
 	void get_prover(zk_prover*);
 	void delete_self();
+	prime_field::field_element* generate_randomness(unsigned int size);
 	vector<prime_field::field_element> predicates(int depth, prime_field::field_element *r_0, prime_field::field_element *r_1, prime_field::field_element *r_u, prime_field::field_element *r_v, prime_field::field_element alpha, prime_field::field_element beta);
 	prime_field::field_element direct_relay(int depth, prime_field::field_element *r_g, prime_field::field_element *r_u);
 	prime_field::field_element V_in(const prime_field::field_element*, const prime_field::field_element*, prime_field::field_element*, int, int);

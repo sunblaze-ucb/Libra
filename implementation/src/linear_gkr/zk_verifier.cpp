@@ -814,17 +814,11 @@ void zk_verifier::beta_init(int depth, prime_field::field_element alpha, prime_f
 	}
 }
 
-prime_field::field_element* generate_randomness(unsigned int size)
+prime_field::field_element* zk_verifier::generate_randomness(unsigned int size)
 {
 	int k = size;
 	prime_field::field_element* ret;
-	ret = new prime_field::field_element[k];
-
-	for(int i = 0; i < k; ++i)
-	{
-		ret[i] = trans.random();
-		ret[i].value = ret[i].value % prime_field::mod;
-	}
+	ret = trans.random(size);
 	return ret;
 }
 
@@ -852,7 +846,7 @@ bool zk_verifier::verify(const char* output_path)
 {
 	int proof_size = 0;
 	//there is a way to compress binlinear pairing element
-	int bilinear_pairing_factor = 3;
+	int bilinear_pairing_factor = 1;
 	double verification_time = 0;
 	double predicates_calc_time = 0;
 	double verification_rdl_time = 0;
@@ -863,7 +857,11 @@ bool zk_verifier::verify(const char* output_path)
 	double key_gen_time = 0;
 	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length, key_gen_time);
 	proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (digest_input.first.size() + digest_input.second.size());
-
+	for(int i = 0; i < digest_input.first.size(); ++i)
+		trans.msg.push_back(container(digest_input.first[i]));
+	for(int i = 0; i < digest_input.second.size(); ++i)
+		trans.msg.push_back(container(digest_input.second[i]));
+	assert(proof_size == trans.get_proof_size());
 	prime_field::field_element alpha, beta;
 	alpha.value = 1;
 	beta.value = 0;
@@ -896,13 +894,18 @@ bool zk_verifier::verify(const char* output_path)
 	{
 		std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	//	std::cerr << "Bound u start" << std::endl;
-		auto rho = prime_field::random();
+		auto rho = trans.random();
 		std::vector<bn::Ec1> digest_mask;
 
 		auto digest_maskR = p -> sumcheck_init(i, C.circuit[i].bit_length, C.circuit[i - 1].bit_length, C.circuit[i - 1].bit_length, alpha, beta, r_0, r_1, one_minus_r_0, one_minus_r_1);
 
 		digest_mask = p -> generate_maskpoly_pre_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (digest_mask.size() + digest_maskR.size());
+		for(int j = 0; j < digest_mask.size(); ++j)
+			trans.msg.push_back(digest_mask[j]);
+		for(int j = 0; j < digest_maskR.size(); ++j)
+			trans.msg.push_back(digest_maskR[j]);
+		assert(proof_size == trans.get_proof_size());
 		p -> rho = rho;
 		p -> generate_maskpoly_after_rho(C.circuit[i - 1].bit_length * 2 + 1, 2);
 		bool r_verify_cc = vpdR::check_commit(digest_maskR[0], digest_maskR[1]);
@@ -934,6 +937,13 @@ bool zk_verifier::verify(const char* output_path)
 			if(j == C.circuit[i - 1].bit_length - 1){
 				quintuple_poly poly = p->sumcheck_phase1_updatelastbit(previous_random, j);
 				proof_size += sizeof(quintuple_poly) / 2;
+				trans.msg.push_back(container(poly.a, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.b, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.c, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.d, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.e, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.f, container::fld_ele_indicator));
+				assert(proof_size == trans.get_proof_size());
 				previous_random = r_u[j];
 
 
@@ -953,6 +963,10 @@ bool zk_verifier::verify(const char* output_path)
 			else{
 				quadratic_poly poly = p -> sumcheck_phase1_update(previous_random, j);
 				proof_size += sizeof(quadratic_poly) / 2;
+				trans.msg.push_back(container(poly.a, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.b, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.c, container::fld_ele_indicator));
+				assert(proof_size == trans.get_proof_size());
 				previous_random = r_u[j];
 			
 
@@ -983,6 +997,13 @@ bool zk_verifier::verify(const char* output_path)
 			if(j == C.circuit[i - 1].bit_length - 1){
 				quintuple_poly poly = p -> sumcheck_phase2_updatelastbit(previous_random, j);
 				proof_size += sizeof(quintuple_poly) / 2;
+				trans.msg.push_back(container(poly.a, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.b, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.c, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.d, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.e, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.f, container::fld_ele_indicator));
+				assert(proof_size == trans.get_proof_size());
 				poly.f = poly.f;
 				previous_random = r_v[j];
 				if(poly.eval(0) + poly.eval(1) + direct_relay_value * p -> v_u != alpha_beta_sum)
@@ -1000,6 +1021,10 @@ bool zk_verifier::verify(const char* output_path)
 			{
 				quadratic_poly poly = p -> sumcheck_phase2_update(previous_random, j);
 				proof_size += sizeof(quadratic_poly) / 2;
+				trans.msg.push_back(container(poly.a, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.b, container::fld_ele_indicator));
+				trans.msg.push_back(container(poly.c, container::fld_ele_indicator));
+				assert(proof_size == trans.get_proof_size());
 				poly.c = poly.c;
 			
 				previous_random = r_v[j];
@@ -1064,6 +1089,11 @@ bool zk_verifier::verify(const char* output_path)
 		auto witnesses = p -> prove_R(r, maskRg1_value_mpz);
 		prime_field::field_element tmp_rg1;
 		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses.first.size() + witnesses.second.size());
+		for(int i = 0; i < witnesses.first.size(); ++i)
+			trans.msg.push_back(container(witnesses.first[i]));
+		for(int i = 0; i < witnesses.second.size(); ++i)
+			trans.msg.push_back(container(witnesses.second[i]));
+		assert(proof_size == trans.get_proof_size());
 
 		std::chrono::high_resolution_clock::time_point vpdr_verify_0_0 = std::chrono::high_resolution_clock::now();
 		bool r_verify_verify = vpdR::verify(r, digest_maskR[0], maskRg1_value_mpz, witnesses.first, witnesses.second);
@@ -1074,6 +1104,11 @@ bool zk_verifier::verify(const char* output_path)
 		r[0] = p -> preprev1.to_gmp_class();
 		witnesses = p -> prove_R(r, maskRg2_value_mpz);
 		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses.first.size() + witnesses.second.size());
+		for(int i = 0; i < witnesses.first.size(); ++i)
+			trans.msg.push_back(container(witnesses.first[i]));
+		for(int i = 0; i < witnesses.second.size(); ++i)
+			trans.msg.push_back(container(witnesses.second[i]));
+		assert(proof_size == trans.get_proof_size());
 		
 		std::chrono::high_resolution_clock::time_point vpdr_verify_1_0 = std::chrono::high_resolution_clock::now();
 		r_verify_verify &= vpdR::verify(r, digest_maskR[0], maskRg2_value_mpz, witnesses.first, witnesses.second);
@@ -1099,6 +1134,11 @@ bool zk_verifier::verify(const char* output_path)
 		mpz_class maskpoly_value_mpz = 0;
 		witnesses = p -> prove_mask(r, maskpoly_value_mpz);
 		proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses.first.size() + witnesses.second.size());
+		for(int i = 0; i < witnesses.first.size(); ++i)
+			trans.msg.push_back(container(witnesses.first[i]));
+		for(int i = 0; i < witnesses.second.size(); ++i)
+			trans.msg.push_back(container(witnesses.second[i]));
+		assert(proof_size == trans.get_proof_size());
 
 
 
@@ -1165,6 +1205,11 @@ bool zk_verifier::verify(const char* output_path)
 	input_0_mpz = 0, input_1_mpz = 0;
 	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
 	proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (witnesses_0.first.size() + witnesses_0.second.size());
+	for(int i = 0; i < witnesses_0.first.size(); ++i)
+		trans.msg.push_back(container(witnesses_0.first[i]));
+	for(int i = 0; i < witnesses_0.second.size(); ++i)
+		trans.msg.push_back(container(witnesses_0.second[i]));
+	assert(proof_size == trans.get_proof_size());
 	
 
 	std::chrono::high_resolution_clock::time_point vpd_input_0 = std::chrono::high_resolution_clock::now();
@@ -1200,7 +1245,9 @@ bool zk_verifier::verify(const char* output_path)
 	//	std::cerr << "Verification gate time " << predicates_calc_time << std::endl;
 		std::cerr << "Verification rdl time " << verification_rdl_time << std::endl;
 		std::cerr << "Verification Time " << verification_time - verification_rdl_time << std::endl;
-		std::cerr << "Proof size(bytes) " << proof_size << std::endl;
+		std::cerr << "Proof size(bytes) est " << proof_size << std::endl;
+		std::cerr << "Proof size(bytes) real " << trans.get_proof_size() << std::endl;
+		trans.output_to_file("proof.bin");
 		FILE *result = fopen(output_path, "w");
 		fprintf(result, "%lf %lf %lf %lf %lf %d\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, key_gen_time, proof_size);
 		fclose(result);

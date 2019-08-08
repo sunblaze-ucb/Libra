@@ -41,6 +41,17 @@
         "cstddef": "cpp",
         "deque": "cpp",
         "iomanip": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp",
+        "atomic": "cpp",
+        "bitset": "cpp",
+        "list": "cpp",
+        "unordered_set": "cpp",
+        "thread": "cpp",
+        "cinttypes": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp",
+        "algorithm": "cpp"
     }
 }
