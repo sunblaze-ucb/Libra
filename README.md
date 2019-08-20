@@ -11,7 +11,6 @@ Please read the README files in each of the following repositories:
 
 - [Paper](https://github.com/sunblaze-ucb/fastZKP/tree/master/paper): the paper with all versions
 
-Please read through the [Wiki](https://github.com/sunblaze-ucb/fastZKP/wiki/Circuit-description) page to learn the circuit representation of this implementation.
 
 ## prerequisites ##
 
@@ -36,24 +35,18 @@ The top-level Makefile in this directory will build everything below. Just run
 
 ## Testing ##
 ### Lanczos
-`cd implemetation/tests/lanczos`
-
-`python build.py`
-
-`python run.py`
+    cd implemetation/tests/lanczos
+    python build.py
+    python run.py
 
 ### Matmul
-`cd implemetation/tests/matmul`
-
-`python build.py`
-
-`python run.py`
+    cd implemetation/tests/matmul
+    python build.py
+    python run.py
 
 ### SHA256
-`cd implemetation/tests/SHA256`
-
-`python build.py`
-
-`python run.py`
+    cd implemetation/tests/SHA256
+    python build.py
+    python run.py
 
 use `sudo` if necessary.
