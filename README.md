@@ -12,7 +12,7 @@ Please read the README files in each of the following repositories:
 - [Paper](https://github.com/sunblaze-ucb/fastZKP/tree/master/paper): the paper with all versions
 
 
-## prerequisites ##
+## Prerequisites ##
 
 On Debian based systems, you can run the following command:
 
@@ -27,7 +27,7 @@ Or:
 
 In other words, you'll need a C++11-compatible compiler (we use clang-7) (g++ 5, 6, or 7 will work).
 
-## building ##
+## Building ##
 
 The top-level Makefile in this directory will build everything below. Just run
 
