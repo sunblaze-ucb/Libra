@@ -1,4 +1,4 @@
-# Libra ZK Reference Implementation
+# Libra ZK reference implementation
 
 [Libra](https://eprint.iacr.org/2019/317) is a doubly-efficient (meaning,
 for both the prover and the verifier) zkSNARK.
