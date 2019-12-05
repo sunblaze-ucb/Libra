@@ -156,7 +156,8 @@ void zk_verifier::read_circuit(const char *path, const char *meta_path)
 		int is_para;
 		fscanf(meta_in, "%d", &is_para);
 		fscanf(meta_in, "%d%d%d%d", &C.circuit[i].block_size, &C.circuit[i].repeat_num, &C.circuit[i].log_block_size, &C.circuit[i].log_repeat_num);
-		assert(1 << C.circuit[i].log_repeat_num == C.circuit[i].repeat_num);
+		if(is_para)
+			assert(1 << C.circuit[i].log_repeat_num == C.circuit[i].repeat_num);
 		if(is_para)
 		{
 			C.circuit[i].is_parallel = true;
@@ -850,12 +851,16 @@ bool zk_verifier::verify(const char* output_path)
 	double verification_time = 0;
 	double predicates_calc_time = 0;
 	double verification_rdl_time = 0;
+	double poly_commit_scheme_time = 0;
 	prime_field::init_random();
 	p -> proof_init();
 
 	auto result = p -> evaluate();
 	double key_gen_time = 0;
+	auto commit_t0 = std::chrono::high_resolution_clock::now();
 	auto digest_input = p -> keygen_and_commit(C.circuit[0].bit_length, key_gen_time);
+	auto commit_t1 = std::chrono::high_resolution_clock::now();
+	poly_commit_scheme_time += (std::chrono::duration_cast<std::chrono::duration<double>>(commit_t1 - commit_t0)).count() - key_gen_time;
 	proof_size += sizeof(bn::Ec1) / bilinear_pairing_factor * (digest_input.first.size() + digest_input.second.size());
 	for(int i = 0; i < digest_input.first.size(); ++i)
 		trans.msg.push_back(container(digest_input.first[i]));
@@ -1076,6 +1081,7 @@ bool zk_verifier::verify(const char* output_path)
 			r_c[0] = prime_field::field_element(0);
 		alpha_beta_sum = poly.eval(r_c[0]) + direct_relay_value * p -> v_u;
 
+		auto poly_commit_prove_time_t0 = std::chrono::high_resolution_clock::now();
 		mpz_class maskRg1_value_mpz, maskRg2_value_mpz;
 		std::vector<mpz_class> r;
 		r.resize(2);
@@ -1107,7 +1113,8 @@ bool zk_verifier::verify(const char* output_path)
 		std::chrono::high_resolution_clock::time_point vpdr_verify_1_1 = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> vpdr_verify_1_span = std::chrono::duration_cast<std::chrono::duration<double>>(vpdr_verify_1_1 - vpdr_verify_1_0);
 		verification_time += vpdr_verify_1_span.count();
-
+		auto poly_commit_prove_time_t1 = std::chrono::high_resolution_clock::now();
+		poly_commit_scheme_time += std::chrono::duration_cast<std::chrono::duration<double>>(poly_commit_prove_time_t1 - poly_commit_prove_time_t0).count();
 		if(r_verify_verify & r_verify_cc)
 		{
 		}
@@ -1192,6 +1199,7 @@ bool zk_verifier::verify(const char* output_path)
 		r_1_mpz.push_back(r_1[i].to_gmp_class());
 	
 	mpz_class input_0_mpz, input_1_mpz;
+	auto poly_commit_prove_time_t0 = std::chrono::high_resolution_clock::now();
 
 	input_0_mpz = 0, input_1_mpz = 0;
 	auto witnesses_0 = p -> prove_input(r_0_mpz, input_0_mpz, p -> Zu.to_gmp_class());
@@ -1207,7 +1215,8 @@ bool zk_verifier::verify(const char* output_path)
 	std::chrono::high_resolution_clock::time_point vpd_input_1 = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> vpd_input_span = std::chrono::duration_cast<std::chrono::duration<double>>(vpd_input_1 - vpd_input_0);
 	verification_time += vpd_input_span.count();
-
+	auto poly_commit_prove_time_t1 = std::chrono::high_resolution_clock::now();
+	poly_commit_scheme_time += std::chrono::duration_cast<std::chrono::duration<double>>(poly_commit_prove_time_t1 - poly_commit_prove_time_t0).count();
 	if(!(input_0_verify))
 	{
 		fprintf(stderr, "Verification fail, input vpd.\n");
@@ -1237,9 +1246,10 @@ bool zk_verifier::verify(const char* output_path)
 		std::cerr << "Verification Time " << verification_time - verification_rdl_time << std::endl;
 		std::cerr << "Proof size(bytes) est " << proof_size << std::endl;
 		std::cerr << "Proof size(bytes) real " << trans.get_proof_size() << std::endl;
+		std::cerr << "Poly commit scheme time " << poly_commit_scheme_time << std::endl;
 		trans.output_to_file("proof.bin");
 		FILE *result = fopen(output_path, "w");
-		fprintf(result, "%lf %lf %lf %lf %lf %d\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, key_gen_time, proof_size);
+		fprintf(result, "%lf %lf %lf %lf %lf %d %lf\n", p -> total_time, verification_time, predicates_calc_time, verification_rdl_time, key_gen_time, proof_size, poly_commit_scheme_time);
 		fclose(result);
 	}
 	p -> delete_self();

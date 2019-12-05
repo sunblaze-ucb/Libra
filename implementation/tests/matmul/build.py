@@ -1,6 +1,6 @@
 import os
 
-n = [16, 32, 64, 128]
+n = [16, 32, 64, 128, 256]
 
 os.system('g++ gen.cpp -o gen -O3')
 
