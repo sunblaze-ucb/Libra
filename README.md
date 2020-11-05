@@ -1,3 +1,15 @@
+# Acknowledgement
+
+We use [Hyrax](https://github.com/hyraxZK)'s SHA256 circuit generator and LANCZOS circuit generator as a subroutine.
+
+We list all files from Hyrax that in the following:
+- [SHA256 Gen](https://github.com/sunblaze-ucb/Libra/blob/Libra/implementation/tests/SHA256/sha256gen.py)
+- [SHA256 Gen batch file](https://github.com/sunblaze-ucb/Libra/blob/Libra/implementation/tests/SHA256/build.sh)
+- [LANCZOS Gen](https://github.com/sunblaze-ucb/Libra/blob/Libra/implementation/tests/lanczos/lanczos2.py)
+- [LANCZOS GEN batch file](https://github.com/sunblaze-ucb/Libra/blob/Libra/implementation/tests/lanczos/build.sh)
+
+Thanks for their effort in generating these circuits, this saves us a ton of time.
+
 # Libra ZK reference implementation
 
 [Libra](https://eprint.iacr.org/2019/317) is a doubly-efficient (meaning,
