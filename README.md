@@ -7,9 +7,9 @@ This repo will help you to run all tests that performed in the paper.
 
 Please read the README files in each of the following repositories:
 
-- [Implementation](https://github.com/sunblaze-ucb/fastZKP/tree/master/implementation): the main Libra codebase
+- [Implementation](https://github.com/sunblaze-ucb/Libra/tree/master/implementation): the main Libra codebase
 
-- [Paper](https://github.com/sunblaze-ucb/fastZKP/tree/master/paper): the paper with all versions
+- [Paper](https://github.com/sunblaze-ucb/Libra/tree/master/paper): the paper with all versions
 
 # Acknowledgement
 
