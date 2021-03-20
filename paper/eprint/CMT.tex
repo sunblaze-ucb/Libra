@@ -36,7 +36,7 @@ The proof size of the sumcheck protocol is $O(d\ell)$, where $d$ is the variable
 	
 	
 	$\tilde{V}$ can be expressed as:
-	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum\nolimits_{b\in\{0,1\}^\ell}\prod\nolimits_{i=1}^{l}[((1-x_i)(1-b_i)+x_ib_i) \times V(b)]$$
+	$$\tilde{V}(x_1, x_2, ..., x_{l})=\sum\nolimits_{b\in\{0,1\}^\ell}V(b)\prod\nolimits_{i=1}^{l}[(1-x_i)(1-b_i)+x_ib_i]$$
 	where $b_i$ is $i$-th bit of b.
 	
 	
