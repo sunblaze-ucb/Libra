@@ -3,7 +3,7 @@
 
 #include "linear_gkr/circuit.h"
 #include <vector>
-#include "linear_gkr/prime_field.h"
+#include "linear_gkr/prime_field_og.h"
 #include "linear_gkr/polynomial.h"
 #include <ctime>
 

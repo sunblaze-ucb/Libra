@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <utility>
-#include "linear_gkr/prime_field.h"
+#include "linear_gkr/prime_field_og.h"
 
 class layer
 {

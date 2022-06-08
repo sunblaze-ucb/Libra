@@ -2,7 +2,7 @@
 #define __timer__
 #include "linear_gkr/verifier.h"
 #include "linear_gkr/prover.h"
-#include "linear_gkr/prime_field.h"
+#include "linear_gkr/prime_field_og.h"
 
 verifier v;
 prover p;
