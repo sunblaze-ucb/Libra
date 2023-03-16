@@ -9,4 +9,3 @@ os.system('./psdp lanczos2_16.pws lanczos2_16_560_N=1024_rdl.pws lanczos2_560_N=
 os.system('./psdp lanczos2_16.pws lanczos2_16_1072_N=4096_rdl.pws lanczos2_1072_N=4096_circuit.txt lanczos2_1072_N=4096_meta.txt')
 
 os.system('make -C ../.. linear_gkr_zk')
-os.system('cp ../../bin/main_zk .')
