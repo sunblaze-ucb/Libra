@@ -20,7 +20,6 @@ int main(int argc, char **argv)
 	while(mat_sz != (1 << log_mat_sz))
 		log_mat_sz++;
 	
-	//input layer
 	int block_number = mat_sz * mat_sz;
 	int block_size;
 	vector<vector<int> > A, B;
@@ -33,8 +32,11 @@ int main(int argc, char **argv)
 		for(int j = 0; j < mat_sz; ++j)
 			A[i][j] = rand() % 10, B[i][j] = rand() % 10;
 	}
-	//input layer
+
+	// input layer
+	// depth
 	fprintf(output_path, "%d\n", 1 + 1 + 1);
+	// layer 1 / input layer
 	fprintf(output_path, "%d ", mat_sz * mat_sz * 2);
 	for(int i = 0; i < mat_sz; ++i)
 	{
@@ -53,7 +55,7 @@ int main(int argc, char **argv)
 	}
 	fprintf(output_path, "\n");
 
-	//mult
+	// mult
 	fprintf(output_path, "%d ", mat_sz * mat_sz * mat_sz);
 	for(int i = 0; i < mat_sz; ++i)
 	{
@@ -62,7 +64,7 @@ int main(int argc, char **argv)
 			for(int k = 0; k < mat_sz; ++k)
 			{
 				int id = i * mat_sz * mat_sz + j * mat_sz + k;
-				int a = i * k, b = k * j;
+				int a = i * mat_sz + k, b = k * mat_sz + (j + mat_sz * mat_sz);
 				fprintf(output_path, "%d %d %d %d ", 1, id, a, b);
 			}
 		}
@@ -70,7 +72,6 @@ int main(int argc, char **argv)
 	fprintf(meta_path, "0 0 0 0 0\n");
 	fprintf(output_path, "\n");
 
-	
 
 	//summation gate
 	fprintf(output_path, "%d ", mat_sz * mat_sz);

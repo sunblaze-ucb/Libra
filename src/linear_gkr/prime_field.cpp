@@ -8,9 +8,6 @@ namespace prime_field
 	const __uint128_t __max_ull = ULLONG_MAX;
 	const __uint128_t __zero = 0LL;
 	const __uint128_t __max_128 = ~(__zero);
-
-
-
 	
 	u256b::u256b(){lo = mid = 0; hi = 0;}
 	u256b::u256b(const unsigned long long &x)

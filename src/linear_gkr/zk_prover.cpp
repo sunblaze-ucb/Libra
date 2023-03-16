@@ -55,6 +55,8 @@ prime_field::field_element* zk_prover::evaluate()
 {
 	std::chrono::high_resolution_clock::time_point t0 = std::chrono::high_resolution_clock::now();
 	circuit_value[0] = new prime_field::field_element[(1 << C.circuit[0].bit_length)];
+
+	std::cerr << "---layer 0---" << std::endl;
 	for(int i = 0; i < (1 << C.circuit[0].bit_length); ++i)
 	{
 		int g, u, ty;
@@ -62,11 +64,16 @@ prime_field::field_element* zk_prover::evaluate()
 		u = C.circuit[0].gates[g].u;
 		ty = C.circuit[0].gates[g].ty;
 		assert(ty == 3 || ty == 2);
-		circuit_value[0][g] = prime_field::field_element(u);
+		circuit_value[0][g] = prime_field::field_element(u);		
+		std::cerr << "index: " << g << " type: " << ty << " u: " << u << std::endl;
+		std::cerr << "index: " << g << " value: " << circuit_value[0][g].to_string() << std::endl;
 	}
+
 	assert(C.total_depth < 1000000);
+
 	for(int i = 1; i < C.total_depth; ++i)
 	{
+		std::cerr << "---layer " << i << "---" << std::endl;
 		circuit_value[i] = new prime_field::field_element[(1 << C.circuit[i].bit_length)];
 		for(int j = 0; j < (1 << C.circuit[i].bit_length); ++j)
 		{
@@ -75,6 +82,7 @@ prime_field::field_element* zk_prover::evaluate()
 			ty = C.circuit[i].gates[g].ty;
 			u = C.circuit[i].gates[g].u;
 			v = C.circuit[i].gates[g].v;
+			std::cerr << "index: " << g << " type: " << ty << " u: " << u << " v: " << v << std::endl;
 			if(ty == 0)
 			{
 				circuit_value[i][g] = circuit_value[i - 1][u] + circuit_value[i - 1][v];
@@ -141,6 +149,7 @@ prime_field::field_element* zk_prover::evaluate()
 			{
 				assert(false);
 			}
+			std::cerr << "index: " << g << " value: " << circuit_value[i][g].to_string() << std::endl;
 		}
 	}
 
